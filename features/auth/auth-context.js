@@ -46,7 +46,7 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => {
-    const res = await apiFetch("/auth/login", {
+    const res = await apiFetch("/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
@@ -57,16 +57,12 @@ export function AuthProvider({ children }) {
     return user;
   };
 
-  const signup = async (name, email, password) => {
-    const res = await apiFetch("/auth/register", {
+  const signup = async (name, email, password, role) => {
+    const res = await apiFetch("/register", {
       method: "POST",
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, role }),
     });
-    const { token, user } = res.data;
-    localStorage.setItem("token", token);
-    setUser(user);
-    setIsSignedIn(true);
-    return user;
+    return res.data;
   };
 
   const value = {
