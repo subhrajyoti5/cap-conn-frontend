@@ -31,13 +31,28 @@ const NAV_ITEMS = [
     roles: ["ADMIN"],
   },
   {
-    label: "Users",
+    label: "Pending Users",
+    href: "/admin/users/pending",
+    roles: ["ADMIN"],
+  },
+  {
+    label: "All Users",
     href: "/admin/users",
     roles: ["ADMIN"],
   },
   {
     label: "Courses",
-    href: "/courses",
+    href: "/admin/courses",
+    roles: ["ADMIN"],
+  },
+  {
+    label: "Subjects",
+    href: "/admin/subjects",
+    roles: ["ADMIN"],
+  },
+  {
+    label: "Notifications",
+    href: "/admin/notifications",
     roles: ["ADMIN"],
   },
 ];
