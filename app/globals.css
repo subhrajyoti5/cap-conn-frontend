@@ -1,0 +1,59 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --gradient-accent: linear-gradient(135deg, #2d3561 0%, #e8913a 100%);
+  }
+
+  body {
+    @apply bg-surface text-ink font-body antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .gradient-accent-bar {
+    background: var(--gradient-accent);
+  }
+
+  .card {
+    @apply bg-white border border-border-warm rounded-lg p-5 shadow-sm;
+  }
+
+  .card-hover {
+    @apply card transition-shadow duration-200 hover:shadow-md;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md
+      bg-accent text-white font-medium text-sm
+      transition-colors duration-150
+      hover:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md
+      border border-border-warm bg-white text-ink font-medium text-sm
+      transition-colors duration-150
+      hover:bg-surface-alt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium
+      text-muted transition-colors duration-150
+      hover:text-ink hover:bg-surface-alt;
+  }
+
+  .nav-link-active {
+    @apply nav-link text-ink bg-surface-alt;
+  }
+}
