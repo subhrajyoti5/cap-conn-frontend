@@ -45,6 +45,30 @@ export function AuthProvider({ children }) {
     return localStorage.getItem("token");
   };
 
+  const login = async (email, password) => {
+    const res = await apiFetch("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+    const { token, user } = res.data;
+    localStorage.setItem("token", token);
+    setUser(user);
+    setIsSignedIn(true);
+    return user;
+  };
+
+  const signup = async (name, email, password) => {
+    const res = await apiFetch("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ name, email, password }),
+    });
+    const { token, user } = res.data;
+    localStorage.setItem("token", token);
+    setUser(user);
+    setIsSignedIn(true);
+    return user;
+  };
+
   const value = {
     user,
     isLoaded,
