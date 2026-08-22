@@ -20,6 +20,7 @@ const ROLES = [
 export default function SignUpPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState(null);
   const [error, setError] = useState("");
@@ -34,7 +35,7 @@ export default function SignUpPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({ name, email, password, role }),
       });
       const data = await res.json();
 
@@ -135,6 +136,18 @@ export default function SignUpPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+            />
+                    </div>
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1">
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
               className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
             />
