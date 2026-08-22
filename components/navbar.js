@@ -1,15 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import {
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { useAuth } from "@/features/auth/auth-context";
 
 export function Navbar() {
+  const { isSignedIn, signOut, user } = useAuth();
+
   return (
     <header className="flex items-center justify-between h-14 px-4 lg:px-6 border-b border-border-warm bg-white">
       <Link href="/" className="flex items-center gap-2">
@@ -22,24 +18,28 @@ export function Navbar() {
       </Link>
 
       <div className="flex items-center gap-3">
-        <SignedOut>
-          <SignInButton mode="modal">
-            <button className="btn-secondary">Sign In</button>
-          </SignInButton>
-          <SignUpButton mode="modal">
-            <button className="btn-primary">Sign Up</button>
-          </SignUpButton>
-        </SignedOut>
-        <SignedIn>
-          <UserButton
-            afterSignOutUrl="/"
-            appearance={{
-              elements: {
-                avatarBox: "w-8 h-8",
-              },
-            }}
-          />
-        </SignedIn>
+        {!isSignedIn ? (
+          <>
+            <Link href="/sign-in" className="btn-secondary">
+              Sign In
+            </Link>
+            <Link href="/sign-up" className="btn-primary">
+              Sign Up
+            </Link>
+          </>
+        ) : (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted hidden sm:inline">
+              {user?.email}
+            </span>
+            <button
+              onClick={signOut}
+              className="px-3 py-1.5 text-sm rounded-md border border-border-warm hover:bg-surface-alt transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/features/auth/auth-context";
 import { listPendingUsers, approveUser, rejectUser } from "@/features/users/api/users.api";
 
 export default function AdminUsersPage() {
@@ -10,6 +10,7 @@ export default function AdminUsersPage() {
 
   async function load() {
     const token = await getToken();
+    if (!token) return;
     const res = await listPendingUsers(token);
     setUsers(res.data || []);
   }
@@ -20,12 +21,14 @@ export default function AdminUsersPage() {
 
   async function handleApprove(id) {
     const token = await getToken();
+    if (!token) return;
     await approveUser(token, id);
     load();
   }
 
   async function handleReject(id) {
     const token = await getToken();
+    if (!token) return;
     await rejectUser(token, id, "");
     load();
   }

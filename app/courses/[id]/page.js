@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/features/auth/auth-context";
 import { useParams, useRouter } from "next/navigation";
 import { getCourse, enrollCourse, publishCourse } from "@/features/courses/api/courses.api";
 
@@ -13,6 +13,7 @@ export default function CourseDetailPage() {
 
   async function load() {
     const token = await getToken();
+    if (!token) return;
     const res = await getCourse(token, id);
     setCourse(res.data);
   }
@@ -23,19 +24,21 @@ export default function CourseDetailPage() {
 
   async function handleEnroll() {
     const token = await getToken();
+    if (!token) return;
     await enrollCourse(token, id);
     load();
   }
 
   async function handlePublish() {
     const token = await getToken();
+    if (!token) return;
     await publishCourse(token, id);
     load();
   }
 
   if (!course) return <p className="p-8">Loading...</p>;
 
-  const isOwner = course.trainer?.clerkUserId === userId;
+  const isOwner = course.trainerId === userId;
 
   return (
     <main className="p-8 max-w-3xl mx-auto">

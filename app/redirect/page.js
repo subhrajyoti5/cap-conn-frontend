@@ -2,57 +2,27 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, useUser } from "@clerk/nextjs";
-import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/features/auth/auth-context";
 
 export default function RedirectPage() {
   const router = useRouter();
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-  const { user } = useUser();
+  const { isLoaded, isSignedIn, user } = useAuth();
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
 
-    async function resolve() {
-      const meta = user?.publicMetadata || {};
-      let role = meta.role;
-      let status = meta.status;
+    const status = user?.status || "PENDING";
+    const role = user?.role || "TRAINEE";
 
-      if (!role || !status) {
-        try {
-          const token = await getToken();
-          const res = await apiFetch("/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (res?.data) {
-            role = res.data.role;
-            status = res.data.status;
-          }
-        } catch {
-          // user row may not exist yet (webhook race)
-        }
-      }
-
-      status = status || "PENDING";
-      role = role || "TRAINEE";
-
-      if (status === "PENDING") {
-        router.push("/pending");
-        return;
-      }
-
-      if (status === "REJECTED" || status === "SUSPENDED") {
-        router.push("/pending");
-        return;
-      }
-
-      if (role === "ADMIN") router.push("/admin");
-      else if (role === "TRAINER") router.push("/trainer");
-      else router.push("/trainee");
+    if (status === "PENDING" || status === "REJECTED" || status === "SUSPENDED") {
+      router.push("/pending");
+      return;
     }
 
-    resolve();
-  }, [isLoaded, isSignedIn, user, getToken, router]);
+    if (role === "ADMIN") router.push("/admin");
+    else if (role === "TRAINER") router.push("/trainer");
+    else router.push("/trainee");
+  }, [isLoaded, isSignedIn, user, router]);
 
   return (
     <div className="flex-1 flex items-center justify-center">

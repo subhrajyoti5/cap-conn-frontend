@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/features/auth/auth-context";
 import { apiFetch } from "@/lib/api";
 
 export default function TraineeDashboardPage() {
@@ -11,6 +11,7 @@ export default function TraineeDashboardPage() {
   useEffect(() => {
     async function load() {
       const token = await getToken();
+      if (!token) return;
       const res = await apiFetch("/dashboard/trainee", {
         headers: { Authorization: `Bearer ${token}` },
       });

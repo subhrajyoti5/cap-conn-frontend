@@ -1,119 +1,104 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { apiFetch } from "@/lib/api";
 
-export default function LoginPage() {
+export default function SignInPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const { data } = await apiFetch("/auth/login", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/login`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+      const data = await res.json();
 
-      // Store token in localStorage
-      localStorage.setItem("token", data.token);
-
-      // Redirect based on role and status
-      if (data.user.status === "PENDING") {
-        router.push("/pending");
-      } else if (data.user.status === "REJECTED" || data.user.status === "SUSPENDED") {
-        router.push("/pending");
-      } else if (data.user.role === "ADMIN") {
-        router.push("/admin");
-      } else if (data.user.role === "TRAINER") {
-        router.push("/trainer");
-      } else {
-        router.push("/trainee");
+      if (!res.ok) {
+        setError(data.message || "Login failed");
+        return;
       }
-    } catch (err) {
-      setError(err.message || "Login failed");
+
+      localStorage.setItem("token", data.data.token);
+      window.location.href = "/redirect";
+    } catch {
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight">Sign in to your account</h2>
-          <p className="mt-2 text-sm text-muted">
-            Or <a href="/signup" className="font-medium text-primary hover:underline">create a new account</a>
+    <div className="flex-1 flex items-center justify-center p-4 bg-surface">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="w-10 h-10 rounded-lg gradient-accent-bar mx-auto mb-4" />
+          <h1 className="font-display text-display-md text-primary mb-2">
+            Welcome back
+          </h1>
+          <p className="text-muted text-sm">
+            Sign in to Capacity Connect
           </p>
         </div>
 
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">{error}</h3>
-              </div>
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white border border-border-warm rounded-xl p-6 shadow-sm space-y-4"
+        >
+          {error && (
+            <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
+              {error}
             </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+            />
           </div>
-        )}
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4 rounded-md shadow-sm">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-foreground">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="relative block w-full rounded-md border border-input bg-background px-3 py-2 text-foreground placeholder-muted focus:z-10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm"
-                placeholder="you@example.com"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-foreground">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="relative block w-full rounded-md border border-input bg-background px-3 py-2 text-foreground placeholder-muted focus:z-10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm"
-                placeholder="••••••••"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+            />
           </div>
-
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <a href="#" className="font-medium text-primary hover:text-primary/80">
-                Forgot your password?
-              </a>
-            </div>
-          </div>
-
           <button
             type="submit"
             disabled={loading}
-            className="group relative flex w-full justify-center rounded-md bg-primary py-2 px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
+            className="w-full btn-primary py-2.5 disabled:opacity-50"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
+
+        <p className="text-center text-xs text-muted mt-8">
+          Don&apos;t have an account?{" "}
+          <Link href="/sign-up" className="text-accent hover:text-accent-600 font-medium transition-colors">
+            Create one
+          </Link>
+        </p>
       </div>
     </div>
   );

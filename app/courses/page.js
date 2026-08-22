@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/features/auth/auth-context";
 import Link from "next/link";
 import { listCourses } from "@/features/courses/api/courses.api";
 
@@ -12,6 +12,7 @@ export default function CoursesPage() {
   useEffect(() => {
     async function load() {
       const token = await getToken();
+      if (!token) return;
       const res = await listCourses(token);
       setCourses(res.data || []);
     }

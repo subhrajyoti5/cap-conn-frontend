@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/features/auth/auth-context";
 import { useRouter } from "next/navigation";
 import { createCourse } from "@/features/courses/api/courses.api";
 import { listSubjects } from "@/features/subjects/api/subjects.api";
 
 export default function CreateCoursePage() {
-  const { getToken, userId } = useAuth();
+  const { getToken } = useAuth();
   const router = useRouter();
   const [subjects, setSubjects] = useState([]);
   const [form, setForm] = useState({ title: "", description: "", subjectId: "" });
@@ -15,6 +15,7 @@ export default function CreateCoursePage() {
   useEffect(() => {
     async function load() {
       const token = await getToken();
+      if (!token) return;
       const res = await listSubjects(token);
       setSubjects(res.data || []);
     }
@@ -24,6 +25,7 @@ export default function CreateCoursePage() {
   async function handleSubmit(e) {
     e.preventDefault();
     const token = await getToken();
+    if (!token) return;
     await createCourse(token, form);
     router.push("/courses");
   }

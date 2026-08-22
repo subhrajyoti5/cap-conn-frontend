@@ -1,12 +1,12 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/features/auth/auth-context";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
 
 export function AppShell({ children }) {
-  const { user } = useUser();
-  const role = user?.publicMetadata?.role || "TRAINEE";
+  const { user } = useAuth();
+  const role = user?.role || "TRAINEE";
 
   return (
     <div className="flex flex-col h-screen">

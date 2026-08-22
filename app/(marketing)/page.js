@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { SignedIn, SignedOut } from "@clerk/nextjs";
 
 const FEATURES = [
   {
@@ -90,19 +89,12 @@ export default async function LandingPage() {
           </p>
 
           <div className="flex flex-wrap gap-3">
-            <SignedOut>
-              <Link href="/sign-up" className="btn-primary px-7 py-3 text-base">
-                Get Started
-              </Link>
-              <Link href="/sign-in" className="btn-secondary px-7 py-3 text-base">
-                Sign In
-              </Link>
-            </SignedOut>
-            <SignedIn>
-              <Link href="/trainee" className="btn-primary px-7 py-3 text-base">
-                Go to Dashboard
-              </Link>
-            </SignedIn>
+            <Link href="/sign-up" className="btn-primary px-7 py-3 text-base">
+              Get Started
+            </Link>
+            <Link href="/sign-in" className="btn-secondary px-7 py-3 text-base">
+              Sign In
+            </Link>
           </div>
         </div>
       </section>
@@ -173,11 +165,9 @@ export default async function LandingPage() {
               Join as a trainee to start learning, or as a trainer to share your
               expertise with India&apos;s scientific workforce.
             </p>
-            <SignedOut>
-              <Link href="/sign-up" className="px-7 py-3 rounded-md bg-white text-primary font-medium hover:bg-surface transition-colors inline-block">
-                Create Your Account
-              </Link>
-            </SignedOut>
+            <Link href="/sign-up" className="px-7 py-3 rounded-md bg-white text-primary font-medium hover:bg-surface transition-colors inline-block">
+              Create Your Account
+            </Link>
           </div>
         </div>
       </section>
