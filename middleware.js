@@ -1,22 +1,30 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/api/webhooks(.*)",
-]);
+const isPublicRoute = (request) => {
+  const url = request.nextUrl.clone();
+  const path = url.pathname;
 
-export default clerkMiddleware(async (auth, req) => {
-  const { userId, redirectToSignIn } = await auth();
+  return (
+    path === "/" ||
+    path.startsWith("/sign-in") ||
+    path.startsWith("/sign-up") ||
+    path.startsWith("/pending") ||
+    path.startsWith("/api/webhooks")
+  );
+};
 
-  if (!isPublicRoute(req) && !userId) {
-    return redirectToSignIn({ returnBackUrl: req.url });
+export default function middleware(request) {
+  const token = request.cookies.get("token")?.value || request.headers.get("authorization")?.replace("Bearer ", "");
+  const isAuthenticated = !!token;
+
+  if (!isPublicRoute(request) && !isAuthenticated) {
+    const url = new URL("/sign-in", request.url);
+    url.searchParams.set("redirect", request.nextUrl.pathname);
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/((?!_next|.*\\..*).*)"],
