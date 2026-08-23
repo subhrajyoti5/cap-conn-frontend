@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/auth-context";
 import { apiFetch } from "@/lib/api";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function TrainerDashboardPage() {
-  const { getToken, user } = useAuth();
+  const { getToken } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,11 +31,13 @@ export default function TrainerDashboardPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 w-48 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+      <div className="space-y-6 animate-in">
+        <div className="skeleton h-8 w-48" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
+            <div key={i} className="card-shell">
+              <div className="card p-6 skeleton h-24" />
+            </div>
           ))}
         </div>
       </div>
@@ -42,121 +45,66 @@ export default function TrainerDashboardPage() {
   }
 
   const stats = [
-    { label: "Total Courses", value: data?.courses || 0, desc: "Created courses" },
-    { label: "Active Trainees", value: data?.totalTrainees || 0, desc: "Enrolled students" },
-    { label: "Pending Submissions", value: data?.pendingToGrade || 0, desc: "Awaiting evaluation" },
+    { label: "Courses", value: data.courses, icon: "📖" },
+    { label: "Trainees", value: data.totalTrainees, icon: "👥" },
+    { label: "Pending", value: data.pendingToGrade, icon: "📝" },
   ];
 
   return (
-    <div className="space-y-8 max-w-5xl">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+    <div className="space-y-6 animate-in">
+      <div className="page-header flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            Trainer Dashboard
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Overview of your authored courses, resources, and trainee performance.
-          </p>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Overview of your teaching activities.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/courses"
-            className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors"
-          >
-            My Courses
-          </Link>
-          <Link
-            href="/courses/create"
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm"
-          >
-            Create Course
-          </Link>
+        <div className="flex gap-2">
+          <Link href="/courses" className="btn-secondary">My Courses</Link>
+          <Link href="/courses/create" className="btn-primary">Create Course</Link>
         </div>
       </div>
 
-      {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {stat.label}
-            </p>
-            <p className="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-2">
-              {stat.value}
-            </p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{stat.desc}</p>
+        {stats.map((stat, index) => (
+          <div key={stat.label} className="card-shell" style={{ animationDelay: `${index * 50}ms` }}>
+            <div className="card p-6 flex flex-col items-center text-center">
+              <div className="w-16 h-16 mb-3 rounded-xl overflow-hidden bg-muted">
+                <Image 
+                  src="/trainer/Artboard 1.png" 
+                  alt="Trainer Icon" 
+                  width={64} 
+                  height={64} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <p className="text-3xl font-bold">{stat.value}</p>
+              <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Quick Action Navigation */}
-      <div className="space-y-4">
-        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-          Management
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Link
-            href="/courses"
-            className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm group"
-          >
-            <p className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
-              Manage Courses
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Add presentation slide decks, study blueprints, and documents.
-            </p>
-          </Link>
-
-          <Link
-            href="/certifications"
-            className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm group"
-          >
-            <p className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
-              Credentials & Badges
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              View your professional certifications and instructor credentials.
-            </p>
-          </Link>
-
-          <Link
-            href="/courses/create"
-            className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm group"
-          >
-            <p className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
-              Publish New Course
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Define competencies, curriculum modules, and assessments.
-            </p>
-          </Link>
-        </div>
-      </div>
-
-      {/* Recent Feedback if present */}
-      {data?.recentFeedback && data.recentFeedback.length > 0 && (
-        <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">
-            Recent Trainee Reviews
-          </h3>
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {data.recentFeedback.map((fb) => (
-              <div key={fb.id} className="py-2.5 flex items-center justify-between text-xs">
-                <div>
-                  <p className="font-medium text-slate-800 dark:text-slate-200">
-                    {fb.user?.name || "Trainee"} &bull; {fb.rating}/5 Stars
-                  </p>
-                  <p className="text-slate-500 dark:text-slate-400 mt-0.5">{fb.comment}</p>
-                </div>
-              </div>
-            ))}
+      <section className="card-shell">
+        <div className="card p-6">
+          <h2 className="font-semibold mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <Link href="/courses" className="p-4 rounded-lg hover:bg-muted transition-colors text-left">
+              <span className="text-xl mb-2 block">📖</span>
+              <p className="font-medium">View My Courses</p>
+              <p className="text-sm text-muted-foreground">Manage your course content</p>
+            </Link>
+            <Link href="/courses/create" className="p-4 rounded-lg hover:bg-muted transition-colors text-left">
+              <span className="text-xl mb-2 block">➕</span>
+              <p className="font-medium">Create New Course</p>
+              <p className="text-sm text-muted-foreground">Start teaching today</p>
+            </Link>
+            <Link href="/submissions" className="p-4 rounded-lg hover:bg-muted transition-colors text-left">
+              <span className="text-xl mb-2 block">📝</span>
+              <p className="font-medium">Grade Submissions</p>
+              <p className="text-sm text-muted-foreground">{data.pendingToGrade} items pending</p>
+            </Link>
           </div>
         </div>
-      )}
+      </section>
     </div>
   );
 }

@@ -54,7 +54,7 @@ export default function CreateCoursePage() {
       <form onSubmit={handleSubmit} className="card-shell">
         <div className="card p-6 space-y-5">
           {error && (
-            <div className="form-error p-3 rounded-button bg-red-50 text-red-600 text-sm">
+            <div className="form-error p-3 rounded-lg bg-destructive/10 text-destructive text-sm border border-destructive/20">
               {error}
             </div>
           )}

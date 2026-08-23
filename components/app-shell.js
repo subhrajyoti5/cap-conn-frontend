@@ -19,7 +19,7 @@ export function AppShell({ children }) {
           mobileOpen={mobileNavOpen}
           onMobileClose={() => setMobileNavOpen(false)}
         />
-        <main className="flex-1 overflow-y-auto bg-slate-50/75 dark:bg-[#0b0f19]">
+        <main className="flex-1 overflow-y-auto bg-background">
           <div className="page">
             <div className="page-section">{children}</div>
           </div>

@@ -31,10 +31,10 @@ export default function TraineeDashboardPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+        <div className="h-8 w-48 bg-muted rounded animate-pulse" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
+            <div key={i} className="h-28 bg-muted rounded-xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -50,18 +50,18 @@ export default function TraineeDashboardPage() {
   return (
     <div className="space-y-8 max-w-5xl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          <h1 className="font-display text-display-md text-foreground">
             Welcome back{user?.name ? `, ${user.name}` : ""}
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Track your ongoing courses, assignments, and verified credentials.
           </p>
         </div>
         <Link
           href="/courses"
-          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm self-start sm:self-auto"
+          className="btn-primary self-start sm:self-auto"
         >
           Browse All Courses
         </Link>
@@ -70,59 +70,52 @@ export default function TraineeDashboardPage() {
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {stat.label}
-            </p>
-            <p className="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-2">
-              {stat.value}
-            </p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{stat.desc}</p>
+          <div key={stat.label} className="stat-card">
+            <p className="stat-label">{stat.label}</p>
+            <p className="stat-value">{stat.value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{stat.desc}</p>
           </div>
         ))}
       </div>
 
       {/* Quick Navigation Cards */}
       <div className="space-y-4">
-        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="font-display text-lg text-foreground">
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Link
             href="/courses"
-            className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm group"
+            className="card-interactive p-5 text-left group"
           >
-            <p className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
+            <p className="font-semibold text-foreground group-hover:text-accent transition-colors">
               Enrolled Courses
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               View study materials and presentation slide decks.
             </p>
           </Link>
 
           <Link
             href="/certifications"
-            className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm group"
+            className="card-interactive p-5 text-left group"
           >
-            <p className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
+            <p className="font-semibold text-foreground group-hover:text-accent transition-colors">
               Certifications
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Preview verified certificate documents with Drive viewer.
             </p>
           </Link>
 
           <Link
             href="/courses"
-            className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm group"
+            className="card-interactive p-5 text-left group"
           >
-            <p className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
+            <p className="font-semibold text-foreground group-hover:text-accent transition-colors">
               Assessments & Quizzes
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Take pending quizzes and review graded scores.
             </p>
           </Link>
@@ -131,23 +124,23 @@ export default function TraineeDashboardPage() {
 
       {/* Recent Certifications if available */}
       {data?.certifications && data.certifications.length > 0 && (
-        <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="card-padded">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
+            <h3 className="font-display text-base text-foreground">
               Verified Certifications
             </h3>
-            <Link href="/certifications" className="text-xs text-blue-600 hover:underline">
+            <Link href="/certifications" className="text-xs text-primary hover:text-primary-hover font-medium transition-colors">
               View All
             </Link>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="divide-y divide-border">
             {data.certifications.map((cert) => (
               <div key={cert.id} className="py-2.5 flex items-center justify-between text-xs">
                 <div>
-                  <p className="font-medium text-slate-800 dark:text-slate-200">{cert.name}</p>
-                  <p className="text-slate-400">{cert.issuer}</p>
+                  <p className="font-medium text-foreground">{cert.name}</p>
+                  <p className="text-muted-foreground">{cert.issuer}</p>
                 </div>
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Verified</span>
+                <span className="badge-success">Verified</span>
               </div>
             ))}
           </div>

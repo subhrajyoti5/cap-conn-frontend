@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -10,19 +10,27 @@
     --color-primary: #2563EB;
     --color-primary-hover: #1D4ED8;
     --color-primary-active: #1E40AF;
-    --color-secondary: #3B82F6;
     --color-accent: #EA580C;
     --color-accent-hover: #C2410C;
     --color-background: #F8FAFC;
+    --color-surface: #FFFFFF;
     --color-foreground: #1E293B;
-    --color-card: #FFFFFF;
-    --color-card-foreground: #1E293B;
-    --color-muted: #E9EFF8;
     --color-muted-foreground: #475569;
     --color-border: #E2E8F0;
     --color-destructive: #DC2626;
     --color-on-destructive: #FFFFFF;
     --color-ring: #2563EB;
+    --color-success: #16A34A;
+    --color-warning: #D97706;
+  }
+
+  .dark {
+    --color-background: #0B0F19;
+    --color-surface: #111827;
+    --color-foreground: #F1F5F9;
+    --color-muted-foreground: #94A3B8;
+    --color-border: #1F2937;
+    --color-ring: #60A5FA;
   }
 
   * {
@@ -102,7 +110,7 @@
   }
 
   .page-title {
-    @apply font-body text-display-lg text-foreground;
+    @apply font-display text-display-lg text-foreground;
   }
 
   .page-subtitle {
@@ -125,8 +133,8 @@
   .btn-primary {
     @apply btn px-4 py-2.5 rounded-lg
       bg-accent text-white font-semibold
-      hover:bg-accent/90 hover:brightness-105 active:scale-[0.98]
-      shadow-md shadow-accent-600/20
+      hover:bg-accent-600 active:scale-[0.98]
+      shadow-md shadow-accent/25
       text-sm;
   }
 
@@ -251,7 +259,7 @@
   }
 
   .card {
-    @apply bg-card border border-border rounded-xl text-foreground shadow-md;
+    @apply bg-card border border-border rounded-xl text-foreground shadow-sm;
     transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -268,7 +276,7 @@
   }
 
   .card-interactive {
-    @apply card hover:shadow-lg hover:border-primary/40;
+    @apply card hover:shadow-lg hover:border-accent/40;
   }
 
   .card-padded {
@@ -372,7 +380,7 @@
   }
 
   .empty-state-title {
-    @apply font-body text-lg text-foreground mb-1.5;
+    @apply font-display text-lg text-foreground mb-1.5;
   }
 
   .empty-state-desc {
@@ -417,7 +425,7 @@
   }
 
   .stat-value {
-    @apply text-3xl font-body font-bold text-foreground;
+    @apply text-3xl font-display font-bold text-foreground;
   }
 
   .stat-trend {
@@ -467,7 +475,7 @@
   }
 
   .modal-title {
-    @apply font-body text-xl text-foreground;
+    @apply font-display text-xl text-foreground;
   }
 
   .modal-body {
@@ -555,120 +563,12 @@
 }
 
 /**
- * Aura Background Styles - Glassmorphism Effect
+ * Glassmorphism Utility
  */
-.aura-fixed-canvas {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  pointer-events: none !important;
-  z-index: 0 !important;
-  overflow: hidden !important;
-  isolation: isolate;
+.glass {
+  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-glass;
 }
 
-.aura-bg {
-  position: relative;
-  overflow: hidden;
-}
-
-.aura-layer-1 {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(154deg, transparent 18%, rgba(60,10,10,0.06) 29%, rgba(255,40,0,0.40) 36%, rgb(255,255,255) 42%, rgba(207,60,20,0.32) 48%, rgba(158,20,10,0.22) 55%, rgba(255,90,0,0.30) 62%, rgba(60,15,10,0.08) 68%, transparent 82%);
-  mix-blend-mode: screen;
-  filter: blur(85px);
-  transform: translateZ(0);
-  will-change: transform;
-  pointer-events: none;
-}
-
-.aura-layer-2 {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(128deg, transparent 28%, rgba(80,10,20,0.06) 38%, rgba(255,80,0,0.35) 43%, rgb(255,255,255) 48%, rgba(200,60,30,0.22) 52%, rgba(255,40,0,0.25) 57%, rgba(90,20,10,0.10) 62%, transparent 76%);
-  mix-blend-mode: screen;
-  filter: blur(75px);
-  opacity: 0.9;
-  transform: translateZ(0);
-  will-change: transform;
-  pointer-events: none;
-}
-
-.aura-layer-3 {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 78% 20% at 51% 53%, rgba(200,50,20,0.24) 0%, rgba(100,20,10,0.10) 45%, transparent 82%);
-  mix-blend-mode: screen;
-  filter: blur(70px);
-  opacity: 0.9;
-  transform: translateZ(0);
-  will-change: transform;
-  pointer-events: none;
-}
-
-.aura-layer-4 {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 48% 9% at 52% 50%, rgba(255,220,190,0.14) 0%, rgba(200,80,50,0.06) 45%, transparent 80%);
-  mix-blend-mode: screen;
-  filter: blur(175px);
-  transform: translateZ(0);
-  will-change: transform;
-  pointer-events: none;
-}
-
-.aura-layer-5 {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(5,1,1,0.90) 0%, rgba(5,1,1,0.58) 28%, rgba(5,1,1,0.20) 55%, transparent 78%);
-  mix-blend-mode: multiply;
-  filter: blur(80px);
-  opacity: 0.9;
-  transform: translateZ(0);
-  will-change: transform;
-  pointer-events: none;
-}
-
-.aura-layer-6 {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 50% 28% at 72% 18%, rgba(150,90,20,0.10) 0%, rgba(100,60,10,0.04) 45%, transparent 82%);
-  mix-blend-mode: screen;
-  filter: blur(138px);
-  opacity: 0.7;
-  transform: translateZ(0);
-  will-change: transform;
-  pointer-events: none;
-}
-
-@media (min-width: 768px) {
-  .aura-layer-1 { filter: blur(122px); }
-  .aura-layer-2 { filter: blur(108px); }
-  .aura-layer-3 { filter: blur(101px); }
-  .aura-layer-4 { filter: blur(252px); }
-  .aura-layer-5 { filter: blur(115px); }
-  .aura-layer-6 { filter: blur(198px); }
-}
-
-.aura-grain {
-  position: absolute;
-  inset: 0;
-  mix-blend-mode: overlay;
-  opacity: 0.85;
-  pointer-events: none;
-}
-
-.aura-overlay {
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(17, 24, 39, 0.85) 0%, rgba(17, 24, 39, 0.6) 50%, rgba(17, 24, 39, 0.85) 100%);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.content-above-aura {
-  position: relative;
-  z-index: 2;
+.dark .glass {
+  @apply bg-gray-900/70 border-gray-700/30;
 }

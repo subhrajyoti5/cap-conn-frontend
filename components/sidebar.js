@@ -88,16 +88,16 @@ export function Sidebar({ role, mobileOpen, onMobileClose }) {
     <>
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-surface shrink-0">
-        <div className="px-3 py-3 border-b border-border">
-          <p className="text-xs font-mono text-muted uppercase tracking-wider">
-            Navigation
-          </p>
-        </div>
+<div className="px-3 py-3 border-b border-border">
+  <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+    Navigation
+  </p>
+</div>
         {navContent}
         <div className="flex-1" />
-        <div className="px-3 py-4 border-t border-border">
-          <p className="text-xs text-muted font-mono">Capacity Connect</p>
-        </div>
+<div className="px-3 py-4 border-t border-border">
+  <p className="text-xs text-muted-foreground font-mono">Capacity Connect</p>
+</div>
       </aside>
 
       {/* Mobile overlay */}
@@ -109,13 +109,13 @@ export function Sidebar({ role, mobileOpen, onMobileClose }) {
             aria-hidden="true"
           />
           <aside className="fixed inset-y-0 left-0 w-64 bg-surface border-r border-border z-50 flex flex-col lg:hidden animate-in slide-in-from-left duration-normal ease-out-expo">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <span className="font-body text-lg font-semibold text-text">Menu</span>
-              <button
-                onClick={onMobileClose}
-                className="btn-icon text-muted"
-                aria-label="Close navigation"
-              >
+<div className="flex items-center justify-between px-4 py-3 border-b border-border">
+  <span className="font-display text-lg font-semibold text-foreground">Menu</span>
+<button
+  onClick={onMobileClose}
+  className="btn-icon text-muted-foreground"
+  aria-label="Close navigation"
+>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -123,9 +123,9 @@ export function Sidebar({ role, mobileOpen, onMobileClose }) {
             </div>
             {navContent}
             <div className="flex-1" />
-            <div className="px-4 py-4 border-t border-border">
-              <p className="text-xs text-muted font-mono">Capacity Connect</p>
-            </div>
+<div className="px-4 py-4 border-t border-border">
+  <p className="text-xs text-muted-foreground font-mono">Capacity Connect</p>
+</div>
           </aside>
         </>
       )}

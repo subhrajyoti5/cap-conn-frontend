@@ -22,7 +22,7 @@ export function Navbar({ onMenuClick }) {
             </button>
           )}
           <Link href="/" className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-accent-600 flex items-center justify-center">
+            <span className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
               <span className="text-white font-body text-base font-bold">C</span>
             </span>
             <span className="font-body text-lg font-semibold text-foreground hidden sm:inline">

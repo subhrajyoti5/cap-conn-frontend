@@ -41,27 +41,24 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <div className="w-12 h-12 rounded-card-lg bg-ink flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mx-auto mb-4">
             <span className="text-white font-display text-xl font-bold">C</span>
           </div>
-          <h1 className="font-display text-display-md text-ink mb-2">
+          <h1 className="font-display text-display-md text-foreground mb-2">
             Welcome back
           </h1>
-          <p className="text-white text-sm">
+          <p className="text-sm text-muted-foreground">
             Sign in to Capacity Connect
           </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="card-shell"
-        >
+        <form onSubmit={handleSubmit} className="card-shell">
           <div className="card p-6 space-y-4">
             {error && (
-              <div className="form-error p-3 rounded-button bg-red-50 text-red-600 text-sm">
+              <div className="form-error p-3 rounded-lg bg-destructive/10 text-destructive text-sm border border-destructive/20">
                 {error}
               </div>
             )}
@@ -99,9 +96,9 @@ export default function SignInPage() {
           </div>
         </form>
 
-        <p className="text-center text-xs text-muted mt-8">
+        <p className="text-center text-xs text-muted-foreground mt-8">
           Don&apos;t have an account?{" "}
-          <Link href="/sign-up" className="text-accent hover:text-accent-600 font-medium transition-colors">
+          <Link href="/sign-up" className="text-accent hover:text-accent-hover font-medium transition-colors">
             Create one
           </Link>
         </p>

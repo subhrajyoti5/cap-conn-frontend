@@ -59,7 +59,7 @@ export default function CoursesPage() {
 
       {courses.length === 0 ? (
         <div className="empty-state">
-          <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
           </svg>
           <p className="empty-state-title">No courses available</p>
@@ -85,15 +85,15 @@ export default function CoursesPage() {
             >
               <div className="card p-5 h-full">
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <p className="font-semibold text-sm text-ink line-clamp-2">{c.title}</p>
+                  <p className="font-semibold text-sm text-foreground line-clamp-2">{c.title}</p>
                   <span className={`badge shrink-0 ${c.status === "PUBLISHED" ? "badge-success" : c.status === "DRAFT" ? "badge-neutral" : "badge-info"}`}>
                     {c.status?.toLowerCase()}
                   </span>
                 </div>
-                <p className="text-sm text-muted line-clamp-2 mb-3">{c.description}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{c.description}</p>
                 {c.subject && (
-                  <p className="text-xs text-muted flex items-center gap-1">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                     </svg>

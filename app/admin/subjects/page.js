@@ -101,13 +101,13 @@ export default function AdminSubjectsPage() {
           >
             {creating ? "Creating&hellip;" : "Add Subject"}
           </button>
-          {error && <p className="w-full text-sm text-red-600 mt-1">{error}</p>}
+          {error && <p className="w-full form-error mt-1">{error}</p>}
         </div>
       </form>
 
       {subjects.length === 0 ? (
         <div className="empty-state">
-          <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
           </svg>
@@ -115,12 +115,12 @@ export default function AdminSubjectsPage() {
           <p className="empty-state-desc">Add a subject to categorize courses.</p>
         </div>
       ) : (
-        <ul className="data-list divide-y divide-border-warm">
+        <ul className="data-list divide-y divide-border">
           {subjects.map((s, index) => (
             <li key={s.id} className="py-3 px-4" style={{ animationDelay: `${index * 40}ms` }}>
-              <p className="font-medium text-sm text-ink">{s.name}</p>
+              <p className="font-medium text-sm text-foreground">{s.name}</p>
               {s.description && (
-                <p className="text-sm text-muted mt-0.5">{s.description}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">{s.description}</p>
               )}
             </li>
           ))}

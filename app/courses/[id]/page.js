@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/auth-context";
 import { useParams } from "next/navigation";
 import { getCourse, enrollCourse, publishCourse } from "@/features/courses/api/courses.api";
-import { GoogleDriveViewerModal, isGoogleDriveUrl } from "@/components/google-drive-viewer";
+import { UploadResourceModal } from "@/components/upload-resource-modal";
 import Link from "next/link";
 
 export default function CourseDetailPage() {
@@ -13,14 +13,13 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-
-  // Document viewer modal state
-  const [selectedDoc, setSelectedDoc] = useState(null);
-  const [viewerOpen, setViewerOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [authToken, setAuthToken] = useState("");
 
   async function load() {
     const token = await getToken();
     if (!token) return;
+    setAuthToken(token);
     try {
       const res = await getCourse(token, id);
       setCourse(res.data);
@@ -63,30 +62,22 @@ export default function CourseDetailPage() {
     }
   }
 
-  const handleOpenDocViewer = (resource) => {
-    setSelectedDoc(resource);
-    setViewerOpen(true);
-  };
-
   if (loading) {
     return (
-      <div className="space-y-6 animate-in stagger-1">
-        <div className="skeleton h-8 w-64" />
-        <div className="skeleton h-4 w-full max-w-lg" />
-        <div className="skeleton h-4 w-48" />
+      <div className="space-y-6">
+        <div className="h-8 w-64 bg-muted rounded animate-pulse" />
+        <div className="h-4 w-full max-w-lg bg-muted rounded animate-pulse" />
+        <div className="h-4 w-48 bg-muted rounded animate-pulse" />
       </div>
     );
   }
 
   if (!course) {
     return (
-      <div className="empty-state animate-in stagger-1">
-        <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-        </svg>
-        <p className="empty-state-title">Course not found</p>
-        <p className="empty-state-desc">The course you are looking for does not exist or has been removed.</p>
-        <Link href="/courses" className="btn-secondary mt-4">
+      <div className="text-center py-16">
+        <p className="font-display text-lg text-foreground">Course not found</p>
+        <p className="text-sm text-muted-foreground mt-1">The course you are looking for does not exist or has been removed.</p>
+        <Link href="/courses" className="btn-secondary mt-4 inline-block">
           Back to courses
         </Link>
       </div>
@@ -98,9 +89,9 @@ export default function CourseDetailPage() {
   const isAdmin = user?.role === "ADMIN";
 
   return (
-    <div className="space-y-8 animate-in stagger-1">
+    <div className="space-y-8 max-w-5xl">
       {/* Page Header */}
-      <div className="page-header">
+      <div className="border-b border-border pb-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -111,7 +102,7 @@ export default function CourseDetailPage() {
                 <span className="badge badge-neutral">{course.subject.name}</span>
               )}
             </div>
-            <h1 className="page-title text-2xl sm:text-3xl font-bold">{course.title}</h1>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">{course.title}</h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {(isOwner || isAdmin) && course.status === "DRAFT" && (
@@ -133,227 +124,185 @@ export default function CourseDetailPage() {
               </button>
             )}
             {isEnrolled && (
-              <span className="badge badge-success px-3 py-1 text-sm">✓ Enrolled</span>
+              <span className="badge-success px-3 py-1 text-sm font-medium">✓ Enrolled</span>
             )}
           </div>
         </div>
         {course.description && (
-          <p className="page-subtitle max-w-3xl mt-3 text-base">{course.description}</p>
+          <p className="text-sm text-muted-foreground max-w-3xl mt-3 leading-relaxed">{course.description}</p>
         )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content: Learning Resources & Presentations, Assessments */}
+        {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Learning Resources & Google Drive Presentations Section */}
-          <div className="card-shell">
-            <div className="card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">📁</span>
-                  <h2 className="font-display text-lg font-semibold text-ink">Learning Resources & Presentation Decks</h2>
-                </div>
-                <span className="badge badge-neutral text-xs font-mono">
-                  {course.resources?.length || 0} items
-                </span>
+          {/* Learning Resources */}
+          <div className="p-6 rounded-xl border border-border bg-card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📁</span>
+                <h2 className="font-display text-base font-semibold text-foreground">Course Resources</h2>
               </div>
-
-              {course.resources && course.resources.length > 0 ? (
-                <div className="space-y-3">
-                  {course.resources.map((res, index) => {
-                    const isDrive = isGoogleDriveUrl(res.storageKey);
-                    return (
-                      <div
-                        key={res.id || index}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-surface hover:bg-muted/40 transition-all duration-200 gap-3"
-                      >
-                        <div className="flex items-start gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
-                            {res.type === "PRESENTATION" ? (
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                              </svg>
-                            ) : (
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm text-ink truncate">{res.title}</p>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap text-xs text-muted">
-                              <span className="badge badge-neutral text-[10px] py-0.5">{res.type}</span>
-                              {isDrive && (
-                                <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                  Google Drive Ready
-                                </span>
-                              )}
-                              {res.createdAt && (
-                                <span>&bull; {new Date(res.createdAt).toLocaleDateString()}</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                          {isDrive ? (
-                            <button
-                              onClick={() => handleOpenDocViewer(res)}
-                              className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-sm"
-                            >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                              <span>Preview Deck</span>
-                            </button>
-                          ) : (
-                            <a
-                              href={res.storageKey}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn-secondary text-xs py-1.5 px-3"
-                            >
-                              Download
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted border border-dashed border-border rounded-xl">
-                  <p className="text-sm">No learning resources uploaded for this course yet.</p>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground font-mono">
+                  {course.resources?.length || 0} files
+                </span>
+                {(isOwner || isAdmin) && (
+                  <button
+                    onClick={() => setUploadModalOpen(true)}
+                    className="btn-primary text-xs py-1.5 px-3"
+                  >
+                    + Upload File
+                  </button>
+                )}
+              </div>
             </div>
+
+            {course.resources && course.resources.length > 0 ? (
+              <div className="space-y-2.5">
+                {course.resources.map((res, index) => (
+                  <div
+                    key={res.id || index}
+                    className="flex items-center justify-between p-3.5 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm text-foreground truncate">{res.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                        <span className="uppercase text-[10px] font-semibold">{res.type}</span>
+                        {res.createdAt && (
+                          <span>&bull; {new Date(res.createdAt).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <a
+                      href={res.storageKey}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary text-xs py-1.5 px-3 shrink-0"
+                    >
+                      Open ↗
+                    </a>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-lg text-xs">
+                No learning resources uploaded for this course yet.
+              </div>
+            )}
           </div>
 
           {/* Assessments Section */}
-          <div className="card-shell">
-            <div className="card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">📝</span>
-                  <h2 className="font-display text-lg font-semibold text-ink">Course Assessments</h2>
-                </div>
-                <span className="badge badge-neutral text-xs font-mono">
-                  {course.assessments?.length || 0} assessments
-                </span>
+          <div className="p-6 rounded-xl border border-border bg-card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📝</span>
+                <h2 className="font-display text-base font-semibold text-foreground">Assessments</h2>
               </div>
+              <span className="text-xs text-muted-foreground font-mono">
+                {course.assessments?.length || 0} total
+              </span>
+            </div>
 
-              {course.assessments && course.assessments.length > 0 ? (
-                <div className="space-y-3">
-                  {course.assessments.map((a) => (
-                    <div
-                      key={a.id}
-                      className="p-4 rounded-xl border border-border bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                    >
-                      <div>
-                        <p className="font-semibold text-sm text-ink">{a.title}</p>
-                        <p className="text-xs text-muted mt-1">{a.description}</p>
-                        <div className="flex items-center gap-3 mt-2 text-xs text-muted">
-                          <span>🎯 Total Marks: <strong>{a.totalMarks}</strong></span>
-                          <span>❓ {a.questions?.length || 0} Questions</span>
-                          {a.deadline && (
-                            <span>⏳ Due: {new Date(a.deadline).toLocaleDateString()}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="shrink-0 self-end sm:self-center">
-                        <span className={`badge ${a.status === "PUBLISHED" ? "badge-success" : "badge-neutral"}`}>
-                          {a.status?.toLowerCase()}
-                        </span>
+            {course.assessments && course.assessments.length > 0 ? (
+              <div className="space-y-3">
+                {course.assessments.map((a) => (
+                  <div
+                    key={a.id}
+                    className="p-4 rounded-lg border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div>
+                      <p className="font-medium text-sm text-foreground">{a.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{a.description}</p>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        <span>Total Marks: <strong>{a.totalMarks}</strong></span>
+                        <span>{a.questions?.length || 0} Questions</span>
+                        {a.deadline && (
+                          <span>Due: {new Date(a.deadline).toLocaleDateString()}</span>
+                        )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted border border-dashed border-border rounded-xl">
-                  <p className="text-sm">No assessments assigned yet.</p>
-                </div>
-              )}
-            </div>
+                    <span className={`badge ${a.status === "PUBLISHED" ? "badge-success" : "badge-neutral"} self-start sm:self-center`}>
+                      {a.status?.toLowerCase()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-lg text-xs">
+                No assessments assigned yet.
+              </div>
+            )}
           </div>
 
           {/* Feedback & Reviews Section */}
           {course.feedbacks && course.feedbacks.length > 0 && (
-            <div className="card-shell">
-              <div className="card p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-xl">⭐</span>
-                  <h2 className="font-display text-lg font-semibold text-ink">Student Feedback & Reviews</h2>
-                </div>
-                <div className="space-y-3">
-                  {course.feedbacks.map((f, i) => (
-                    <div key={f.id || i} className="p-4 rounded-xl border border-border bg-surface/50">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-sm text-ink">{f.user?.name || "Verified Trainee"}</span>
-                        <div className="flex text-amber-400 text-sm">
-                          {"★".repeat(f.rating)}{"☆".repeat(5 - f.rating)}
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted leading-relaxed">{f.comment}</p>
+            <div className="p-6 rounded-xl border border-border bg-card">
+              <h2 className="font-display text-base font-semibold text-foreground mb-4">Student Reviews</h2>
+              <div className="space-y-3">
+                {course.feedbacks.map((f, i) => (
+                  <div key={f.id || i} className="p-3.5 rounded-lg border border-border bg-card">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium text-xs text-foreground">{f.user?.name || "Trainee"}</span>
+<div className="flex text-warning text-xs">
+  {"★".repeat(f.rating)}{"☆".repeat(5 - f.rating)}
+</div>
                     </div>
-                  ))}
-                </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{f.comment}</p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
         </div>
 
-        {/* Sidebar: Details, Trainer Profile, Enrollments */}
+        {/* Sidebar */}
         <div className="space-y-6">
-          <div className="card-shell">
-            <div className="card p-5">
-              <h3 className="font-display text-xs text-muted uppercase tracking-wider mb-4 font-semibold">
-                Course Details
-              </h3>
-              <dl className="space-y-3.5 text-sm divide-y divide-border">
-                <div className="flex justify-between pt-1">
-                  <dt className="text-muted">Status</dt>
-                  <dd className="font-medium text-ink capitalize">{course.status?.toLowerCase()}</dd>
-                </div>
-                <div className="flex justify-between pt-3">
-                  <dt className="text-muted">Subject</dt>
-                  <dd className="font-medium text-ink">{course.subject?.name || "General"}</dd>
-                </div>
-                <div className="flex justify-between pt-3">
-                  <dt className="text-muted">Instructor</dt>
-                  <dd className="font-medium text-ink">{course.trainer?.name || "Instructor"}</dd>
-                </div>
-                <div className="flex justify-between pt-3">
-                  <dt className="text-muted">Instructor Email</dt>
-                  <dd className="font-mono text-xs text-ink">{course.trainer?.email || "trainer@capconn.in"}</dd>
-                </div>
-                <div className="flex justify-between pt-3">
-                  <dt className="text-muted">Active Enrollments</dt>
-                  <dd className="font-medium text-ink">{course.enrollments?.length || 0}</dd>
-                </div>
-                <div className="flex justify-between pt-3">
-                  <dt className="text-muted">Published Date</dt>
-                  <dd className="text-ink">
-                    {course.createdAt ? new Date(course.createdAt).toLocaleDateString() : "—"}
-                  </dd>
-                </div>
-              </dl>
-            </div>
+          <div className="p-5 rounded-xl border border-border bg-card">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+              Course Details
+            </h3>
+            <dl className="space-y-3 text-xs divide-y divide-border">
+              <div className="flex justify-between pt-1">
+                <dt className="text-muted-foreground">Status</dt>
+                <dd className="font-medium text-foreground capitalize">{course.status?.toLowerCase()}</dd>
+              </div>
+              <div className="flex justify-between pt-3">
+                <dt className="text-muted-foreground">Subject</dt>
+                <dd className="font-medium text-foreground">{course.subject?.name || "General"}</dd>
+              </div>
+              <div className="flex justify-between pt-3">
+                <dt className="text-muted-foreground">Instructor</dt>
+                <dd className="font-medium text-foreground">{course.trainer?.name || "Instructor"}</dd>
+              </div>
+              <div className="flex justify-between pt-3">
+                <dt className="text-muted-foreground">Instructor Email</dt>
+                <dd className="font-mono text-foreground">{course.trainer?.email || "trainer@capconn.in"}</dd>
+              </div>
+              <div className="flex justify-between pt-3">
+                <dt className="text-muted-foreground">Enrollments</dt>
+                <dd className="font-medium text-foreground">{course.enrollments?.length || 0}</dd>
+              </div>
+              <div className="flex justify-between pt-3">
+                <dt className="text-muted-foreground">Created Date</dt>
+                <dd className="text-foreground">
+                  {course.createdAt ? new Date(course.createdAt).toLocaleDateString() : "—"}
+                </dd>
+              </div>
+            </dl>
           </div>
         </div>
       </div>
 
-      {/* Google Drive Document / Presentation Modal Viewer */}
-      {selectedDoc && (
-        <GoogleDriveViewerModal
-          isOpen={viewerOpen}
-          onClose={() => setViewerOpen(false)}
-          url={selectedDoc.storageKey}
-          title={selectedDoc.title}
-          type={selectedDoc.type}
-        />
-      )}
+      {/* Cloudflare R2 Resource Upload Modal */}
+      <UploadResourceModal
+        isOpen={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        courseId={id}
+        token={authToken}
+        onResourceUploaded={load}
+      />
     </div>
   );
 }
