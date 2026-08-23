@@ -29,7 +29,10 @@ export default function SignInPage() {
         return;
       }
 
-      localStorage.setItem("token", data.data.token);
+      const token = data.data.token;
+      localStorage.setItem("token", token);
+      // Also set cookie so middleware can verify auth on server-side
+      document.cookie = `auth_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
       window.location.href = "/redirect";
     } catch {
       setError("Something went wrong. Please try again.");

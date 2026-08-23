@@ -36,6 +36,8 @@ export function AuthProvider({ children }) {
 
   const signOut = () => {
     localStorage.removeItem("token");
+    // Clear the cookie that middleware reads
+    document.cookie = "auth_token=; path=/; max-age=0; SameSite=Lax";
     setUser(null);
     setIsSignedIn(false);
     window.location.href = "/";

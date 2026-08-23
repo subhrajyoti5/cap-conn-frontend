@@ -1,25 +1,22 @@
 import { NextResponse } from "next/server";
 
-const isPublicRoute = (request) => {
-  const url = request.nextUrl.clone();
-  const path = url.pathname;
-
-  return (
-    path === "/" ||
-    path.startsWith("/sign-in") ||
-    path.startsWith("/sign-up") ||
-    path.startsWith("/pending") ||
-    path.startsWith("/api/webhooks")
-  );
-};
+const PUBLIC_PATHS = ["/", "/sign-in", "/sign-up", "/pending"];
 
 export default function middleware(request) {
-  const token = request.cookies.get("token")?.value || request.headers.get("authorization")?.replace("Bearer ", "");
-  const isAuthenticated = !!token;
+  const { pathname } = request.nextUrl;
 
-  if (!isPublicRoute(request) && !isAuthenticated) {
+  // Allow public routes and Next.js internals
+  const isPublic = PUBLIC_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(p + "/")
+  );
+  if (isPublic) return NextResponse.next();
+
+  // Check cookie (set alongside localStorage on login)
+  const token = request.cookies.get("auth_token")?.value;
+
+  if (!token) {
     const url = new URL("/sign-in", request.url);
-    url.searchParams.set("redirect", request.nextUrl.pathname);
+    url.searchParams.set("redirect", pathname);
     return NextResponse.redirect(url);
   }
 
@@ -27,5 +24,5 @@ export default function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };
