@@ -6,158 +6,340 @@
 
 @layer base {
   :root {
-    --gradient-accent: linear-gradient(135deg, #2d3561 0%, #e8913a 100%);
+    --color-primary: #1A1A2E;
+    --color-accent: #C47A1E;
+    --color-surface: #FAFAF9;
+    --color-surface-alt: #F0EFED;
+    --color-ink: #1A1A2E;
+    --color-muted: #787774;
+    --color-border: #EAEAEA;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
     @apply bg-surface text-ink font-body antialiased;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-size: 0.875rem;
+    line-height: 1.6;
   }
 
-  h1, h2, h3 {
-    @apply font-display;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-ink;
+    line-height: 1.15;
+  }
+
+  h1 { @apply text-display-xl; }
+  h2 { @apply text-display-lg; }
+  h3 { @apply text-display-md; }
+  h4 { @apply text-display-sm; }
+
+  a {
+    @apply text-accent transition-colors duration-fast;
+  }
+
+  a:hover {
+    @apply text-accent-600;
   }
 
   /* Focus visible global style */
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-accent;
+    @apply outline-none ring-2 ring-focus-ring ring-offset-2 ring-offset-surface;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-accent-100 text-accent-900;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border-warm rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted/40;
   }
 }
 
 @layer components {
-  /* Accent gradient bar */
-  .gradient-accent-bar {
-    background: var(--gradient-accent);
+  /* ========================================
+     LAYOUT PRIMITIVES
+  ======================================== */
+
+  /* Page container */
+  .page {
+    @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  /* ---- CARDS ---- */
-  .card {
-    @apply bg-white border border-border-warm rounded-lg;
+  .page-section {
+    @apply py-10 lg:py-14;
   }
 
-  .card-hover {
-    @apply card transition-shadow duration-200 hover:shadow-md;
+  .page-header {
+    @apply mb-8 lg:mb-10;
   }
 
-  /* ---- BUTTONS ---- */
-  /* Primary: the main action on a surface */
+  .page-title {
+    @apply font-display text-display-lg text-ink;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-muted mt-1.5 max-w-2xl;
+  }
+
+  .page-actions {
+    @apply mt-4 flex flex-wrap items-center gap-2;
+  }
+
+  /* ========================================
+     BUTTONS
+  ======================================== */
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium
+      transition-all duration-fast
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface
+      disabled:opacity-40 disabled:pointer-events-none
+      select-none;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Primary: Main action */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-md
-      bg-accent text-white font-medium text-sm
-      transition-all duration-150
-      hover:bg-accent-600
-      active:scale-[0.98]
-      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent
-      disabled:opacity-50 disabled:pointer-events-none;
+    @apply btn px-4 py-2.5 rounded-button
+      bg-ink text-white
+      hover:bg-ink/90 active:scale-[0.98]
+      text-sm;
   }
 
-  /* Secondary: valid alternative, not competing */
+  .btn-primary-lg {
+    @apply btn-primary px-6 py-3 text-base rounded-button-lg;
+  }
+
+  /* Secondary: Alternative action */
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-md
-      border border-border-warm bg-white text-ink font-medium text-sm
-      transition-all duration-150
-      hover:bg-surface-alt
-      active:scale-[0.98]
-      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
-      disabled:opacity-50 disabled:pointer-events-none;
+    @apply btn px-4 py-2.5 rounded-button
+      border border-border-warm bg-white text-ink
+      hover:bg-surface-alt hover:border-muted/30 active:scale-[0.98]
+      text-sm;
   }
 
-  /* Tertiary / Ghost: low-emphasis, escape, navigation */
+  .btn-secondary-lg {
+    @apply btn-secondary px-6 py-3 text-base rounded-button-lg;
+  }
+
+  /* Tertiary / Ghost: Low emphasis */
   .btn-tertiary {
-    @apply inline-flex items-center justify-center px-3 py-1.5 rounded-md
-      text-sm font-medium text-muted
-      transition-colors duration-150
-      hover:text-ink hover:bg-surface-alt
-      active:scale-[0.98]
-      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
-      disabled:opacity-50 disabled:pointer-events-none;
+    @apply btn px-3 py-1.5 rounded-button
+      text-sm text-muted
+      hover:text-ink hover:bg-surface-alt active:scale-[0.98];
   }
 
-  /* Danger: destructive actions */
+  .btn-tertiary-sm {
+    @apply btn-tertiary px-2.5 py-1 text-xs;
+  }
+
+  /* Danger: Destructive */
   .btn-danger {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-md
-      bg-red-600 text-white font-medium text-sm
-      transition-all duration-150
-      hover:bg-red-700
-      active:scale-[0.98]
-      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500
-      disabled:opacity-50 disabled:pointer-events-none;
+    @apply btn px-4 py-2.5 rounded-button
+      bg-red-600 text-white
+      hover:bg-red-700 active:scale-[0.98]
+      text-sm;
   }
 
-  /* Success: positive confirmation */
+  /* Success: Positive confirmation */
   .btn-success {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-md
-      bg-green-700 text-white font-medium text-sm
-      transition-all duration-150
-      hover:bg-green-800
-      active:scale-[0.98]
-      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500
-      disabled:opacity-50 disabled:pointer-events-none;
+    @apply btn px-4 py-2.5 rounded-button
+      bg-green-700 text-white
+      hover:bg-green-800 active:scale-[0.98]
+      text-sm;
   }
 
-  /* ---- FORMS ---- */
+  /* Icon button */
+  .btn-icon {
+    @apply btn p-1.5 rounded-button;
+  }
+
+  .btn-icon-sm {
+    @apply btn p-1 rounded-button;
+  }
+
+  /* Button sizes */
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs rounded-button;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base rounded-button-lg;
+  }
+
+  /* ========================================
+     FORMS
+  ======================================== */
+
   .input {
-    @apply w-full border border-border-warm rounded-lg px-3 py-2 text-sm
-      bg-white text-ink
-      transition-colors duration-150
-      placeholder:text-muted/60
-      focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20
-      disabled:bg-surface-alt disabled:opacity-60;
+    @apply w-full px-3 py-2 rounded-input text-sm
+      border border-border-warm bg-white text-ink
+      placeholder:text-muted/50
+      transition-all duration-fast
+      focus:outline-none focus:border-focus-ring focus:ring-1 focus:ring-focus-ring/20
+      disabled:bg-surface-alt disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .input-lg {
+    @apply input px-4 py-3 text-base;
+  }
+
+  .input-error {
+    @apply input border-red-400 focus:border-red-500 focus:ring-red-500/20;
   }
 
   .textarea {
-    @apply input min-h-[80px] resize-y;
+    @apply input min-h-[100px] resize-y;
   }
 
   .select {
-    @apply input appearance-none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
+    @apply input appearance-none pr-10;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23787774' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.625rem center;
     background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-    padding-right: 2.5rem;
+    background-size: 1.25rem 1.25rem;
   }
 
   .label {
     @apply block text-sm font-medium text-ink mb-1.5;
   }
 
+  .form-field {
+    @apply space-y-1.5;
+  }
+
   .form-error {
-    @apply p-3 rounded-lg bg-red-50 text-red-600 text-sm;
+    @apply text-sm text-red-600;
   }
 
   .form-hint {
-    @apply text-xs text-muted mt-1;
+    @apply text-xs text-muted;
   }
 
-  /* ---- PAGE STRUCTURE ---- */
-  .page-header {
-    @apply mb-8;
+  .form-row {
+    @apply grid gap-4 sm:grid-cols-2;
   }
 
-  .page-title {
-    @apply font-display text-2xl text-primary;
+  /* Checkbox */
+  .checkbox {
+    @apply relative flex items-center gap-2;
   }
 
-  .page-subtitle {
-    @apply text-sm text-muted mt-1;
+  .checkbox input[type="checkbox"] {
+    @apply appearance-none w-4 h-4 rounded-[4px] border border-border-warm bg-white
+      checked:bg-ink checked:border-ink checked:after:content-[''] checked:after:absolute
+      checked:after:left-1.5 checked:after:top-[2px] checked:after:w-[5px] checked:after:h-[9px]
+      checked:after:border-r-2 checked:after:border-b-2 checked:after:border-white
+      checked:after:rotate-45
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2
+      transition-colors duration-fast cursor-pointer;
   }
 
-  /* ---- TABLES & LISTS ---- */
-  .data-row {
-    @apply flex items-center justify-between gap-4 py-3 px-4
-      border-b border-border-warm last:border-b-0
-      transition-colors duration-150 hover:bg-surface-alt/50;
+  /* ========================================
+     CARDS & CONTAINERS (Double Bezel Pattern)
+  ======================================== */
+
+  /* Base card - inner content */
+  .card {
+    @apply bg-white rounded-card border border-border-warm;
   }
 
+  .card-lg {
+    @apply card rounded-card-lg;
+  }
+
+  /* Double bezel: outer shell + inner card */
+  .card-shell {
+    @apply bg-surface border border-border-warm rounded-card-lg p-[1px];
+  }
+
+  .card-shell-lg {
+    @apply card-shell rounded-[1rem] p-[1.5px];
+  }
+
+  /* Interactive card */
+  .card-interactive {
+    @apply card transition-all duration-normal
+      hover:shadow-card-hover hover:border-muted/30;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .card-padded {
+    @apply card p-5 sm:p-6;
+  }
+
+  .card-padded-lg {
+    @apply card-lg p-6 sm:p-8;
+  }
+
+  /* ========================================
+     TABLES & DATA LISTS
+  ======================================== */
+
+  .table-container {
+    @apply overflow-x-auto border border-border-warm rounded-card;
+  }
+
+  .table {
+    @apply w-full text-sm;
+  }
+
+  .table th {
+    @apply px-4 py-3 text-left font-medium text-xs uppercase tracking-wider text-muted bg-surface-alt border-b border-border-warm;
+  }
+
+  .table td {
+    @apply px-4 py-3 border-b border-border-warm/50 text-ink;
+  }
+
+  .table tbody tr {
+    @apply transition-colors duration-fast hover:bg-surface-alt/50;
+  }
+
+  .table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  /* Data list (non-table) */
   .data-list {
-    @apply bg-white border border-border-warm rounded-lg overflow-hidden;
+    @apply bg-white border border-border-warm rounded-card overflow-hidden;
   }
 
-  /* ---- STATUS BADGES ---- */
+  .data-row {
+    @apply flex items-center justify-between gap-4 px-4 py-3
+      border-b border-border-warm last:border-b-0
+      transition-colors duration-fast hover:bg-surface-alt/50;
+  }
+
+  .data-row-compact {
+    @apply data-row py-2.5;
+  }
+
+  /* ========================================
+     BADGES & STATUS
+  ======================================== */
+
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wider;
   }
 
   .badge-neutral {
@@ -184,38 +366,87 @@
     @apply badge bg-accent-50 text-accent-700;
   }
 
-  /* ---- NAVIGATION ---- */
+  .badge-outline {
+    @apply badge border border-border-warm bg-transparent text-muted hover:bg-surface-alt;
+  }
+
+  /* ========================================
+     NAVIGATION
+  ======================================== */
+
   .nav-link {
-    @apply flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium
-      text-muted transition-colors duration-150
+    @apply flex items-center gap-2.5 px-3 py-2 rounded-button text-sm font-medium
+      text-muted transition-colors duration-fast
       hover:text-ink hover:bg-surface-alt;
   }
 
   .nav-link-active {
-    @apply nav-link text-ink bg-surface-alt;
+    @apply nav-link text-ink bg-surface-alt font-medium;
   }
 
-  /* ---- EMPTY STATES ---- */
+  .nav-link-active::before {
+    @apply content-[''] absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-accent rounded-r-full;
+  }
+
+  /* ========================================
+     EMPTY STATES
+  ======================================== */
+
   .empty-state {
-    @apply text-center py-16 px-4;
+    @apply text-center py-12 lg:py-16 px-4;
+  }
+
+  .empty-state-icon {
+    @apply w-12 h-12 mx-auto mb-4 text-muted/40;
   }
 
   .empty-state-title {
-    @apply font-display text-lg text-ink mb-1;
+    @apply font-display text-lg text-ink mb-1.5;
   }
 
   .empty-state-desc {
-    @apply text-sm text-muted max-w-sm mx-auto;
+    @apply text-sm text-muted max-w-sm mx-auto mb-6;
   }
 
-  /* ---- LOADING ---- */
+  .empty-state-action {
+    @apply mt-4 inline-flex;
+  }
+
+  /* ========================================
+     LOADING STATES
+  ======================================== */
+
   .skeleton {
     @apply animate-pulse bg-surface-alt rounded;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* ---- STAT CARDS ---- */
+  .skeleton-text {
+    @apply skeleton h-4 w-full;
+  }
+
+  .skeleton-text-short {
+    @apply skeleton-text w-3/4;
+  }
+
+  .skeleton-title {
+    @apply skeleton h-6 w-1/3;
+  }
+
+  .skeleton-card {
+    @apply card p-5 space-y-3;
+  }
+
+  .skeleton-avatar {
+    @apply skeleton w-10 h-10 rounded-full;
+  }
+
+  /* ========================================
+     STAT CARDS
+  ======================================== */
+
   .stat-card {
-    @apply card p-5;
+    @apply card-shell p-5;
   }
 
   .stat-label {
@@ -223,6 +454,169 @@
   }
 
   .stat-value {
-    @apply text-3xl font-display text-primary;
+    @apply text-3xl font-display text-ink;
+  }
+
+  .stat-trend {
+    @apply text-xs font-medium mt-1.5 flex items-center gap-1;
+  }
+
+  .stat-trend-up {
+    @apply stat-trend text-green-600;
+  }
+
+  .stat-trend-down {
+    @apply stat-trend text-red-600;
+  }
+
+  /* ========================================
+     DROPDOWN / POPOVER
+  ======================================== */
+
+  .dropdown {
+    @apply absolute right-0 top-full z-50 mt-1.5 min-w-[160px] 
+      bg-white border border-border-warm rounded-card-lg shadow-modal
+      animate-in fade-in-0 zoom-in-95 duration-fast;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .dropdown-item {
+    @apply flex items-center gap-2 w-full px-3 py-2 text-sm text-ink
+      hover:bg-surface-alt transition-colors duration-fast
+      focus-visible:outline-none focus-visible:bg-surface-alt;
+  }
+
+  .dropdown-divider {
+    @apply border-t border-border-warm my-1;
+  }
+
+  /* ========================================
+     MODAL / DIALOG
+  ======================================== */
+
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/40 backdrop-blur-sm z-50
+      animate-in fade-in-0 duration-normal;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .modal-content {
+    @apply fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50
+      w-full max-w-lg bg-white rounded-card-lg shadow-modal p-6 sm:p-8
+      animate-in fade-in-0 zoom-in-95 duration-normal;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .modal-header {
+    @apply mb-6;
+  }
+
+  .modal-title {
+    @apply font-display text-xl text-ink;
+  }
+
+  .modal-body {
+    @apply space-y-4;
+  }
+
+  .modal-footer {
+    @apply mt-6 flex justify-end gap-3;
+  }
+
+  /* ========================================
+     TABS
+  ======================================== */
+
+  .tabs {
+    @apply flex gap-1 bg-surface-alt p-1 rounded-button;
+  }
+
+  .tab {
+    @apply px-3 py-1.5 text-sm font-medium rounded-[calc(0.375rem-2px)]
+      text-muted hover:text-ink transition-colors duration-fast;
+  }
+
+  .tab-active {
+    @apply tab bg-white text-ink shadow-[0_1px_2px_rgba(0,0,0,0.05)];
+  }
+
+  /* ========================================
+     TOOLTIP
+  ======================================== */
+
+  .tooltip {
+    @apply absolute z-50 px-2 py-1.5 text-xs font-medium text-white bg-ink rounded-button
+      animate-in fade-in-0 zoom-in-95 duration-fast;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* ========================================
+     AVATAR
+  ======================================== */
+
+  .avatar {
+    @apply inline-flex items-center justify-center rounded-full bg-primary-100 text-primary font-medium;
+  }
+
+  .avatar-sm { @apply avatar w-8 h-8 text-xs; }
+  .avatar-md { @apply avatar w-10 h-10 text-sm; }
+  .avatar-lg { @apply avatar w-12 h-12 text-base; }
+
+  .avatar-img {
+    @apply w-full h-full rounded-full object-cover;
+  }
+
+  /* ========================================
+     DIVIDER
+  ======================================== */
+
+  .divider {
+    @apply border-t border-border-warm;
+  }
+
+  .divider-vertical {
+    @apply border-l border-border-warm h-6;
+  }
+
+  /* ========================================
+     UTILITIES
+  ======================================== */
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-in {
+    animation: animateIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes animateIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Staggered animation delays */
+  .stagger-1 { animation-delay: 60ms; }
+  .stagger-2 { animation-delay: 120ms; }
+  .stagger-3 { animation-delay: 180ms; }
+  .stagger-4 { animation-delay: 240ms; }
+  .stagger-5 { animation-delay: 300ms; }
+  .stagger-6 { animation-delay: 360ms; }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

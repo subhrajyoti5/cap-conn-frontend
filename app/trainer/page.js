@@ -27,11 +27,13 @@ export default function TrainerDashboardPage() {
 
   if (!data) {
     return (
-      <div className="animate-pulse space-y-6">
-        <div className="h-8 w-48 bg-surface-alt rounded" />
+      <div className="space-y-6 animate-in stagger-1">
+        <div className="skeleton h-8 w-48" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="stat-card h-24" />
+            <div key={i} className="card-shell">
+              <div className="card p-5 skeleton h-24" />
+            </div>
           ))}
         </div>
       </div>
@@ -39,28 +41,34 @@ export default function TrainerDashboardPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-8 animate-in stagger-1">
       <div className="page-header">
         <h1 className="page-title">Dashboard</h1>
         <p className="page-subtitle">Your teaching overview</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="stat-card">
-          <p className="stat-label">Courses</p>
-          <p className="stat-value">{data.courses}</p>
+        <div className="card-shell">
+          <div className="card p-5">
+            <p className="stat-label">Courses</p>
+            <p className="stat-value">{data.courses}</p>
+          </div>
         </div>
-        <div className="stat-card">
-          <p className="stat-label">Total Trainees</p>
-          <p className="stat-value">{data.totalTrainees}</p>
+        <div className="card-shell">
+          <div className="card p-5">
+            <p className="stat-label">Total Trainees</p>
+            <p className="stat-value">{data.totalTrainees}</p>
+          </div>
         </div>
-        <div className="stat-card">
-          <p className="stat-label">Pending to Grade</p>
-          <p className="stat-value">{data.pendingToGrade}</p>
+        <div className="card-shell">
+          <div className="card p-5">
+            <p className="stat-label">Pending to Grade</p>
+            <p className="stat-value">{data.pendingToGrade}</p>
+          </div>
         </div>
       </div>
 
-      <div className="mt-8">
+      <div>
         <h2 className="font-display text-lg text-ink mb-4">Quick Links</h2>
         <div className="flex flex-wrap gap-3">
           <Link href="/courses" className="btn-secondary">

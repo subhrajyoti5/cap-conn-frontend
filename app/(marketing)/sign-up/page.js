@@ -54,11 +54,13 @@ export default function SignUpPage() {
 
   if (!role) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 bg-surface">
+      <div className="min-h-screen flex items-center justify-center bg-surface px-4 py-12">
         <div className="w-full max-w-lg">
-          <div className="text-center mb-8">
-            <div className="w-10 h-10 rounded-lg gradient-accent-bar mx-auto mb-4" />
-            <h1 className="font-display text-display-md text-primary mb-2">
+          <div className="text-center mb-10">
+            <div className="w-12 h-12 rounded-card-lg bg-ink flex items-center justify-center mx-auto mb-4">
+              <span className="text-white font-display text-xl font-bold">C</span>
+            </div>
+            <h1 className="font-display text-display-md text-ink mb-2">
               Create your account
             </h1>
             <p className="text-muted text-sm">
@@ -71,17 +73,16 @@ export default function SignUpPage() {
               <button
                 key={r.value}
                 onClick={() => setRole(r.value)}
-                className="group text-left p-5 bg-white border border-border-warm rounded-xl
-                  transition-all duration-200
-                  hover:border-accent hover:shadow-md hover:-translate-y-0.5
-                  focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="card-shell group"
               >
-                <p className="font-display text-lg text-ink mb-1 group-hover:text-primary transition-colors">
-                  {r.label}
-                </p>
-                <p className="text-xs text-muted leading-relaxed">
-                  {r.description}
-                </p>
+                <div className="card p-5 text-left h-full group-hover:border-accent/30 transition-colors duration-normal">
+                  <p className="font-display text-lg text-ink mb-1 group-hover:text-primary transition-colors">
+                    {r.label}
+                  </p>
+                  <p className="text-xs text-muted leading-relaxed">
+                    {r.description}
+                  </p>
+                </div>
               </button>
             ))}
           </div>
@@ -98,14 +99,14 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex-1 flex items-center justify-center p-4 bg-surface">
+    <div className="min-h-screen flex items-center justify-center bg-surface px-4 py-12">
       <div className="w-full max-w-md">
         <button
           onClick={() => setRole(null)}
-          className="text-sm text-muted hover:text-ink mb-6 inline-flex items-center gap-1 transition-colors"
+          className="btn-tertiary mb-6"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
           </svg>
           Back to role selection
         </button>
@@ -114,64 +115,66 @@ export default function SignUpPage() {
           <p className="text-xs font-mono text-accent uppercase tracking-wider mb-1">
             Signing up as
           </p>
-          <p className="font-display text-xl text-primary">
+          <p className="font-display text-xl text-ink">
             {ROLES.find((r) => r.value === role)?.label}
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-border-warm rounded-xl p-6 shadow-sm space-y-4"
+          className="card-shell"
         >
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-              {error}
+          <div className="card p-6 space-y-4">
+            {error && (
+              <div className="form-error p-3 rounded-button bg-red-50 text-red-600 text-sm">
+                {error}
+              </div>
+            )}
+            <div className="form-field">
+              <label className="label" htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="input"
+                placeholder="you@example.com"
+              />
             </div>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            />
+            <div className="form-field">
+              <label className="label" htmlFor="name">Name</label>
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="input"
+                placeholder="Your name"
+              />
+            </div>
+            <div className="form-field">
+              <label className="label" htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="input"
+                placeholder="\u2022\u2022\u2022\u2022\u2022\u2022"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full mt-2"
+            >
+              {loading ? "Creating account\u2026" : "Create Account"}
+            </button>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1">
-              Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full btn-primary py-2.5 disabled:opacity-50"
-          >
-            {loading ? "Creating account..." : "Create Account"}
-          </button>
         </form>
 
         <p className="text-center text-xs text-muted mt-8">

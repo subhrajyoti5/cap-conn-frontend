@@ -11,7 +11,7 @@ export function AppShell({ children }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="flex flex-col h-screen bg-surface">
+    <div className="flex flex-col min-h-screen bg-surface">
       <Navbar onMenuClick={() => setMobileNavOpen(true)} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
@@ -19,8 +19,10 @@ export function AppShell({ children }) {
           mobileOpen={mobileNavOpen}
           onMobileClose={() => setMobileNavOpen(false)}
         />
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8">
-          {children}
+        <main className="flex-1 overflow-y-auto">
+          <div className="page">
+            <div className="page-section">{children}</div>
+          </div>
         </main>
       </div>
     </div>

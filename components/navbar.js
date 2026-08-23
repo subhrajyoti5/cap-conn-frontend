@@ -7,52 +7,64 @@ export function Navbar({ onMenuClick }) {
   const { isSignedIn, signOut, user } = useAuth();
 
   return (
-    <header className="flex items-center justify-between h-14 px-4 lg:px-6 border-b border-border-warm bg-white shrink-0">
-      <div className="flex items-center gap-3">
-        {isSignedIn && onMenuClick && (
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden p-1.5 rounded-md hover:bg-surface-alt transition-colors"
-            aria-label="Open navigation"
-          >
-            <svg className="w-5 h-5 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-          </button>
-        )}
-        <Link href="/" className="flex items-center gap-2">
-          <span className="w-7 h-7 rounded-md gradient-accent-bar flex items-center justify-center">
-            <span className="text-white font-display text-sm font-bold">C</span>
-          </span>
-          <span className="font-display text-lg text-primary hidden sm:inline">
-            Capacity Connect
-          </span>
-        </Link>
-      </div>
-
-      <div className="flex items-center gap-3">
-        {!isSignedIn ? (
-          <>
-            <Link href="/sign-in" className="btn-secondary text-sm">
-              Sign In
-            </Link>
-            <Link href="/sign-up" className="btn-primary text-sm">
-              Sign Up
-            </Link>
-          </>
-        ) : (
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted hidden md:inline max-w-[200px] truncate">
-              {user?.email}
-            </span>
+    <header className="sticky top-0 z-40 h-14 border-b border-border-warm bg-white/80 backdrop-blur-sm">
+      <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3">
+          {isSignedIn && onMenuClick && (
             <button
-              onClick={signOut}
-              className="btn-tertiary border border-border-warm"
+              onClick={onMenuClick}
+              className="lg:hidden btn-icon text-muted hover:text-ink"
+              aria-label="Open navigation"
             >
-              Sign Out
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
             </button>
-          </div>
-        )}
+          )}
+          <Link href="/" className="flex items-center gap-2">
+            <span className="w-8 h-8 rounded-button bg-ink flex items-center justify-center">
+              <span className="text-white font-display text-base font-bold">C</span>
+            </span>
+            <span className="font-display text-lg text-ink hidden sm:inline">
+              Capacity Connect
+            </span>
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {!isSignedIn ? (
+            <>
+              <Link href="/sign-in" className="btn-tertiary hidden sm:inline-flex">
+                Sign In
+              </Link>
+              <Link href="/sign-up" className="btn-primary">
+                <span className="hidden sm:inline">Sign Up</span>
+                <span className="sm:hidden">Get Started</span>
+              </Link>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted hidden md:inline max-w-[180px] truncate">
+                {user?.email}
+              </span>
+              <button
+                onClick={signOut}
+                className="btn-tertiary border border-border-warm hidden sm:inline-flex"
+              >
+                Sign Out
+              </button>
+              <button
+                onClick={signOut}
+                className="btn-icon text-muted sm:hidden"
+                aria-label="Sign out"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

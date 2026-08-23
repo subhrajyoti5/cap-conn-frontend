@@ -47,18 +47,24 @@ export default function AdminSubjectsPage() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-8 w-32 bg-surface-alt rounded" />
-        <div className="card h-24" />
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="card h-16" />
-        ))}
+      <div className="space-y-6 animate-in stagger-1">
+        <div className="skeleton h-8 w-32" />
+        <div className="card-shell">
+          <div className="card p-4 skeleton h-24" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card-shell">
+              <div className="card p-4 skeleton h-16" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="space-y-8 animate-in stagger-1">
       <div className="page-header">
         <h1 className="page-title">Subjects</h1>
         <p className="page-subtitle">Manage course subjects and categories</p>
@@ -66,46 +72,52 @@ export default function AdminSubjectsPage() {
 
       <form
         onSubmit={handleCreate}
-        className="card p-4 mb-6 flex gap-3 flex-wrap items-end"
+        className="card-shell"
       >
-        <div className="flex-1 min-w-[160px]">
-          <label className="label">Name</label>
-          <input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            required
-            className="input"
-            placeholder="e.g. Mathematics"
-          />
+        <div className="card p-4 flex gap-3 flex-wrap items-end">
+          <div className="form-field flex-1 min-w-[160px]">
+            <label className="label">Name</label>
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              required
+              className="input"
+              placeholder="e.g. Mathematics"
+            />
+          </div>
+          <div className="form-field flex-1 min-w-[200px]">
+            <label className="label">Description (optional)</label>
+            <input
+              value={newDesc}
+              onChange={(e) => setNewDesc(e.target.value)}
+              className="input"
+              placeholder="Short description"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={creating}
+            className="btn-primary shrink-0"
+          >
+            {creating ? "Creating&hellip;" : "Add Subject"}
+          </button>
+          {error && <p className="w-full text-sm text-red-600 mt-1">{error}</p>}
         </div>
-        <div className="flex-1 min-w-[200px]">
-          <label className="label">Description (optional)</label>
-          <input
-            value={newDesc}
-            onChange={(e) => setNewDesc(e.target.value)}
-            className="input"
-            placeholder="Short description"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={creating}
-          className="btn-primary"
-        >
-          {creating ? "Creating..." : "Add Subject"}
-        </button>
-        {error && <p className="w-full text-sm text-red-600 mt-1">{error}</p>}
       </form>
 
       {subjects.length === 0 ? (
         <div className="empty-state">
+          <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
+          </svg>
           <p className="empty-state-title">No subjects yet</p>
           <p className="empty-state-desc">Add a subject to categorize courses.</p>
         </div>
       ) : (
         <ul className="data-list divide-y divide-border-warm">
-          {subjects.map((s) => (
-            <li key={s.id} className="py-3 px-4">
+          {subjects.map((s, index) => (
+            <li key={s.id} className="py-3 px-4" style={{ animationDelay: `${index * 40}ms` }}>
               <p className="font-medium text-sm text-ink">{s.name}</p>
               {s.description && (
                 <p className="text-sm text-muted mt-0.5">{s.description}</p>
