@@ -50,7 +50,7 @@ export default function SignInPage() {
           <h1 className="font-display text-display-md text-ink mb-2">
             Welcome back
           </h1>
-          <p className="text-muted text-sm">
+          <p className="text-white text-sm">
             Sign in to Capacity Connect
           </p>
         </div>
