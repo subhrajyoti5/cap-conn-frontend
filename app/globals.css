@@ -11,49 +11,218 @@
 
   body {
     @apply bg-surface text-ink font-body antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  h1,
-  h2,
-  h3 {
+  h1, h2, h3 {
     @apply font-display;
+  }
+
+  /* Focus visible global style */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
   }
 }
 
 @layer components {
+  /* Accent gradient bar */
   .gradient-accent-bar {
     background: var(--gradient-accent);
   }
 
+  /* ---- CARDS ---- */
   .card {
-    @apply bg-white border border-border-warm rounded-lg p-5 shadow-sm;
+    @apply bg-white border border-border-warm rounded-lg;
   }
 
   .card-hover {
     @apply card transition-shadow duration-200 hover:shadow-md;
   }
 
+  /* ---- BUTTONS ---- */
+  /* Primary: the main action on a surface */
   .btn-primary {
     @apply inline-flex items-center justify-center px-4 py-2 rounded-md
       bg-accent text-white font-medium text-sm
-      transition-colors duration-150
-      hover:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
+      transition-all duration-150
+      hover:bg-accent-600
+      active:scale-[0.98]
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent
+      disabled:opacity-50 disabled:pointer-events-none;
   }
 
+  /* Secondary: valid alternative, not competing */
   .btn-secondary {
     @apply inline-flex items-center justify-center px-4 py-2 rounded-md
       border border-border-warm bg-white text-ink font-medium text-sm
-      transition-colors duration-150
-      hover:bg-surface-alt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
+      transition-all duration-150
+      hover:bg-surface-alt
+      active:scale-[0.98]
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
+      disabled:opacity-50 disabled:pointer-events-none;
   }
 
+  /* Tertiary / Ghost: low-emphasis, escape, navigation */
+  .btn-tertiary {
+    @apply inline-flex items-center justify-center px-3 py-1.5 rounded-md
+      text-sm font-medium text-muted
+      transition-colors duration-150
+      hover:text-ink hover:bg-surface-alt
+      active:scale-[0.98]
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
+      disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  /* Danger: destructive actions */
+  .btn-danger {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md
+      bg-red-600 text-white font-medium text-sm
+      transition-all duration-150
+      hover:bg-red-700
+      active:scale-[0.98]
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500
+      disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  /* Success: positive confirmation */
+  .btn-success {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md
+      bg-green-700 text-white font-medium text-sm
+      transition-all duration-150
+      hover:bg-green-800
+      active:scale-[0.98]
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500
+      disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  /* ---- FORMS ---- */
+  .input {
+    @apply w-full border border-border-warm rounded-lg px-3 py-2 text-sm
+      bg-white text-ink
+      transition-colors duration-150
+      placeholder:text-muted/60
+      focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20
+      disabled:bg-surface-alt disabled:opacity-60;
+  }
+
+  .textarea {
+    @apply input min-h-[80px] resize-y;
+  }
+
+  .select {
+    @apply input appearance-none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-ink mb-1.5;
+  }
+
+  .form-error {
+    @apply p-3 rounded-lg bg-red-50 text-red-600 text-sm;
+  }
+
+  .form-hint {
+    @apply text-xs text-muted mt-1;
+  }
+
+  /* ---- PAGE STRUCTURE ---- */
+  .page-header {
+    @apply mb-8;
+  }
+
+  .page-title {
+    @apply font-display text-2xl text-primary;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-muted mt-1;
+  }
+
+  /* ---- TABLES & LISTS ---- */
+  .data-row {
+    @apply flex items-center justify-between gap-4 py-3 px-4
+      border-b border-border-warm last:border-b-0
+      transition-colors duration-150 hover:bg-surface-alt/50;
+  }
+
+  .data-list {
+    @apply bg-white border border-border-warm rounded-lg overflow-hidden;
+  }
+
+  /* ---- STATUS BADGES ---- */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-neutral {
+    @apply badge bg-surface-alt text-muted;
+  }
+
+  .badge-success {
+    @apply badge bg-green-50 text-green-700;
+  }
+
+  .badge-warning {
+    @apply badge bg-amber-50 text-amber-700;
+  }
+
+  .badge-danger {
+    @apply badge bg-red-50 text-red-700;
+  }
+
+  .badge-info {
+    @apply badge bg-primary-50 text-primary;
+  }
+
+  .badge-accent {
+    @apply badge bg-accent-50 text-accent-700;
+  }
+
+  /* ---- NAVIGATION ---- */
   .nav-link {
-    @apply flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium
+    @apply flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium
       text-muted transition-colors duration-150
       hover:text-ink hover:bg-surface-alt;
   }
 
   .nav-link-active {
     @apply nav-link text-ink bg-surface-alt;
+  }
+
+  /* ---- EMPTY STATES ---- */
+  .empty-state {
+    @apply text-center py-16 px-4;
+  }
+
+  .empty-state-title {
+    @apply font-display text-lg text-ink mb-1;
+  }
+
+  .empty-state-desc {
+    @apply text-sm text-muted max-w-sm mx-auto;
+  }
+
+  /* ---- LOADING ---- */
+  .skeleton {
+    @apply animate-pulse bg-surface-alt rounded;
+  }
+
+  /* ---- STAT CARDS ---- */
+  .stat-card {
+    @apply card p-5;
+  }
+
+  .stat-label {
+    @apply text-xs font-mono text-muted uppercase tracking-wider mb-1.5;
+  }
+
+  .stat-value {
+    @apply text-3xl font-display text-primary;
   }
 }

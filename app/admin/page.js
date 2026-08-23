@@ -12,29 +12,50 @@ export default function AdminDashboardPage() {
     async function load() {
       const token = await getToken();
       if (!token) return;
-      const res = await apiFetch("/dashboard/admin", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setData(res.data);
+      try {
+        const res = await apiFetch("/dashboard/admin", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setData(res.data);
+      } catch (e) {
+        console.error(e);
+      }
     }
     load();
   }, [getToken]);
 
-  if (!data) return <p className="p-8">Loading...</p>;
+  if (!data) {
+    return (
+      <div className="animate-pulse space-y-6">
+        <div className="h-8 w-48 bg-surface-alt rounded" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="stat-card h-24" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const stats = Object.entries(data).map(([key, value]) => ({
+    label: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
+    value,
+  }));
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {Object.entries(data).map(([key, value]) => (
-          <div key={key} className="border p-4 rounded">
-            <p className="text-sm text-gray-600 capitalize">
-              {key.replace(/([A-Z])/g, " $1")}
-            </p>
-            <p className="text-2xl font-bold">{value}</p>
+    <div>
+      <div className="page-header">
+        <h1 className="page-title">Dashboard</h1>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s) => (
+          <div key={s.label} className="stat-card">
+            <p className="stat-label">{s.label}</p>
+            <p className="stat-value">{s.value}</p>
           </div>
         ))}
       </div>
-    </main>
+    </div>
   );
 }

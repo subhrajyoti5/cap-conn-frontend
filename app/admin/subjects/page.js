@@ -45,62 +45,75 @@ export default function AdminSubjectsPage() {
     }
   }
 
-  if (loading) return <p className="p-8">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 w-32 bg-surface-alt rounded" />
+        <div className="card h-24" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="card h-16" />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Subjects</h1>
+    <div>
+      <div className="page-header">
+        <h1 className="page-title">Subjects</h1>
+        <p className="page-subtitle">Manage course subjects and categories</p>
+      </div>
 
       <form
         onSubmit={handleCreate}
-        className="mb-8 p-4 border border-border-warm rounded-lg flex gap-3 flex-wrap items-end"
+        className="card p-4 mb-6 flex gap-3 flex-wrap items-end"
       >
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-sm font-medium text-ink mb-1">Name</label>
+          <label className="label">Name</label>
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             required
-            className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="input"
             placeholder="e.g. Mathematics"
           />
         </div>
         <div className="flex-1 min-w-[200px]">
-          <label className="block text-sm font-medium text-ink mb-1">Description (optional)</label>
+          <label className="label">Description (optional)</label>
           <input
             value={newDesc}
             onChange={(e) => setNewDesc(e.target.value)}
-            className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="input"
             placeholder="Short description"
           />
         </div>
         <button
           type="submit"
           disabled={creating}
-          className="btn-primary text-sm"
+          className="btn-primary"
         >
-          {creating ? "Creating..." : "+ Add Subject"}
+          {creating ? "Creating..." : "Add Subject"}
         </button>
-        {error && <p className="w-full text-sm text-red-600">{error}</p>}
+        {error && <p className="w-full text-sm text-red-600 mt-1">{error}</p>}
       </form>
 
       {subjects.length === 0 ? (
-        <p className="text-muted">No subjects yet.</p>
+        <div className="empty-state">
+          <p className="empty-state-title">No subjects yet</p>
+          <p className="empty-state-desc">Add a subject to categorize courses.</p>
+        </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="data-list divide-y divide-border-warm">
           {subjects.map((s) => (
-            <li
-              key={s.id}
-              className="border border-border-warm rounded-lg p-4"
-            >
-              <p className="font-semibold">{s.name}</p>
+            <li key={s.id} className="py-3 px-4">
+              <p className="font-medium text-sm text-ink">{s.name}</p>
               {s.description && (
-                <p className="text-sm text-muted mt-1">{s.description}</p>
+                <p className="text-sm text-muted mt-0.5">{s.description}</p>
               )}
             </li>
           ))}
         </ul>
       )}
-    </main>
+    </div>
   );
 }

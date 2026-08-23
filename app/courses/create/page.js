@@ -5,66 +5,107 @@ import { useAuth } from "@/features/auth/auth-context";
 import { useRouter } from "next/navigation";
 import { createCourse } from "@/features/courses/api/courses.api";
 import { listSubjects } from "@/features/subjects/api/subjects.api";
+import Link from "next/link";
 
 export default function CreateCoursePage() {
   const { getToken } = useAuth();
   const router = useRouter();
   const [subjects, setSubjects] = useState([]);
   const [form, setForm] = useState({ title: "", description: "", subjectId: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function load() {
       const token = await getToken();
       if (!token) return;
-      const res = await listSubjects(token);
-      setSubjects(res.data || []);
+      try {
+        const res = await listSubjects(token);
+        setSubjects(res.data || []);
+      } catch (e) {
+        console.error(e);
+      }
     }
     load();
   }, [getToken]);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const token = await getToken();
-    if (!token) return;
-    await createCourse(token, form);
-    router.push("/courses");
+    setError("");
+    setSubmitting(true);
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await createCourse(token, form);
+      router.push("/courses");
+    } catch (err) {
+      setError(err.message || "Failed to create course");
+      setSubmitting(false);
+    }
   }
 
   return (
-    <main className="p-8 max-w-xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Create Course</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          className="w-full border p-2 rounded"
-          placeholder="Title"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-          required
-        />
-        <textarea
-          className="w-full border p-2 rounded"
-          placeholder="Description"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          required
-        />
-        <select
-          className="w-full border p-2 rounded"
-          value={form.subjectId}
-          onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
-          required
-        >
-          <option value="">Select Subject</option>
-          {subjects.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-        <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">
-          Create
-        </button>
+    <div className="max-w-xl">
+      <div className="page-header">
+        <h1 className="page-title">Create Course</h1>
+        <p className="page-subtitle">Add a new course to the platform</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="card p-6 space-y-5">
+        {error && <div className="form-error">{error}</div>}
+
+        <div>
+          <label className="label" htmlFor="title">Title</label>
+          <input
+            id="title"
+            className="input"
+            placeholder="Course title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            required
+          />
+        </div>
+
+        <div>
+          <label className="label" htmlFor="description">Description</label>
+          <textarea
+            id="description"
+            className="textarea"
+            placeholder="What will students learn?"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            required
+            rows={4}
+          />
+        </div>
+
+        <div>
+          <label className="label" htmlFor="subject">Subject</label>
+          <select
+            id="subject"
+            className="select"
+            value={form.subjectId}
+            onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
+            required
+          >
+            <option value="">Select a subject</option>
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-3 pt-2">
+          <button type="submit" disabled={submitting} className="btn-primary">
+            {submitting ? "Creating..." : "Create Course"}
+          </button>
+          <Link href="/courses" className="btn-secondary">
+            Cancel
+          </Link>
+        </div>
       </form>
-    </main>
+    </div>
   );
 }

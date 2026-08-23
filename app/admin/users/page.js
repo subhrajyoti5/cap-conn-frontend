@@ -7,12 +7,20 @@ import { listPendingUsers, approveUser, rejectUser } from "@/features/users/api/
 export default function AdminUsersPage() {
   const { getToken } = useAuth();
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionId, setActionId] = useState(null);
 
   async function load() {
     const token = await getToken();
     if (!token) return;
-    const res = await listPendingUsers(token);
-    setUsers(res.data || []);
+    try {
+      const res = await listPendingUsers(token);
+      setUsers(res.data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -22,48 +30,83 @@ export default function AdminUsersPage() {
   async function handleApprove(id) {
     const token = await getToken();
     if (!token) return;
-    await approveUser(token, id);
-    load();
+    setActionId(id);
+    try {
+      await approveUser(token, id);
+      load();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionId(null);
+    }
   }
 
   async function handleReject(id) {
     const token = await getToken();
     if (!token) return;
-    await rejectUser(token, id, "");
-    load();
+    setActionId(id);
+    try {
+      await rejectUser(token, id, "");
+      load();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionId(null);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 w-48 bg-surface-alt rounded" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="card h-20" />
+        ))}
+      </div>
+    );
   }
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Pending Approvals</h1>
+    <div>
+      <div className="page-header">
+        <h1 className="page-title">Pending Approvals</h1>
+        <p className="page-subtitle">Review and approve new user registrations</p>
+      </div>
+
       {users.length === 0 ? (
-        <p>No pending users.</p>
+        <div className="empty-state">
+          <p className="empty-state-title">No pending users</p>
+          <p className="empty-state-desc">All user registrations have been reviewed.</p>
+        </div>
       ) : (
-        <ul className="space-y-4">
+        <ul className="data-list">
           {users.map((u) => (
-            <li key={u.id} className="border p-4 rounded flex justify-between items-center">
-              <div>
-                <p className="font-bold">{u.email}</p>
-                <p className="text-sm text-gray-600">Role: {u.role}</p>
+            <li key={u.id} className="data-row">
+              <div className="min-w-0">
+                <p className="font-medium text-sm text-ink">{u.name || u.email}</p>
+                <p className="text-sm text-muted">{u.email}</p>
+                <span className="badge badge-info mt-1">{u.role?.toLowerCase()}</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => handleApprove(u.id)}
-                  className="px-3 py-1 bg-green-600 text-white rounded"
+                  disabled={actionId === u.id}
+                  className="btn-success text-sm"
                 >
-                  Approve
+                  {actionId === u.id ? "..." : "Approve"}
                 </button>
                 <button
                   onClick={() => handleReject(u.id)}
-                  className="px-3 py-1 bg-red-600 text-white rounded"
+                  disabled={actionId === u.id}
+                  className="btn-danger text-sm"
                 >
-                  Reject
+                  {actionId === u.id ? "..." : "Reject"}
                 </button>
               </div>
             </li>
           ))}
         </ul>
       )}
-    </main>
+    </div>
   );
 }

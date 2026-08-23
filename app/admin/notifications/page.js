@@ -25,36 +25,53 @@ export default function AdminNotificationsPage() {
     }
   }
 
-  if (loading) return <p className="p-8">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-3">
+        <div className="h-8 w-40 bg-surface-alt rounded" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="card h-20" />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Notifications</h1>
+    <div>
+      <div className="page-header">
+        <h1 className="page-title">Notifications</h1>
+        <p className="page-subtitle">
+          {notifications.filter((n) => !n.isRead).length} unread
+        </p>
+      </div>
 
       {notifications.length === 0 ? (
-        <p className="text-muted">No notifications.</p>
+        <div className="empty-state">
+          <p className="empty-state-title">No notifications</p>
+          <p className="empty-state-desc">You are all caught up.</p>
+        </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-2">
           {notifications.map((n) => (
             <li
               key={n.id}
-              className={`border rounded-lg p-4 flex justify-between items-start gap-4 ${
-                n.isRead
-                  ? "border-border-warm bg-white"
-                  : "border-accent/40 bg-accent/5"
+              className={`card p-4 flex items-start justify-between gap-4 ${
+                n.isRead ? "bg-white" : "bg-accent-50/30 border-accent/20"
               }`}
             >
-              <div>
-                <p className="font-semibold">{n.title}</p>
-                <p className="text-sm text-muted mt-1">{n.body}</p>
-                <p className="text-xs text-muted mt-1">
+              <div className="min-w-0">
+                <p className={`font-medium text-sm ${n.isRead ? "text-ink" : "text-primary"}`}>
+                  {n.title}
+                </p>
+                <p className="text-sm text-muted mt-0.5">{n.body}</p>
+                <p className="text-xs text-muted mt-1.5">
                   {new Date(n.createdAt).toLocaleString()}
                 </p>
               </div>
               {!n.isRead && (
                 <button
                   onClick={() => handleMarkRead(n.id)}
-                  className="text-xs px-2 py-1 border border-border-warm rounded hover:bg-surface-alt transition-colors whitespace-nowrap"
+                  className="btn-tertiary shrink-0"
                 >
                   Mark read
                 </button>
@@ -63,6 +80,6 @@ export default function AdminNotificationsPage() {
           ))}
         </ul>
       )}
-    </main>
+    </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/auth-context";
 import { apiFetch } from "@/lib/api";
+import Link from "next/link";
 
 export default function TraineeDashboardPage() {
   const { getToken } = useAuth();
@@ -12,10 +13,14 @@ export default function TraineeDashboardPage() {
     async function load() {
       const token = await getToken();
       if (!token) return;
-      const res = await apiFetch("/dashboard/trainee", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setData(res.data);
+      try {
+        const res = await apiFetch("/dashboard/trainee", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setData(res.data);
+      } catch (e) {
+        console.error(e);
+      }
     }
     load();
   }, [getToken]);
@@ -26,7 +31,7 @@ export default function TraineeDashboardPage() {
         <div className="h-8 w-48 bg-surface-alt rounded" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="card h-24" />
+            <div key={i} className="stat-card h-24" />
           ))}
         </div>
       </div>
@@ -35,33 +40,32 @@ export default function TraineeDashboardPage() {
 
   return (
     <div>
-      <h1 className="font-display text-display-md text-primary mb-6">
-        Dashboard
-      </h1>
+      <div className="page-header">
+        <h1 className="page-title">Dashboard</h1>
+        <p className="page-subtitle">Your learning at a glance</p>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="card">
-          <p className="text-xs font-mono text-muted uppercase tracking-wider mb-1">
-            Active Courses
-          </p>
-          <p className="text-3xl font-display text-primary">
-            {data.activeCourses}
-          </p>
+        <div className="stat-card">
+          <p className="stat-label">Active Courses</p>
+          <p className="stat-value">{data.activeCourses}</p>
         </div>
-        <div className="card">
-          <p className="text-xs font-mono text-muted uppercase tracking-wider mb-1">
-            Pending Assessments
-          </p>
-          <p className="text-3xl font-display text-primary">
-            {data.pendingAssessments}
-          </p>
+        <div className="stat-card">
+          <p className="stat-label">Pending Assessments</p>
+          <p className="stat-value">{data.pendingAssessments}</p>
         </div>
-        <div className="card">
-          <p className="text-xs font-mono text-muted uppercase tracking-wider mb-1">
-            Completed
-          </p>
-          <p className="text-3xl font-display text-primary">
-            {data.completedAssessments}
-          </p>
+        <div className="stat-card">
+          <p className="stat-label">Completed</p>
+          <p className="stat-value">{data.completedAssessments}</p>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="font-display text-lg text-ink mb-4">Quick Links</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/courses" className="btn-secondary">
+            Browse Courses
+          </Link>
         </div>
       </div>
     </div>
