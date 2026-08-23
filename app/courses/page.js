@@ -6,7 +6,7 @@ import Link from "next/link";
 import { listCourses } from "@/features/courses/api/courses.api";
 
 export default function CoursesPage() {
-  const { getToken } = useAuth();
+  const { getToken, user } = useAuth();
   const [courses, setCourses] = useState([]);
 
   useEffect(() => {
@@ -22,11 +22,13 @@ export default function CoursesPage() {
   return (
     <main className="p-8">
       <h1 className="text-3xl font-bold mb-6">Courses</h1>
-      <div className="mb-4">
-        <Link href="/courses/create" className="px-4 py-2 bg-blue-600 text-white rounded">
-          Create Course
-        </Link>
-      </div>
+      {user?.role !== "TRAINEE" && (
+        <div className="mb-4">
+          <Link href="/courses/create" className="px-4 py-2 bg-blue-600 text-white rounded">
+            Create Course
+          </Link>
+        </div>
+      )}
       {courses.length === 0 ? (
         <p>No courses available.</p>
       ) : (
