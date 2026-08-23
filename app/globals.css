@@ -6,13 +6,13 @@
 
 @layer base {
   :root {
-    --color-primary: #1A1A2E;
-    --color-accent: #C47A1E;
-    --color-surface: #FAFAF9;
-    --color-surface-alt: #F0EFED;
-    --color-ink: #1A1A2E;
-    --color-muted: #787774;
-    --color-border: #EAEAEA;
+    --color-primary: #FFFFFF;
+    --color-accent: #E8913A;
+    --color-surface: transparent;
+    --color-surface-alt: rgba(255, 255, 255, 0.06);
+    --color-ink: #FFFFFF;
+    --color-muted: #A1A1AA;
+    --color-border: rgba(255, 255, 255, 0.12);
   }
 
   * {
@@ -26,13 +26,18 @@
   }
 
   body {
-    @apply bg-surface text-ink font-body antialiased;
+    background-color: #100e0b !important;
+    color: #f3f4f6;
     font-size: 0.875rem;
     line-height: 1.6;
   }
 
+  .bg-surface {
+    background-color: transparent !important;
+  }
+
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display text-ink;
+    @apply font-display text-white;
     line-height: 1.15;
   }
 
@@ -42,21 +47,21 @@
   h4 { @apply text-display-sm; }
 
   a {
-    @apply text-accent transition-colors duration-fast;
+    @apply text-accent-400 transition-colors duration-fast;
   }
 
   a:hover {
-    @apply text-accent-600;
+    @apply text-accent-300;
   }
 
   /* Focus visible global style */
   :focus-visible {
-    @apply outline-none ring-2 ring-focus-ring ring-offset-2 ring-offset-surface;
+    @apply outline-none ring-2 ring-focus-ring ring-offset-2 ring-offset-black;
   }
 
   /* Selection */
   ::selection {
-    @apply bg-accent-100 text-accent-900;
+    @apply bg-accent text-white;
   }
 
   /* Scrollbar */
@@ -67,10 +72,10 @@
     @apply bg-transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-border-warm rounded-full;
+    @apply bg-white/20 rounded-full;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted/40;
+    @apply bg-white/40;
   }
 }
 
@@ -93,11 +98,11 @@
   }
 
   .page-title {
-    @apply font-display text-display-lg text-ink;
+    @apply font-display text-display-lg text-white;
   }
 
   .page-subtitle {
-    @apply text-sm text-muted mt-1.5 max-w-2xl;
+    @apply text-sm text-slate-400 mt-1.5 max-w-2xl;
   }
 
   .page-actions {
@@ -111,7 +116,7 @@
   .btn {
     @apply inline-flex items-center justify-center gap-2 font-medium
       transition-all duration-fast
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-black
       disabled:opacity-40 disabled:pointer-events-none
       select-none;
     transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -120,8 +125,8 @@
   /* Primary: Main action */
   .btn-primary {
     @apply btn px-4 py-2.5 rounded-button
-      bg-ink text-white
-      hover:bg-ink/90 active:scale-[0.98]
+      bg-accent text-white font-semibold shadow-md shadow-accent/20
+      hover:bg-accent-500 active:scale-[0.98]
       text-sm;
   }
 
@@ -132,8 +137,8 @@
   /* Secondary: Alternative action */
   .btn-secondary {
     @apply btn px-4 py-2.5 rounded-button
-      border border-border-warm bg-white text-ink
-      hover:bg-surface-alt hover:border-muted/30 active:scale-[0.98]
+      border border-white/20 bg-white/10 text-white font-medium
+      hover:bg-white/20 hover:border-white/30 backdrop-blur-md active:scale-[0.98]
       text-sm;
   }
 
@@ -144,8 +149,8 @@
   /* Tertiary / Ghost: Low emphasis */
   .btn-tertiary {
     @apply btn px-3 py-1.5 rounded-button
-      text-sm text-muted
-      hover:text-ink hover:bg-surface-alt active:scale-[0.98];
+      text-sm text-slate-300
+      hover:text-white hover:bg-white/10 active:scale-[0.98];
   }
 
   .btn-tertiary-sm {
@@ -189,14 +194,14 @@
   /* ========================================
      FORMS
   ======================================== */
-
+  /* Inputs */
   .input {
-    @apply w-full px-3 py-2 rounded-input text-sm
-      border border-border-warm bg-white text-ink
-      placeholder:text-muted/50
+    @apply w-full px-3.5 py-2.5 rounded-input text-sm
+      border border-white/15 bg-black/40 text-white
+      placeholder:text-slate-500
       transition-all duration-fast
-      focus:outline-none focus:border-focus-ring focus:ring-1 focus:ring-focus-ring/20
-      disabled:bg-surface-alt disabled:opacity-60 disabled:cursor-not-allowed;
+      focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/40
+      disabled:bg-white/5 disabled:opacity-60 disabled:cursor-not-allowed;
   }
 
   .input-lg {
@@ -213,14 +218,14 @@
 
   .select {
     @apply input appearance-none pr-10;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23787774' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23A1A1AA' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     background-position: right 0.625rem center;
     background-repeat: no-repeat;
     background-size: 1.25rem 1.25rem;
   }
 
   .label {
-    @apply block text-sm font-medium text-ink mb-1.5;
+    @apply block text-sm font-medium text-white mb-1.5;
   }
 
   .form-field {
@@ -228,11 +233,11 @@
   }
 
   .form-error {
-    @apply text-sm text-red-600;
+    @apply text-sm text-red-400;
   }
 
   .form-hint {
-    @apply text-xs text-muted;
+    @apply text-xs text-slate-400;
   }
 
   .form-row {
@@ -245,8 +250,8 @@
   }
 
   .checkbox input[type="checkbox"] {
-    @apply appearance-none w-4 h-4 rounded-[4px] border border-border-warm bg-white
-      checked:bg-ink checked:border-ink checked:after:content-[''] checked:after:absolute
+    @apply appearance-none w-4 h-4 rounded-[4px] border border-white/20 bg-black/40
+      checked:bg-accent checked:border-accent checked:after:content-[''] checked:after:absolute
       checked:after:left-1.5 checked:after:top-[2px] checked:after:w-[5px] checked:after:h-[9px]
       checked:after:border-r-2 checked:after:border-b-2 checked:after:border-white
       checked:after:rotate-45
@@ -260,7 +265,7 @@
 
   /* Base card - inner content */
   .card {
-    @apply bg-white rounded-card border border-border-warm;
+    @apply bg-white/[0.04] rounded-card border border-white/10 text-slate-100 backdrop-blur-md;
   }
 
   .card-lg {
@@ -269,7 +274,7 @@
 
   /* Double bezel: outer shell + inner card */
   .card-shell {
-    @apply bg-surface border border-border-warm rounded-card-lg p-[1px];
+    @apply bg-white/[0.02] border border-white/10 rounded-card-lg p-[1px];
   }
 
   .card-shell-lg {
@@ -279,7 +284,7 @@
   /* Interactive card */
   .card-interactive {
     @apply card transition-all duration-normal
-      hover:shadow-card-hover hover:border-muted/30;
+      hover:shadow-card-hover hover:border-accent/40;
     transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -296,7 +301,7 @@
   ======================================== */
 
   .table-container {
-    @apply overflow-x-auto border border-border-warm rounded-card;
+    @apply overflow-x-auto border border-white/10 rounded-card bg-white/[0.02] backdrop-blur-md;
   }
 
   .table {
@@ -304,15 +309,15 @@
   }
 
   .table th {
-    @apply px-4 py-3 text-left font-medium text-xs uppercase tracking-wider text-muted bg-surface-alt border-b border-border-warm;
+    @apply px-4 py-3 text-left font-medium text-xs uppercase tracking-wider text-slate-300 bg-white/[0.05] border-b border-white/10;
   }
 
   .table td {
-    @apply px-4 py-3 border-b border-border-warm/50 text-ink;
+    @apply px-4 py-3 border-b border-white/5 text-slate-200;
   }
 
   .table tbody tr {
-    @apply transition-colors duration-fast hover:bg-surface-alt/50;
+    @apply transition-colors duration-fast hover:bg-white/[0.04];
   }
 
   .table tbody tr:last-child td {
@@ -619,4 +624,118 @@
       transition-duration: 0.01ms !important;
     }
   }
+}
+
+/* ========================================
+   BLOOD AURORA - AURA GRADIENT
+   ======================================== */
+.aura-fixed-canvas {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  overflow: hidden !important;
+  isolation: isolate;
+}
+
+.aura-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Layer 1 - screen */
+.aura-layer-1 {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(154deg, transparent 18%, rgba(60,10,10,0.06) 29%, rgba(255,40,0,0.40) 36%, rgb(255,255,255) 42%, rgba(207,60,20,0.32) 48%, rgba(158,20,10,0.22) 55%, rgba(255,90,0,0.30) 62%, rgba(60,15,10,0.08) 68%, transparent 82%);
+  mix-blend-mode: screen;
+  filter: blur(85px);
+  transform: translateZ(0);
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* Layer 2 - screen */
+.aura-layer-2 {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(128deg, transparent 28%, rgba(80,10,20,0.06) 38%, rgba(255,80,0,0.35) 43%, rgb(255,255,255) 48%, rgba(200,60,30,0.22) 52%, rgba(255,40,0,0.25) 57%, rgba(90,20,10,0.10) 62%, transparent 76%);
+  mix-blend-mode: screen;
+  filter: blur(75px);
+  opacity: 0.9;
+  transform: translateZ(0);
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* Layer 3 - screen */
+.aura-layer-3 {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 78% 20% at 51% 53%, rgba(200,50,20,0.24) 0%, rgba(100,20,10,0.10) 45%, transparent 82%);
+  mix-blend-mode: screen;
+  filter: blur(70px);
+  opacity: 0.9;
+  transform: translateZ(0);
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* Layer 4 - screen */
+.aura-layer-4 {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 48% 9% at 52% 50%, rgba(255,220,190,0.14) 0%, rgba(200,80,50,0.06) 45%, transparent 80%);
+  mix-blend-mode: screen;
+  filter: blur(175px);
+  transform: translateZ(0);
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* Layer 5 - multiply */
+.aura-layer-5 {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(5,1,1,0.90) 0%, rgba(5,1,1,0.58) 28%, rgba(5,1,1,0.20) 55%, transparent 78%);
+  mix-blend-mode: multiply;
+  filter: blur(80px);
+  opacity: 0.9;
+  transform: translateZ(0);
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* Layer 6 - screen */
+.aura-layer-6 {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 50% 28% at 72% 18%, rgba(150,90,20,0.10) 0%, rgba(100,60,10,0.04) 45%, transparent 82%);
+  mix-blend-mode: screen;
+  filter: blur(138px);
+  opacity: 0.7;
+  transform: translateZ(0);
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* Desktop Blur Enhancements */
+@media (min-width: 768px) {
+  .aura-layer-1 { filter: blur(122px); }
+  .aura-layer-2 { filter: blur(108px); }
+  .aura-layer-3 { filter: blur(101px); }
+  .aura-layer-4 { filter: blur(252px); }
+  .aura-layer-5 { filter: blur(115px); }
+  .aura-layer-6 { filter: blur(198px); }
+}
+
+/* Film-grain overlay */
+.aura-grain {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: overlay;
+  opacity: 0.85;
+  pointer-events: none;
 }

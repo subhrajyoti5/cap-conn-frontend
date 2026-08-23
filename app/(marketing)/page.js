@@ -61,37 +61,32 @@ const STATS = [
   { value: "MoES/IMD", label: "Backed by" },
   { value: "3", label: "User roles" },
   { value: "100%", label: "Auto-graded" },
-  { value: "\u221E", label: "Courses" },
+  { value: "∞", label: "Courses" },
 ];
 
 export default async function LandingPage() {
   return (
-    <div className="flex-1">
+    <div className="flex-1 text-slate-100">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-accent-100 opacity-20 blur-3xl translate-x-1/3 -translate-y-1/3" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-primary-100 opacity-10 blur-3xl -translate-x-1/4 translate-y-1/4" />
-        </div>
-
         <div className="page py-18 lg:py-24">
-          <p className="text-xs font-mono text-accent font-medium tracking-widest uppercase mb-6">
-            MoES / IMD \u2014 Smart Education
+          <p className="text-xs font-mono text-accent-400 font-medium tracking-widest uppercase mb-6">
+            MoES / IMD — Smart Education
           </p>
-          <h1 className="font-display text-display-xl text-ink leading-[1.05] mb-6 max-w-3xl">
-            Build capacity, <span className="text-accent">measure growth</span>
+          <h1 className="font-display text-display-xl text-white leading-[1.05] mb-6 max-w-3xl">
+            Build capacity, <span className="text-accent-400">measure growth</span>
           </h1>
-          <p className="text-lg sm:text-xl text-muted max-w-xl mb-10 leading-relaxed">
+          <p className="text-lg sm:text-xl text-slate-300 max-w-xl mb-10 leading-relaxed">
             A platform for India&apos;s Ministry of Earth Sciences to deliver
             structured courses, map trainer competencies, and track measurable
             outcomes.
           </p>
 
           <div className="flex flex-wrap gap-3">
-            <Link href="/sign-up" className="btn-primary-lg">
+            <Link href="/sign-up" className="btn-primary-lg shadow-lg shadow-accent/20">
               Get Started
             </Link>
-            <Link href="/sign-in" className="btn-secondary-lg">
+            <Link href="/sign-in" className="btn-secondary-lg bg-white/10 hover:bg-white/20 text-white border-white/20">
               Sign In
             </Link>
           </div>
@@ -99,12 +94,12 @@ export default async function LandingPage() {
       </section>
 
       {/* Stats bar */}
-      <section className="border-y border-border-warm bg-white">
+      <section className="border-y border-white/10 bg-white/[0.03] backdrop-blur-sm">
         <div className="page py-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
           {STATS.map((s) => (
             <div key={s.label} className="text-center">
-              <p className="font-display text-2xl sm:text-3xl text-ink">{s.value}</p>
-              <p className="text-xs font-mono text-muted uppercase tracking-wider mt-1">{s.label}</p>
+              <p className="font-display text-2xl sm:text-3xl text-white">{s.value}</p>
+              <p className="text-xs font-mono text-slate-400 uppercase tracking-wider mt-1">{s.label}</p>
             </div>
           ))}
         </div>
@@ -112,47 +107,46 @@ export default async function LandingPage() {
 
       {/* Features */}
       <section id="features" className="page py-18 lg:py-24">
-        <p className="text-xs font-mono text-accent uppercase tracking-widest mb-3">
+        <p className="text-xs font-mono text-accent-400 uppercase tracking-widest mb-3">
           What you can do
         </p>
-        <h2 className="font-display text-display-lg text-ink mb-12 max-w-lg">
+        <h2 className="font-display text-display-lg text-white mb-12 max-w-lg">
           Everything you need to run a capacity-building program
         </h2>
         <div className="grid sm:grid-cols-2 gap-6">
           {FEATURES.map((f, index) => (
-            <Link
+            <div
               key={f.title}
-              href="#"
               className="card-shell group"
               style={{ animationDelay: `${index * 80}ms` }}
             >
-              <div className="card p-6 h-full">
-                <div className="w-12 h-12 rounded-card-lg bg-primary-100 text-primary flex items-center justify-center mb-4 group-hover:bg-accent group-hover:text-white transition-colors duration-normal">
+              <div className="card p-6 h-full bg-white/[0.04] backdrop-blur-md border border-white/10 hover:border-accent/40 transition-colors">
+                <div className="w-12 h-12 rounded-card-lg bg-accent/20 text-accent-300 flex items-center justify-center mb-4 group-hover:bg-accent group-hover:text-white transition-colors duration-normal">
                   {f.icon}
                 </div>
-                <h3 className="font-display text-xl text-ink mb-2">{f.title}</h3>
-                <p className="text-sm text-muted leading-relaxed">{f.description}</p>
+                <h3 className="font-display text-xl text-white mb-2">{f.title}</h3>
+                <p className="text-sm text-slate-300 leading-relaxed">{f.description}</p>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="bg-white border-y border-border-warm">
+      <section id="how-it-works" className="bg-white/[0.02] border-y border-white/10 backdrop-blur-sm">
         <div className="page py-18 lg:py-24">
-          <p className="text-xs font-mono text-accent uppercase tracking-widest mb-3">
+          <p className="text-xs font-mono text-accent-400 uppercase tracking-widest mb-3">
             How it works
           </p>
-          <h2 className="font-display text-display-lg text-ink mb-12 max-w-md">
+          <h2 className="font-display text-display-lg text-white mb-12 max-w-md">
             Three steps to get started
           </h2>
           <div className="grid sm:grid-cols-3 gap-8">
             {STEPS.map((s, index) => (
               <div key={s.step} style={{ animationDelay: `${index * 80}ms` }}>
-                <p className="font-mono text-4xl text-accent-200 font-medium mb-3">{s.step}</p>
-                <h3 className="font-display text-lg text-ink mb-2">{s.title}</h3>
-                <p className="text-sm text-muted leading-relaxed">{s.description}</p>
+                <p className="font-mono text-4xl text-accent-300 font-medium mb-3">{s.step}</p>
+                <h3 className="font-display text-lg text-white mb-2">{s.title}</h3>
+                <p className="text-sm text-slate-300 leading-relaxed">{s.description}</p>
               </div>
             ))}
           </div>
@@ -161,17 +155,16 @@ export default async function LandingPage() {
 
       {/* CTA */}
       <section className="page py-18 lg:py-24">
-        <div className="relative overflow-hidden rounded-card-lg bg-ink p-10 sm:p-14 text-center">
-          <div className="absolute inset-0 bg-primary/80" />
+        <div className="relative overflow-hidden rounded-card-lg bg-accent/20 border border-accent/30 p-10 sm:p-14 text-center backdrop-blur-md">
           <div className="relative z-10">
             <h2 className="font-display text-display-lg text-white mb-4">
               Ready to build capacity?
             </h2>
-            <p className="text-primary-100 max-w-md mx-auto mb-8">
+            <p className="text-slate-200 max-w-md mx-auto mb-8">
               Join as a trainee to start learning, or as a trainer to share your
               expertise with India&apos;s scientific workforce.
             </p>
-            <Link href="/sign-up" className="px-7 py-3 rounded-button bg-white text-ink font-medium hover:bg-surface transition-colors duration-fast inline-block">
+            <Link href="/sign-up" className="px-7 py-3 rounded-button bg-accent hover:bg-accent-600 text-white font-medium shadow-lg transition-colors duration-fast inline-block">
               Create Your Account
             </Link>
           </div>
@@ -179,15 +172,15 @@ export default async function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border-warm bg-white">
+      <footer className="border-t border-white/10 bg-black/40 backdrop-blur-md">
         <div className="page py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded bg-ink flex items-center justify-center">
+            <span className="w-5 h-5 rounded bg-accent flex items-center justify-center">
               <span className="text-white font-display text-[10px] font-bold">C</span>
             </span>
-            <span className="text-sm text-muted">Capacity Connect</span>
+            <span className="text-sm text-slate-300">Capacity Connect</span>
           </div>
-          <p className="text-xs text-muted">
+          <p className="text-xs text-slate-400">
             Ministry of Earth Sciences / India Meteorological Department
           </p>
         </div>
