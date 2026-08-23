@@ -1195,3 +1195,4 @@ The technical implementation shall be considered ready for MVP demonstration whe
 * API errors are handled consistently.
 * Sensitive secrets are excluded from source control.
 * Production frontend and backend deployments work.
+
