@@ -170,21 +170,6 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-white/10 bg-black/40 backdrop-blur-md">
-        <div className="page py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded bg-accent flex items-center justify-center">
-              <span className="text-white font-display text-[10px] font-bold">C</span>
-            </span>
-            <span className="text-sm text-slate-300">Capacity Connect</span>
-          </div>
-          <p className="text-xs text-slate-400">
-            Ministry of Earth Sciences / India Meteorological Department
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
