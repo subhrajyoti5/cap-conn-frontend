@@ -66,27 +66,24 @@ const STATS = [
 
 export default async function LandingPage() {
   return (
-    <div className="flex-1 text-slate-100">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="page py-18 lg:py-24">
-          <p className="text-xs font-mono text-accent-400 font-medium tracking-widest uppercase mb-6">
-            MoES / IMD — Smart Education
-          </p>
-          <h1 className="font-display text-display-xl text-white leading-[1.05] mb-6 max-w-3xl">
-            Build capacity, <span className="text-accent-400">measure growth</span>
+      <section className="relative overflow-hidden py-18 lg:py-24">
+        <div className="page">
+          <h1 className="font-display text-display-xl text-foreground leading-[1.05] mb-6 max-w-3xl">
+            Build capacity, <span className="text-accent-600">measure growth</span>
           </h1>
-          <p className="text-lg sm:text-xl text-slate-300 max-w-xl mb-10 leading-relaxed">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mb-10 leading-relaxed">
             A platform for India&apos;s Ministry of Earth Sciences to deliver
             structured courses, map trainer competencies, and track measurable
             outcomes.
           </p>
 
           <div className="flex flex-wrap gap-3">
-            <Link href="/sign-up" className="btn-primary-lg shadow-lg shadow-accent/20">
+            <Link href="/sign-up" className="btn-primary-lg shadow-lg shadow-accent-600/20">
               Get Started
             </Link>
-            <Link href="/sign-in" className="btn-secondary-lg bg-white/10 hover:bg-white/20 text-white border-white/20">
+            <Link href="/sign-in" className="btn-secondary-lg">
               Sign In
             </Link>
           </div>
@@ -94,12 +91,12 @@ export default async function LandingPage() {
       </section>
 
       {/* Stats bar */}
-      <section className="border-y border-white/10 bg-white/[0.03] backdrop-blur-sm">
+      <section className="border-y border-border bg-muted/50 backdrop-blur-sm">
         <div className="page py-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
           {STATS.map((s) => (
             <div key={s.label} className="text-center">
-              <p className="font-display text-2xl sm:text-3xl text-white">{s.value}</p>
-              <p className="text-xs font-mono text-slate-400 uppercase tracking-wider mt-1">{s.label}</p>
+              <p className="font-display text-2xl sm:text-3xl text-foreground">{s.value}</p>
+              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider mt-1">{s.label}</p>
             </div>
           ))}
         </div>
@@ -107,10 +104,10 @@ export default async function LandingPage() {
 
       {/* Features */}
       <section id="features" className="page py-18 lg:py-24">
-        <p className="text-xs font-mono text-accent-400 uppercase tracking-widest mb-3">
+        <p className="text-xs font-mono text-accent-600 uppercase tracking-widest mb-3">
           What you can do
         </p>
-        <h2 className="font-display text-display-lg text-white mb-12 max-w-lg">
+        <h2 className="font-display text-display-lg text-foreground mb-12 max-w-lg">
           Everything you need to run a capacity-building program
         </h2>
         <div className="grid sm:grid-cols-2 gap-6">
@@ -120,12 +117,12 @@ export default async function LandingPage() {
               className="card-shell group"
               style={{ animationDelay: `${index * 80}ms` }}
             >
-              <div className="card p-6 h-full bg-white/[0.04] backdrop-blur-md border border-white/10 hover:border-accent/40 transition-colors">
-                <div className="w-12 h-12 rounded-card-lg bg-accent/20 text-accent-300 flex items-center justify-center mb-4 group-hover:bg-accent group-hover:text-white transition-colors duration-normal">
+              <div className="card p-6 h-full bg-card border border-border hover:border-accent-600/40 transition-all duration-300">
+                <div className="w-12 h-12 rounded-lg bg-accent-100 text-accent-600 flex items-center justify-center mb-4 group-hover:bg-accent-600 group-hover:text-white transition-colors duration-300">
                   {f.icon}
                 </div>
-                <h3 className="font-display text-xl text-white mb-2">{f.title}</h3>
-                <p className="text-sm text-slate-300 leading-relaxed">{f.description}</p>
+                <h3 className="font-display text-xl text-foreground mb-2">{f.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{f.description}</p>
               </div>
             </div>
           ))}
@@ -133,20 +130,20 @@ export default async function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="bg-white/[0.02] border-y border-white/10 backdrop-blur-sm">
+      <section id="how-it-works" className="bg-muted/30 border-y border-border backdrop-blur-sm">
         <div className="page py-18 lg:py-24">
-          <p className="text-xs font-mono text-accent-400 uppercase tracking-widest mb-3">
+          <p className="text-xs font-mono text-accent-600 uppercase tracking-widest mb-3">
             How it works
           </p>
-          <h2 className="font-display text-display-lg text-white mb-12 max-w-md">
+          <h2 className="font-display text-display-lg text-foreground mb-12 max-w-md">
             Three steps to get started
           </h2>
           <div className="grid sm:grid-cols-3 gap-8">
             {STEPS.map((s, index) => (
               <div key={s.step} style={{ animationDelay: `${index * 80}ms` }}>
-                <p className="font-mono text-4xl text-accent-300 font-medium mb-3">{s.step}</p>
-                <h3 className="font-display text-lg text-white mb-2">{s.title}</h3>
-                <p className="text-sm text-slate-300 leading-relaxed">{s.description}</p>
+                <p className="font-mono text-4xl text-accent-600 font-medium mb-3">{s.step}</p>
+                <h3 className="font-display text-lg text-foreground mb-2">{s.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
               </div>
             ))}
           </div>
@@ -155,16 +152,16 @@ export default async function LandingPage() {
 
       {/* CTA */}
       <section className="page py-18 lg:py-24">
-        <div className="relative overflow-hidden rounded-card-lg bg-accent/20 border border-accent/30 p-10 sm:p-14 text-center backdrop-blur-md">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent-50 to-primary-50/30 border border-accent-200/50 p-10 sm:p-14 text-center shadow-xl">
           <div className="relative z-10">
-            <h2 className="font-display text-display-lg text-white mb-4">
+            <h2 className="font-display text-display-lg text-foreground mb-4">
               Ready to build capacity?
             </h2>
-            <p className="text-slate-200 max-w-md mx-auto mb-8">
+            <p className="text-muted-foreground max-w-md mx-auto mb-8">
               Join as a trainee to start learning, or as a trainer to share your
               expertise with India&apos;s scientific workforce.
             </p>
-            <Link href="/sign-up" className="px-7 py-3 rounded-button bg-accent hover:bg-accent-600 text-white font-medium shadow-lg transition-colors duration-fast inline-block">
+            <Link href="/sign-up" className="btn-primary-lg shadow-lg">
               Create Your Account
             </Link>
           </div>
@@ -172,15 +169,15 @@ export default async function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 bg-black/40 backdrop-blur-md">
+      <footer className="border-t border-border bg-card">
         <div className="page py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded bg-accent flex items-center justify-center">
+            <span className="w-5 h-5 rounded bg-accent-600 flex items-center justify-center">
               <span className="text-white font-display text-[10px] font-bold">C</span>
             </span>
-            <span className="text-sm text-slate-300">Capacity Connect</span>
+            <span className="text-sm text-foreground">Capacity Connect</span>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             Ministry of Earth Sciences / India Meteorological Department
           </p>
         </div>

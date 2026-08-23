@@ -7,13 +7,13 @@ export function Navbar({ onMenuClick }) {
   const { isSignedIn, signOut, user } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 h-14 border-b border-border-warm bg-white/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/80 backdrop-blur-sm">
       <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           {isSignedIn && onMenuClick && (
             <button
               onClick={onMenuClick}
-              className="lg:hidden btn-icon text-muted hover:text-ink"
+              className="lg:hidden btn-icon text-muted-foreground hover:text-foreground"
               aria-label="Open navigation"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -22,10 +22,10 @@ export function Navbar({ onMenuClick }) {
             </button>
           )}
           <Link href="/" className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-button bg-ink flex items-center justify-center">
-              <span className="text-white font-display text-base font-bold">C</span>
+            <span className="w-8 h-8 rounded-lg bg-accent-600 flex items-center justify-center">
+              <span className="text-white font-body text-base font-bold">C</span>
             </span>
-            <span className="font-display text-lg text-ink hidden sm:inline">
+            <span className="font-body text-lg font-semibold text-foreground hidden sm:inline">
               Capacity Connect
             </span>
           </Link>
@@ -44,18 +44,18 @@ export function Navbar({ onMenuClick }) {
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted hidden md:inline max-w-[180px] truncate">
+              <span className="text-sm text-muted-foreground hidden md:inline max-w-[180px] truncate">
                 {user?.email}
               </span>
               <button
                 onClick={signOut}
-                className="btn-tertiary border border-border-warm hidden sm:inline-flex"
+                className="btn-tertiary border border-border hidden sm:inline-flex"
               >
                 Sign Out
               </button>
               <button
                 onClick={signOut}
-                className="btn-icon text-muted sm:hidden"
+                className="btn-icon text-muted-foreground sm:hidden"
                 aria-label="Sign out"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

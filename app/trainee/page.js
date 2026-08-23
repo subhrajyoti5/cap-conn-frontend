@@ -69,7 +69,7 @@ export default function TraineeDashboardPage() {
       </div>
 
       <div>
-        <h2 className="font-display text-lg text-ink mb-4">Quick Links</h2>
+        <h2 className="font-body text-lg font-semibold text-text mb-4">Quick Links</h2>
         <div className="flex flex-wrap gap-3">
           <Link href="/courses" className="btn-secondary">
             Browse Courses

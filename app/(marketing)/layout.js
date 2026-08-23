@@ -17,13 +17,13 @@ export default function MarketingLayout({ children }) {
             </span>
           </Link>
           <nav className="flex items-center gap-2">
-            <Link href="#features" className="btn-tertiary text-slate-300 hover:text-white hidden sm:inline-flex">
+            <Link href="#features" className="btn-tertiary text-slate-300 hover:text-white hover:bg-white/10 hidden sm:inline-flex">
               Features
             </Link>
-            <Link href="#how-it-works" className="btn-tertiary text-slate-300 hover:text-white hidden sm:inline-flex">
+            <Link href="#how-it-works" className="btn-tertiary text-slate-300 hover:text-white hover:bg-white/10 hidden sm:inline-flex">
               How It Works
             </Link>
-            <Link href="/sign-in" className="btn-tertiary text-slate-300 hover:text-white hidden md:inline-flex">
+            <Link href="/sign-in" className="btn-tertiary text-slate-300 hover:text-white hover:bg-white/10 hidden md:inline-flex">
               Sign In
             </Link>
             <Link href="/sign-up" className="btn-primary">

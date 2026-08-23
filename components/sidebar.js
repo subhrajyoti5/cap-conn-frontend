@@ -82,15 +82,15 @@ export function Sidebar({ role, mobileOpen, onMobileClose }) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-border-warm bg-white shrink-0">
-        <div className="px-3 py-3 border-b border-border-warm">
+      <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-surface shrink-0">
+        <div className="px-3 py-3 border-b border-border">
           <p className="text-xs font-mono text-muted uppercase tracking-wider">
             Navigation
           </p>
         </div>
         {navContent}
         <div className="flex-1" />
-        <div className="px-3 py-4 border-t border-border-warm">
+        <div className="px-3 py-4 border-t border-border">
           <p className="text-xs text-muted font-mono">Capacity Connect</p>
         </div>
       </aside>
@@ -103,9 +103,9 @@ export function Sidebar({ role, mobileOpen, onMobileClose }) {
             onClick={onMobileClose}
             aria-hidden="true"
           />
-          <aside className="fixed inset-y-0 left-0 w-64 bg-white border-r border-border-warm z-50 flex flex-col lg:hidden animate-in slide-in-from-left duration-normal ease-out-expo">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border-warm">
-              <span className="font-display text-lg text-ink">Menu</span>
+          <aside className="fixed inset-y-0 left-0 w-64 bg-surface border-r border-border z-50 flex flex-col lg:hidden animate-in slide-in-from-left duration-normal ease-out-expo">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <span className="font-body text-lg font-semibold text-text">Menu</span>
               <button
                 onClick={onMobileClose}
                 className="btn-icon text-muted"
@@ -118,7 +118,7 @@ export function Sidebar({ role, mobileOpen, onMobileClose }) {
             </div>
             {navContent}
             <div className="flex-1" />
-            <div className="px-4 py-4 border-t border-border-warm">
+            <div className="px-4 py-4 border-t border-border">
               <p className="text-xs text-muted font-mono">Capacity Connect</p>
             </div>
           </aside>
