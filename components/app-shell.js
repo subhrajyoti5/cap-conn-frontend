@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useAuth } from "@/features/auth/auth-context";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
-import { AuraBackground } from "@/components/aura-background";
 
 export function AppShell({ children }) {
   const { user } = useAuth();
@@ -12,17 +11,15 @@ export function AppShell({ children }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <AuraBackground isFixed={true} />
-      <div className="aura-overlay" />
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar onMenuClick={() => setMobileNavOpen(true)} />
-      <div className="flex flex-1 overflow-hidden content-above-aura">
+      <div className="flex flex-1 overflow-hidden">
         <Sidebar
           role={role}
           mobileOpen={mobileNavOpen}
           onMobileClose={() => setMobileNavOpen(false)}
         />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-slate-50/75 dark:bg-[#0b0f19]">
           <div className="page">
             <div className="page-section">{children}</div>
           </div>
