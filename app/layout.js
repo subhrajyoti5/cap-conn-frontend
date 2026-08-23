@@ -4,6 +4,11 @@ import { Providers } from "@/components/providers";
 export const metadata = {
   title: "Capacity Connect",
   description: "Smart Education LMS — MoES / IMD",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {

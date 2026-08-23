@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/features/auth/auth-context";
 
 export function Navbar({ onMenuClick }) {
@@ -21,10 +22,14 @@ export function Navbar({ onMenuClick }) {
               </svg>
             </button>
           )}
-          <Link href="/" className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-button bg-ink flex items-center justify-center">
-              <span className="text-white font-display text-base font-bold">C</span>
-            </span>
+          <Link href="/" className="flex items-center gap-2.5">
+            <Image
+              src="/logo.png"
+              alt="Capacity Connect Logo"
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-button object-contain"
+            />
             <span className="font-display text-lg text-ink hidden sm:inline">
               Capacity Connect
             </span>

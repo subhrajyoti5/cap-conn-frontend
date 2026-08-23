@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
@@ -44,9 +45,13 @@ export default function SignInPage() {
     <div className="min-h-screen flex items-center justify-center bg-surface px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <div className="w-12 h-12 rounded-card-lg bg-ink flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-display text-xl font-bold">C</span>
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Capacity Connect Logo"
+            width={48}
+            height={48}
+            className="w-12 h-12 rounded-card-lg object-contain mx-auto mb-4"
+          />
           <h1 className="font-display text-display-md text-ink mb-2">
             Welcome back
           </h1>

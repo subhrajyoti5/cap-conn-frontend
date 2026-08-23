@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAuth } from "@/features/auth/auth-context";
 import { apiFetch } from "@/lib/api";
 
@@ -35,9 +36,13 @@ export default function PendingPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface px-4">
       <div className="w-full max-w-md text-center">
-        <div className="w-12 h-12 rounded-card-lg bg-ink flex items-center justify-center mx-auto mb-6">
-          <span className="text-white font-display text-xl font-bold">C</span>
-        </div>
+        <Image
+          src="/logo.png"
+          alt="Capacity Connect Logo"
+          width={48}
+          height={48}
+          className="w-12 h-12 rounded-card-lg object-contain mx-auto mb-6"
+        />
 
         {status === "PENDING" && (
           <>
