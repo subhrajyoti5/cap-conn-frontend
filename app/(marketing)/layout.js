@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { AuraBackground } from "@/components/aura-background";
 
 export default function MarketingLayout({ children }) {
   return (
-    <div className="min-h-screen flex flex-col bg-transparent text-slate-100">
-      <header className="sticky top-0 z-40 h-14 border-b border-white/10 bg-[#100e0b]/60 backdrop-blur-md">
+    <div className="min-h-screen flex flex-col bg-[#100e0b] text-slate-100 relative">
+      <AuraBackground isFixed={true} />
+      <div className="relative z-10 min-h-screen flex flex-col">
+        <header className="sticky top-0 z-40 h-14 border-b border-white/10 bg-[#100e0b]/60 backdrop-blur-md">
         <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2">
             <span className="w-8 h-8 rounded-button bg-accent flex items-center justify-center">
@@ -31,6 +34,7 @@ export default function MarketingLayout({ children }) {
         </div>
       </header>
       <main className="flex-1">{children}</main>
+      </div>
     </div>
   );
 }

@@ -83,7 +83,6 @@ export function Sidebar({ role, mobileOpen, onMobileClose }) {
     <>
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-64 border-r border-border-warm bg-white shrink-0">
-        <div className="h-px bg-gradient-to-r from-accent-200 via-accent-400 to-accent-200" />
         <div className="px-3 py-3 border-b border-border-warm">
           <p className="text-xs font-mono text-muted uppercase tracking-wider">
             Navigation
@@ -105,7 +104,6 @@ export function Sidebar({ role, mobileOpen, onMobileClose }) {
             aria-hidden="true"
           />
           <aside className="fixed inset-y-0 left-0 w-64 bg-white border-r border-border-warm z-50 flex flex-col lg:hidden animate-in slide-in-from-left duration-normal ease-out-expo">
-            <div className="h-px bg-gradient-to-r from-accent-200 via-accent-400 to-accent-200" />
             <div className="flex items-center justify-between px-4 py-3 border-b border-border-warm">
               <span className="font-display text-lg text-ink">Menu</span>
               <button

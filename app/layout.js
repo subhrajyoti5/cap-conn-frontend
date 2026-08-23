@@ -1,6 +1,5 @@
 import "./globals.css";
 import { Providers } from "@/components/providers";
-import { AuraBackground } from "@/components/aura-background";
 
 export const metadata = {
   title: "Capacity Connect",
@@ -10,11 +9,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="bg-[#100e0b] min-h-screen text-slate-100 antialiased">
-        <AuraBackground isFixed={true} />
-        <div className="relative z-10 min-h-screen">
-          <Providers>{children}</Providers>
-        </div>
+      <body className="bg-surface min-h-screen text-ink antialiased">
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
