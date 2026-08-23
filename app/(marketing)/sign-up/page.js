@@ -139,7 +139,7 @@ export default function SignUpPage() {
               required
               className="w-full border border-border-warm rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
             />
-                    </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-ink mb-1">
               Name
