@@ -4,9 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
+  // Trainee items
   {
     label: "Dashboard",
     href: "/trainee",
+    roles: ["TRAINEE"],
+  },
+  {
+    label: "Messages",
+    href: "/messages",
     roles: ["TRAINEE"],
   },
   {
@@ -17,16 +23,18 @@ const NAV_ITEMS = [
   {
     label: "Certifications",
     href: "/certifications",
-    roles: ["TRAINEE", "TRAINER", "ADMIN"],
+    roles: ["TRAINEE"],
+  },
+
+  // Trainer items
+  {
+    label: "Dashboard",
+    href: "/trainer",
+    roles: ["TRAINER"],
   },
   {
     label: "Messages",
     href: "/messages",
-    roles: ["TRAINEE", "TRAINER", "ADMIN"],
-  },
-  {
-    label: "Dashboard",
-    href: "/trainer",
     roles: ["TRAINER"],
   },
   {
@@ -35,13 +43,20 @@ const NAV_ITEMS = [
     roles: ["TRAINER"],
   },
   {
+    label: "Certifications",
+    href: "/certifications",
+    roles: ["TRAINER"],
+  },
+
+  // Admin items
+  {
     label: "Dashboard",
     href: "/admin",
     roles: ["ADMIN"],
   },
   {
-    label: "Pending Users",
-    href: "/admin/users/pending",
+    label: "Messages",
+    href: "/messages",
     roles: ["ADMIN"],
   },
   {
@@ -50,13 +65,18 @@ const NAV_ITEMS = [
     roles: ["ADMIN"],
   },
   {
+    label: "Pending Users",
+    href: "/admin/users/pending",
+    roles: ["ADMIN"],
+  },
+  {
     label: "Courses",
     href: "/admin/courses",
     roles: ["ADMIN"],
   },
   {
-    label: "Subjects",
-    href: "/admin/subjects",
+    label: "Certifications",
+    href: "/certifications",
     roles: ["ADMIN"],
   },
   {
