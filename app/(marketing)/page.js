@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 
 const FEATURES = [
   {
@@ -168,9 +169,7 @@ export default async function LandingPage() {
       <footer className="border-t border-border bg-card">
         <div className="page py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded bg-accent flex items-center justify-center">
-              <span className="text-white font-display text-[10px] font-bold">C</span>
-            </span>
+            <Logo className="w-5 h-5 text-accent" />
             <span className="text-sm text-foreground">Capacity Connect</span>
           </div>
           <p className="text-xs text-muted-foreground">

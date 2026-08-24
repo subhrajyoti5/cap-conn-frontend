@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Logo } from "@/components/logo";
 
 const ROLES = [
   {
@@ -57,8 +58,8 @@ export default function SignUpPage() {
       <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
         <div className="w-full max-w-lg">
           <div className="text-center mb-10">
-            <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-display text-xl font-bold">C</span>
+            <div className="flex items-center justify-center mx-auto mb-4">
+              <Logo className="w-12 h-12 text-accent" />
             </div>
             <h1 className="font-display text-display-md text-foreground mb-2">
               Create your account

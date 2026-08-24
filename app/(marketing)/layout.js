@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 
 export default function MarketingLayout({ children }) {
   return (
@@ -7,9 +8,7 @@ export default function MarketingLayout({ children }) {
         <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/80 backdrop-blur-md">
           <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
             <Link href="/" className="flex items-center gap-2" aria-label="Capacity Connect Home">
-              <span className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shadow-sm">
-                <span className="text-white font-display text-base font-bold">C</span>
-              </span>
+              <Logo className="w-8 h-8 text-accent" />
               <span className="font-semibold text-lg text-foreground tracking-tight hidden sm:inline">
                 Capacity Connect
               </span>
