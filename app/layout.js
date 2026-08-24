@@ -5,9 +5,9 @@ export const metadata = {
   title: "Capacity Connect",
   description: "Smart Education LMS — MoES / IMD",
   icons: {
-    icon: "/favicon.png",
-    shortcut: "/favicon.png",
-    apple: "/favicon.png",
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
   },
 };
 
