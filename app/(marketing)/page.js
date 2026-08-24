@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 
 const FEATURES = [
   {
@@ -191,10 +192,8 @@ export default function LandingPage() {
       <footer className="border-t border-border bg-card py-8">
         <div className="page max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4 px-4 text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-accent flex items-center justify-center">
-              <span className="text-white font-display text-xs font-bold">C</span>
-            </span>
-            <span className="font-semibold text-foreground">Capacity Connect</span>
+            <Logo className="w-5 h-5 text-accent" />
+            <span className="text-sm text-foreground">Capacity Connect</span>
           </div>
           <p className="text-[10px] text-muted-foreground">
             &copy; {new Date().getFullYear()} Capacity Connect. All rights reserved.

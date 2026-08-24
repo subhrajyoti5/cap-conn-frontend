@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/features/auth/auth-context";
 import { apiFetch } from "@/lib/api";
+import { Logo } from "@/components/logo";
 
 export default function PendingPage() {
   const router = useRouter();
@@ -35,8 +36,8 @@ export default function PendingPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md text-center">
-        <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mx-auto mb-6">
-          <span className="text-white font-display text-xl font-bold">C</span>
+        <div className="flex items-center justify-center mx-auto mb-6">
+          <Logo className="w-12 h-12 text-accent" />
         </div>
 
         {status === "PENDING" && (

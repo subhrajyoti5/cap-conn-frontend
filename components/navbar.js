@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/features/auth/auth-context";
-import { apiFetch } from "@/lib/api";
+import { Logo } from "@/components/logo";
 
 export function Navbar({ onMenuClick, onToggleSidebar }) {
   const { isSignedIn, signOut, user } = useAuth();
@@ -110,9 +110,7 @@ export function Navbar({ onMenuClick, onToggleSidebar }) {
             </>
           )}
           <Link href="/" className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-              <span className="text-white font-body text-base font-bold">C</span>
-            </span>
+            <Logo className="w-8 h-8 text-accent" />
             <span className="font-body text-lg font-semibold text-foreground hidden sm:inline">
               Capacity Connect
             </span>
