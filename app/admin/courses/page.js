@@ -10,7 +10,7 @@ export default function AdminCoursesPage() {
 
   useEffect(() => {
     apiFetch("/courses")
-      .then((res) => setCourses(res.data?.data || []))
+      .then((res) => setCourses(res.data?.data || res.data || []))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);

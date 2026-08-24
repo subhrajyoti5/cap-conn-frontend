@@ -14,8 +14,8 @@ export default function PendingUsersPage() {
     try {
       const token = await getToken();
       if (!token) return;
-      const res = await apiFetch("/users/pending");
-      setUsers(res.data?.data || []);
+      const res = await apiFetch("/admin/users/pending");
+      setUsers(res.data?.data || res.data || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -32,7 +32,7 @@ export default function PendingUsersPage() {
     if (!token) return;
     setActionId(id);
     try {
-      await apiFetch(`/users/${id}/approve`, { method: "POST" });
+      await apiFetch(`/admin/users/${id}/approve`, { method: "PATCH" });
       load();
     } catch (e) {
       console.error(e);
@@ -46,8 +46,8 @@ export default function PendingUsersPage() {
     if (!token) return;
     setActionId(id);
     try {
-      await apiFetch(`/users/${id}/reject`, {
-        method: "POST",
+      await apiFetch(`/admin/users/${id}/reject`, {
+        method: "PATCH",
         body: JSON.stringify({ reason: "" }),
       });
       load();
