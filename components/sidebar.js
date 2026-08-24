@@ -68,7 +68,13 @@ export function Sidebar({ role, mobileOpen, onMobileClose }) {
   const navContent = (
     <nav className="flex-1 px-3 py-4 space-y-1">
       {items.map((item, index) => {
-        const active = pathname === item.href || pathname.startsWith(item.href + "/");
+        const active =
+          pathname === item.href ||
+          (item.href !== "/admin" &&
+            item.href !== "/trainer" &&
+            item.href !== "/trainee" &&
+            !(item.href === "/admin/users" && pathname.startsWith("/admin/users/pending")) &&
+            pathname.startsWith(item.href + "/"));
         return (
           <Link
             key={item.href}
