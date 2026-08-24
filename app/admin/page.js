@@ -73,16 +73,10 @@ export default function AdminDashboardPage() {
             className="card-shell hover:shadow-lg transition-all"
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <div className="card p-6 flex flex-col justify-between">
+            <div className="card p-6 flex flex-col justify-between h-full">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
-                  <Image 
-                    src="/trainer/Artboard 1.png" 
-                    alt="Icon" 
-                    width={48} 
-                    height={48} 
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-muted text-2xl">
+                  {stat.icon}
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
