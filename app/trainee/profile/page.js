@@ -1,0 +1,488 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useAuth } from "@/features/auth/auth-context";
+import { apiFetch } from "@/lib/api";
+import Link from "next/link";
+
+export default function TraineeProfilePage() {
+  const { getToken } = useAuth();
+  
+  // Base details state
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [bio, setBio] = useState("");
+  
+  // Lists state
+  const [qualifications, setQualifications] = useState([]);
+  const [workExperiences, setWorkExperiences] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [interests, setInterests] = useState([]);
+  
+  // Form input states
+  const [newQual, setNewQual] = useState({ degree: "", institution: "", year: "" });
+  const [newExp, setNewExp] = useState({ role: "", organization: "", startDate: "", endDate: "" });
+  const [newSkill, setNewSkill] = useState("");
+  const [newInterest, setNewInterest] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [savingBase, setSavingBase] = useState(false);
+  const [actionId, setActionId] = useState(null);
+
+  async function load() {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      
+      const res = await apiFetch("/profiles/me");
+      if (res.data) {
+        setFullName(res.data.fullName || "");
+        setPhone(res.data.phone || "");
+        setBio(res.data.bio || "");
+        setQualifications(res.data.qualifications || []);
+        setWorkExperiences(res.data.workExperiences || []);
+        setSkills(res.data.skills || []);
+        setInterests(res.data.interests || []);
+      }
+    } catch (e) {
+      console.error("Error loading profile:", e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function handleSaveBase(e) {
+    e.preventDefault();
+    setSavingBase(true);
+    try {
+      await apiFetch("/profiles/me", {
+        method: "PUT",
+        body: JSON.stringify({ fullName, phone: phone || null, bio: bio || null }),
+      });
+      alert("Basic profile updated successfully!");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to update basic profile.");
+    } finally {
+      setSavingBase(false);
+    }
+  }
+
+  async function handleAddQual(e) {
+    e.preventDefault();
+    if (!newQual.degree || !newQual.institution || !newQual.year) return;
+    try {
+      const res = await apiFetch("/profiles/me/qualifications", {
+        method: "POST",
+        body: JSON.stringify({
+          degree: newQual.degree,
+          institution: newQual.institution,
+          year: parseInt(newQual.year),
+        }),
+      });
+      setQualifications([...qualifications, res.data]);
+      setNewQual({ degree: "", institution: "", year: "" });
+    } catch (e) {
+      console.error(e);
+      alert("Failed to add qualification.");
+    }
+  }
+
+  async function handleRemoveQual(id) {
+    setActionId(id);
+    try {
+      await apiFetch(`/profiles/me/qualifications/${id}`, { method: "DELETE" });
+      setQualifications(qualifications.filter((q) => q.id !== id));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionId(null);
+    }
+  }
+
+  async function handleAddExp(e) {
+    e.preventDefault();
+    if (!newExp.role || !newExp.organization || !newExp.startDate) return;
+    try {
+      const res = await apiFetch("/profiles/me/work-experience", {
+        method: "POST",
+        body: JSON.stringify({
+          role: newExp.role,
+          organization: newExp.organization,
+          startDate: newExp.startDate,
+          endDate: newExp.endDate || null,
+        }),
+      });
+      setWorkExperiences([...workExperiences, res.data]);
+      setNewExp({ role: "", organization: "", startDate: "", endDate: "" });
+    } catch (e) {
+      console.error(e);
+      alert("Failed to add experience.");
+    }
+  }
+
+  async function handleRemoveExp(id) {
+    setActionId(id);
+    try {
+      await apiFetch(`/profiles/me/work-experience/${id}`, { method: "DELETE" });
+      setWorkExperiences(workExperiences.filter((w) => w.id !== id));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionId(null);
+    }
+  }
+
+  async function handleAddSkill(e) {
+    e.preventDefault();
+    if (!newSkill.trim()) return;
+    try {
+      const res = await apiFetch("/profiles/me/skills", {
+        method: "POST",
+        body: JSON.stringify({ name: newSkill.trim() }),
+      });
+      setSkills([...skills, res.data]);
+      setNewSkill("");
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function handleRemoveSkill(id) {
+    try {
+      await apiFetch(`/profiles/me/skills/${id}`, { method: "DELETE" });
+      setSkills(skills.filter((s) => s.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function handleAddInterest(e) {
+    e.preventDefault();
+    if (!newInterest.trim()) return;
+    try {
+      const res = await apiFetch("/profiles/me/interests", {
+        method: "POST",
+        body: JSON.stringify({ name: newInterest.trim() }),
+      });
+      setInterests([...interests, res.data]);
+      setNewInterest("");
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function handleRemoveInterest(id) {
+    try {
+      await apiFetch(`/profiles/me/interests/${id}`, { method: "DELETE" });
+      setInterests(interests.filter((i) => i.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="skeleton h-8 w-48" />
+        <div className="card-shell h-64" />
+        <div className="card-shell h-64" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 max-w-4xl">
+      <div className="page-header flex justify-between items-center gap-4 flex-wrap">
+        <div>
+          <h1 className="page-title">Configure Profile</h1>
+          <p className="page-subtitle">Configure qualifications, skills, and past work experiences.</p>
+        </div>
+        <Link href="/trainee" className="btn-secondary">
+          Back to Dashboard
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Left Column: Base Details */}
+        <div className="space-y-6 md:col-span-1">
+          <div className="card border border-border p-6 bg-card">
+            <h2 className="font-bold text-sm text-foreground mb-4">Basic Details</h2>
+            <form onSubmit={handleSaveBase} className="space-y-4">
+              <div>
+                <label className="label">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="input text-sm w-full"
+                />
+              </div>
+              <div>
+                <label className="label">Phone Number</label>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="input text-sm w-full"
+                  placeholder="e.g. +91 98765 43210"
+                />
+              </div>
+              <div>
+                <label className="label">Bio</label>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  className="textarea text-sm w-full"
+                  placeholder="Short description of your scientific interests or department..."
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={savingBase}
+                className="btn-primary btn-sm w-full"
+              >
+                {savingBase ? "Saving..." : "Save Details"}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Right Column: Qualifications, Work Experience, Skills, Interests */}
+        <div className="space-y-6 md:col-span-2">
+          {/* Qualifications Panel */}
+          <div className="card border border-border p-6 bg-card space-y-4">
+            <h2 className="font-bold text-sm text-foreground">Qualifications & Degrees</h2>
+            
+            {/* List */}
+            {qualifications.length > 0 && (
+              <ul className="data-list divide-y divide-border border-b border-border mb-4">
+                {qualifications.map((q) => (
+                  <li key={q.id} className="py-2.5 flex items-center justify-between text-xs">
+                    <div>
+                      <p className="font-semibold text-foreground">{q.degree}</p>
+                      <p className="text-muted-foreground">{q.institution} ({q.year})</p>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveQual(q.id)}
+                      disabled={actionId === q.id}
+                      className="btn-danger btn-sm px-2 py-1 text-[10px]"
+                    >
+                      {actionId === q.id ? "..." : "Remove"}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Add form */}
+            <form onSubmit={handleAddQual} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+              <div>
+                <label className="label text-xs">Degree / Qualification</label>
+                <input
+                  type="text"
+                  placeholder="e.g. M.Sc. Meteorology"
+                  required
+                  value={newQual.degree}
+                  onChange={(e) => setNewQual({ ...newQual, degree: e.target.value })}
+                  className="input text-xs w-full py-1.5"
+                />
+              </div>
+              <div>
+                <label className="label text-xs">Institution</label>
+                <input
+                  type="text"
+                  placeholder="e.g. IIT Delhi"
+                  required
+                  value={newQual.institution}
+                  onChange={(e) => setNewQual({ ...newQual, institution: e.target.value })}
+                  className="input text-xs w-full py-1.5"
+                />
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="label text-xs">Year</label>
+                  <input
+                    type="number"
+                    placeholder="2024"
+                    required
+                    min="1950"
+                    max="2100"
+                    value={newQual.year}
+                    onChange={(e) => setNewQual({ ...newQual, year: e.target.value })}
+                    className="input text-xs w-full py-1.5"
+                  />
+                </div>
+                <button type="submit" className="btn-primary text-xs py-1.5 px-3 mb-0.5">
+                  Add
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Work Experience Panel */}
+          <div className="card border border-border p-6 bg-card space-y-4">
+            <h2 className="font-bold text-sm text-foreground">Work Experience</h2>
+            
+            {/* List */}
+            {workExperiences.length > 0 && (
+              <ul className="data-list divide-y divide-border border-b border-border mb-4">
+                {workExperiences.map((w) => (
+                  <li key={w.id} className="py-2.5 flex items-center justify-between text-xs">
+                    <div>
+                      <p className="font-semibold text-foreground">{w.role}</p>
+                      <p className="text-muted-foreground">
+                        {w.organization} ({new Date(w.startDate).toLocaleDateString()} –{" "}
+                        {w.endDate ? new Date(w.endDate).toLocaleDateString() : "Present"})
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveExp(w.id)}
+                      disabled={actionId === w.id}
+                      className="btn-danger btn-sm px-2 py-1 text-[10px]"
+                    >
+                      {actionId === w.id ? "..." : "Remove"}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Add form */}
+            <form onSubmit={handleAddExp} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="label text-xs">Role / Job Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Scientific Assistant"
+                  required
+                  value={newExp.role}
+                  onChange={(e) => setNewExp({ ...newExp, role: e.target.value })}
+                  className="input text-xs w-full py-1.5"
+                />
+              </div>
+              <div>
+                <label className="label text-xs">Organization</label>
+                <input
+                  type="text"
+                  placeholder="e.g. IMD Pune"
+                  required
+                  value={newExp.organization}
+                  onChange={(e) => setNewExp({ ...newExp, organization: e.target.value })}
+                  className="input text-xs w-full py-1.5"
+                />
+              </div>
+              <div>
+                <label className="label text-xs">Start Date</label>
+                <input
+                  type="date"
+                  required
+                  value={newExp.startDate}
+                  onChange={(e) => setNewExp({ ...newExp, startDate: e.target.value })}
+                  className="input text-xs w-full py-1.5"
+                />
+              </div>
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <label className="label text-xs">End Date (optional)</label>
+                  <input
+                    type="date"
+                    value={newExp.endDate}
+                    onChange={(e) => setNewExp({ ...newExp, endDate: e.target.value })}
+                    className="input text-xs w-full py-1.5"
+                  />
+                </div>
+                <button type="submit" className="btn-primary text-xs py-1.5 px-3 mb-0.5">
+                  Add
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Skills & Competencies */}
+          <div className="card border border-border p-6 bg-card space-y-4">
+            <h2 className="font-bold text-sm text-foreground">Skills & Competencies</h2>
+            
+            {/* Tag List */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {skills.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No skills added yet.</p>
+              ) : (
+                skills.map((s) => (
+                  <span key={s.id} className="badge badge-outline text-xs flex items-center gap-1.5 py-1 px-2.5">
+                    {s.name}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSkill(s.id)}
+                      className="text-muted-foreground hover:text-destructive font-bold text-xs"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))
+              )}
+            </div>
+
+            {/* Quick add */}
+            <form onSubmit={handleAddSkill} className="flex gap-2 max-w-md">
+              <input
+                type="text"
+                placeholder="e.g. Python, Weather Forecasting, Radar Analysis"
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                className="input text-xs w-full py-1.5"
+              />
+              <button type="submit" className="btn-primary text-xs py-1.5 px-4">
+                Add Skill
+              </button>
+            </form>
+          </div>
+
+          {/* Learning Interests */}
+          <div className="card border border-border p-6 bg-card space-y-4">
+            <h2 className="font-bold text-sm text-foreground">Learning Interests</h2>
+            
+            {/* Tag List */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {interests.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No interests added yet.</p>
+              ) : (
+                interests.map((i) => (
+                  <span key={i.id} className="badge badge-accent text-xs flex items-center gap-1.5 py-1 px-2.5">
+                    {i.name}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveInterest(i.id)}
+                      className="text-white hover:text-destructive font-bold text-xs"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))
+              )}
+            </div>
+
+            {/* Quick add */}
+            <form onSubmit={handleAddInterest} className="flex gap-2 max-w-md">
+              <input
+                type="text"
+                placeholder="e.g. Data Assimilation, Climate Modeling"
+                value={newInterest}
+                onChange={(e) => setNewInterest(e.target.value)}
+                className="input text-xs w-full py-1.5"
+              />
+              <button type="submit" className="btn-primary text-xs py-1.5 px-4">
+                Add Interest
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
