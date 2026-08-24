@@ -4,40 +4,54 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/auth-context";
 import { apiFetch } from "@/lib/api";
 import Link from "next/link";
-import Image from "next/image";
+
+const CARD_GRADIENTS = [
+  "from-teal-600 to-emerald-700",
+  "from-cyan-600 to-blue-700",
+  "from-violet-600 to-indigo-700",
+  "from-amber-600 to-orange-700",
+];
 
 export default function TrainerDashboardPage() {
-  const { getToken } = useAuth();
+  const { getToken, user } = useAuth();
   const [data, setData] = useState(null);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
+  async function load() {
+    try {
       const token = await getToken();
       if (!token) return;
-      try {
-        const res = await apiFetch("/dashboard/trainer", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setData(res.data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
+
+      const [dashRes, coursesRes] = await Promise.all([
+        apiFetch("/dashboard/trainer"),
+        apiFetch("/courses"),
+      ]);
+
+      setData(dashRes.data || dashRes);
+      
+      // Filter only the courses created by this trainer
+      const allCourses = coursesRes.data || coursesRes || [];
+      const trainerCourses = allCourses.filter((c) => c.trainerId === user?.id);
+      setCourses(trainerCourses);
+    } catch (e) {
+      console.error("Error loading trainer dashboard:", e);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     load();
-  }, [getToken]);
+  }, [user]);
 
   if (loading) {
     return (
-      <div className="space-y-6 animate-in">
-        <div className="skeleton h-8 w-48" />
+      <div className="space-y-6 animate-pulse">
+        <div className="h-44 w-full bg-muted rounded-2xl" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="card-shell">
-              <div className="card p-6 skeleton h-24" />
-            </div>
+            <div key={i} className="h-28 bg-muted rounded-xl" />
           ))}
         </div>
       </div>
@@ -45,66 +59,203 @@ export default function TrainerDashboardPage() {
   }
 
   const stats = [
-    { label: "Courses", value: data.courses, icon: "📖" },
-    { label: "Trainees", value: data.totalTrainees, icon: "👥" },
-    { label: "Pending", value: data.pendingToGrade, icon: "📝" },
+    { 
+      label: "My Courses", 
+      value: data?.courses || 0, 
+      icon: (
+        <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+        </svg>
+      )
+    },
+    { 
+      label: "Active Trainees", 
+      value: data?.totalTrainees || 0, 
+      icon: (
+        <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.97 5.97 0 00-.75-2.985m-.939-2.618A5.006 5.006 0 0018 12.5a3.375 3.375 0 00-3.375-3.375H12a3.375 3.375 0 00-3.375 3.375c0 .324.032.64.093.945m8.25.109a6.375 6.375 0 01-12.75 0v-.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766" />
+        </svg>
+      )
+    },
+    { 
+      label: "Pending to Grade", 
+      value: data?.pendingToGrade || 0, 
+      icon: (
+        <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      )
+    },
   ];
 
   return (
-    <div className="space-y-6 animate-in">
-      <div className="page-header flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">Overview of your teaching activities.</p>
+    <div className="space-y-8 animate-in stagger-1">
+      {/* Welcome Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-800 text-white p-8 shadow-lg shadow-emerald/10">
+        <div className="relative z-10 max-w-2xl">
+          <span className="badge bg-white/20 text-white border-transparent text-xs font-mono uppercase tracking-wider">
+            Trainer Portal
+          </span>
+          <h1 className="font-display text-display-lg text-white mt-3 leading-tight">
+            Teacher Dashboard{user?.name ? `, ${user.name}` : ""}
+          </h1>
+          <p className="text-white/80 text-sm mt-2 leading-relaxed">
+            Create courses, design multiple-choice assessments, grade trainee work, and track enrollment metrics to support India&apos;s meteorological capacity.
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/courses" className="btn-secondary">My Courses</Link>
-          <Link href="/courses/create" className="btn-primary">Create Course</Link>
-        </div>
+        <div className="absolute right-0 bottom-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mb-16" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {stats.map((stat, index) => (
-          <div key={stat.label} className="card-shell" style={{ animationDelay: `${index * 50}ms` }}>
-            <div className="card p-6 flex flex-col items-center text-center">
-              <div className="w-16 h-16 mb-3 rounded-xl overflow-hidden bg-muted">
-                <Image 
-                  src="/trainer/Artboard 1.png" 
-                  alt="Trainer Icon" 
-                  width={64} 
-                  height={64} 
-                  className="w-full h-full object-cover"
-                />
+          <div key={stat.label} className="card-shell hover:shadow-elevated transition-all duration-300" style={{ animationDelay: `${index * 50}ms` }}>
+            <div className="card p-6 flex items-center justify-between bg-card border border-border">
+              <div className="space-y-1">
+                <p className="text-2xl font-bold font-display">{stat.value}</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
               </div>
-              <p className="text-3xl font-bold">{stat.value}</p>
-              <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-muted/40">
+                {stat.icon}
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      <section className="card-shell">
-        <div className="card p-6">
-          <h2 className="font-semibold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <Link href="/courses" className="p-4 rounded-lg hover:bg-muted transition-colors text-left">
-              <span className="text-xl mb-2 block">📖</span>
-              <p className="font-medium">View My Courses</p>
-              <p className="text-sm text-muted-foreground">Manage your course content</p>
-            </Link>
-            <Link href="/courses/create" className="p-4 rounded-lg hover:bg-muted transition-colors text-left">
-              <span className="text-xl mb-2 block">➕</span>
-              <p className="font-medium">Create New Course</p>
-              <p className="text-sm text-muted-foreground">Start teaching today</p>
-            </Link>
-            <Link href="/submissions" className="p-4 rounded-lg hover:bg-muted transition-colors text-left">
-              <span className="text-xl mb-2 block">📝</span>
-              <p className="font-medium">Grade Submissions</p>
-              <p className="text-sm text-muted-foreground">{data.pendingToGrade} items pending</p>
-            </Link>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left Column: Trainer's Courses */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <h2 className="font-display text-lg font-bold text-foreground">
+              My Classrooms
+            </h2>
+            <div className="flex gap-2">
+              <Link href="/courses/create" className="btn-primary btn-sm flex items-center gap-1">
+                <span>➕</span>
+                Create Course
+              </Link>
+            </div>
           </div>
+
+          {courses.length === 0 ? (
+            <div className="empty-state bg-card border border-border rounded-2xl p-10">
+              <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+              </svg>
+              <p className="empty-state-title">No Courses Created</p>
+              <p className="empty-state-desc">You haven&apos;t created any courses yet. Start teaching by creating a new classroom.</p>
+              <Link href="/courses/create" className="btn-primary mt-4">
+                Create First Course
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {courses.map((course, index) => {
+                const gradient = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
+                return (
+                  <Link
+                    key={course.id}
+                    href={`/courses/${course.id}`}
+                    className="group card-shell flex flex-col justify-between overflow-hidden h-64 hover:shadow-elevated transition-all duration-300"
+                  >
+                    <div className="card h-full flex flex-col justify-between border border-border">
+                      {/* Course Card Banner */}
+                      <div className={`bg-gradient-to-br ${gradient} p-4 text-white relative shrink-0`}>
+                        <div className="relative z-10">
+                          <p className="text-[10px] uppercase font-mono tracking-wider opacity-90 truncate">
+                            {course.subject?.name || "LMS Subject"}
+                          </p>
+                          <h3 className="font-display text-base font-bold leading-tight mt-1 line-clamp-2 group-hover:underline">
+                            {course.title}
+                          </h3>
+                          <div className="flex items-center gap-1.5 mt-3">
+                            <span className={`badge text-[9px] uppercase tracking-wider ${course.status === "PUBLISHED" ? "bg-white/20 text-white" : "bg-black/20 text-white"}`}>
+                              {course.status}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="absolute right-0 top-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8" />
+                      </div>
+
+                      {/* Course Details */}
+                      <div className="p-4 flex-1 flex flex-col justify-between">
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                          {course.description}
+                        </p>
+                        
+                        <div className="flex items-center justify-between border-t border-border pt-3 mt-3">
+                          <span className="text-xs font-mono text-muted-foreground">
+                            Enrolled: {course.enrollments?.length || 0}
+                          </span>
+                          <span className="text-xs text-primary font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                            Edit Classwork
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
-      </section>
+
+        {/* Right Column: Alerts & Feedback Queue */}
+        <div className="space-y-6">
+          {/* Grading Queue Alert */}
+          <div className="card border border-border p-5 bg-card">
+            <h3 className="font-semibold text-sm text-foreground">
+              Grading Queue
+            </h3>
+            
+            {data?.pendingToGrade > 0 ? (
+              <div className="mt-3 space-y-2">
+                <div className="p-3 bg-amber-500/5 border border-amber-500/10 rounded-lg flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">Submissions Pending</p>
+                    <p className="text-[10px] text-muted-foreground">Requires grading</p>
+                  </div>
+                  <span className="badge badge-warning text-xs">
+                    {data.pendingToGrade}
+                  </span>
+                </div>
+                <Link href="/courses" className="btn-secondary btn-sm w-full block text-center mt-2">
+                  Review Submissions
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-4 text-center py-4 bg-muted/20 border border-dashed border-border rounded-lg">
+                <p className="text-xs text-muted-foreground font-medium">All caught up!</p>
+                <p className="text-[10px] text-muted-foreground/80 mt-0.5">No trainee submissions to grade.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Recent Course Feedback */}
+          {data?.recentFeedback?.length > 0 && (
+            <div className="card border border-border p-5 bg-card">
+              <h3 className="font-semibold text-sm text-foreground mb-3">
+                Student Reviews
+              </h3>
+              <div className="space-y-3">
+                {data.recentFeedback.map((fb) => (
+                  <div key={fb.id} className="p-2.5 rounded-lg bg-muted/20 border border-border/50 text-[11px] space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-foreground">{fb.user?.name || "Trainee"}</span>
+                      <span className="font-bold text-accent">★ {fb.rating}/5</span>
+                    </div>
+                    <p className="text-muted-foreground italic">&ldquo;{fb.comment}&rdquo;</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
