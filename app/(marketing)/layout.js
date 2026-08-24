@@ -14,10 +14,10 @@ export default function MarketingLayout({ children }) {
               </span>
             </Link>
             <nav className="flex items-center gap-2" aria-label="Main navigation">
-              <Link href="#features" className="btn-tertiary text-sm hidden sm:inline-flex">
+              <Link href="/#features" className="btn-tertiary text-sm hidden sm:inline-flex">
                 Features
               </Link>
-              <Link href="#how-it-works" className="btn-tertiary text-sm hidden sm:inline-flex">
+              <Link href="/#how-it-works" className="btn-tertiary text-sm hidden sm:inline-flex">
                 How It Works
               </Link>
               <Link href="/sign-in" className="btn-tertiary text-sm hidden md:inline-flex">

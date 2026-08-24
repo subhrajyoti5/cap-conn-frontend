@@ -84,7 +84,7 @@ export default function SignInPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="input"
-                placeholder="\u2022\u2022\u2022\u2022\u2022\u2022"
+                placeholder="Enter Password"
               />
             </div>
             <button

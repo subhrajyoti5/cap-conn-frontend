@@ -162,7 +162,7 @@ export default function SignUpPage() {
                 required
                 minLength={6}
                 className="input"
-                placeholder="\u2022\u2022\u2022\u2022\u2022\u2022"
+                placeholder="Enter Password"
               />
             </div>
             <button
