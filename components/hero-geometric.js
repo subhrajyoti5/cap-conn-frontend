@@ -198,18 +198,23 @@ export default function HeroGeometric({
   color1 = "#EA580C",
   color2 = "#FEF3C7",
   speed = 1,
+  opacity = 0.9,
   className,
   children,
 }) {
   return (
     <div
+      id="hero"
       className={cn(
         "relative w-full min-h-screen flex flex-col items-center overflow-hidden bg-white text-black -mt-14",
         className
       )}
       style={{ containerType: "size" }}
     >
-      <div className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none">
+      <div
+        className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none transition-opacity duration-500"
+        style={{ opacity }}
+      >
         <GradientCanvas color1={color1} color2={color2} speed={speed} />
       </div>
 

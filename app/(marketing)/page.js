@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { LandingHero } from "@/components/landing-hero";
+import { CardCarousel } from "@/components/card-carousel";
+import { CopperShadowAura } from "@/components/copper-shadow-aura";
 
 const FEATURES = [
   {
@@ -62,7 +64,6 @@ const STEPS = [
 const STATS = [
   { value: "Enterprise-Ready", label: "LMS Architecture" },
   { value: "3 Roles", label: "Custom Workflows" },
-  { value: "100% Secure", label: "Auto-Grading Engine" },
   { value: "Competency-First", label: "Skills Mapping" },
 ];
 
@@ -72,53 +73,48 @@ export default function LandingPage() {
       {/* Hero Section — geometric WebGL shader */}
       <LandingHero />
 
-      {/* Stats bar */}
-      <section className="border-y border-border bg-card/40 backdrop-blur-md">
-        <div className="page max-w-5xl py-8 grid grid-cols-2 sm:grid-cols-4 gap-6 px-4">
+      {/* Stats & Trust Bar */}
+      <section className="relative border-y border-border/80 bg-card/30 backdrop-blur-md overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-accent/5 pointer-events-none" />
+        <div className="max-w-2xl mx-auto py-6 flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12 px-4 relative z-10">
           {STATS.map((s) => (
-            <div key={s.label} className="text-center space-y-1">
-              <p className="font-display text-lg sm:text-xl font-bold text-foreground">{s.value}</p>
-              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{s.label}</p>
+            <div key={s.label} className="text-center space-y-0.5 group">
+              <p className="font-display text-base sm:text-lg font-bold text-foreground group-hover:text-accent transition-colors">
+                {s.value}
+              </p>
+              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
+                {s.label}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section id="features" className="page max-w-5xl py-20 lg:py-28 px-4">
-        <div className="text-center max-w-lg mx-auto mb-16 space-y-3">
-          <p className="text-[10px] font-mono text-accent uppercase tracking-widest">
+      {/* Interactive Features Showcase (Card Carousel) */}
+      <section id="features" className="relative page max-w-6xl py-24 lg:py-32 px-4 overflow-hidden">
+        {/* Ambient radial glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-accent/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+        <div className="text-center max-w-xl mx-auto mb-8 space-y-3">
+          <p className="text-[11px] font-mono text-accent uppercase tracking-widest font-semibold">
             Platform Capabilities
           </p>
           <h2 className="font-display text-display-md sm:text-display-lg text-foreground tracking-tight">
             Everything you need for capacity building programs
           </h2>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto">
+            Hover and drag through our key platform modules engineered for educational excellence.
+          </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-6">
-          {FEATURES.map((f, index) => (
-            <div
-              key={f.title}
-              className="group rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-6 hover:border-accent/40 hover:shadow-lg transition-all duration-300 flex items-start gap-4 text-left"
-              style={{ animationDelay: `${index * 80}ms` }}
-            >
-              <div className="w-10 h-10 rounded-xl bg-accent/5 text-accent flex items-center justify-center shrink-0 group-hover:bg-accent group-hover:text-white transition-colors duration-300">
-                {f.icon}
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-display text-sm font-bold text-foreground">{f.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{f.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <CardCarousel />
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="bg-muted/20 border-y border-border backdrop-blur-sm">
-        <div className="page max-w-5xl py-20 lg:py-28 px-4">
+      <section id="how-it-works" className="relative bg-muted/20 border-y border-border/70 backdrop-blur-sm overflow-hidden">
+        <div className="page max-w-5xl py-24 lg:py-32 px-4 relative z-10">
           <div className="text-center max-w-lg mx-auto mb-16 space-y-3">
-            <p className="text-[10px] font-mono text-accent uppercase tracking-widest">
+            <p className="text-[11px] font-mono text-accent uppercase tracking-widest font-semibold">
               Simple Onboarding
             </p>
             <h2 className="font-display text-display-md sm:text-display-lg text-foreground tracking-tight">
@@ -130,24 +126,24 @@ export default function LandingPage() {
             {STEPS.map((s, index) => (
               <div
                 key={s.step}
-                className="space-y-3 text-center sm:text-left"
+                className="space-y-4 text-center sm:text-left p-6 rounded-2xl bg-card/40 border border-border/60 backdrop-blur-sm hover:border-accent/30 transition-colors"
                 style={{ animationDelay: `${index * 80}ms` }}
               >
-                <div className="w-12 h-12 rounded-2xl bg-accent/5 border border-accent/15 flex items-center justify-center font-mono text-lg text-accent font-bold mx-auto sm:mx-0">
+                <div className="w-12 h-12 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center font-mono text-lg text-accent font-bold mx-auto sm:mx-0 shadow-inner">
                   {s.step}
                 </div>
-                <h3 className="font-display text-xs font-bold text-foreground">{s.title}</h3>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">{s.description}</p>
+                <h3 className="font-display text-sm font-bold text-foreground">{s.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{s.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA section */}
+      {/* CTA section — Copper Shadow aura */}
       <section className="page max-w-4xl py-20 px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-10 sm:p-14 text-center shadow-elevated">
-          <div className="relative z-10 space-y-6 max-w-lg mx-auto">
+        <CopperShadowAura className="rounded-2xl text-white p-10 sm:p-14 text-center shadow-elevated min-h-[280px]">
+          <div className="space-y-6 max-w-lg mx-auto">
             <h2 className="font-display text-display-md sm:text-display-lg text-white tracking-tight">
               Ready to build capacity?
             </h2>
@@ -155,13 +151,15 @@ export default function LandingPage() {
               Register as a trainee to complete custom course paths, or as a trainer to manage resources and issue verifiable digital credentials.
             </p>
             <div className="pt-2">
-              <Link href="/sign-up" className="btn-primary py-2.5 px-6 shadow-lg hover:scale-[1.02] transition-transform inline-flex">
+              <Link
+                href="/sign-up"
+                className="btn-primary py-2.5 px-6 shadow-lg hover:scale-[1.02] transition-transform inline-flex"
+              >
                 Create Your Account
               </Link>
             </div>
           </div>
-          <div className="absolute right-0 bottom-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mb-16" />
-        </div>
+        </CopperShadowAura>
       </section>
 
       {/* Footer */}

@@ -6,11 +6,12 @@ import HeroGeometric from "@/components/hero-geometric";
 export function LandingHero() {
   return (
     <HeroGeometric
-      title1="Build capacity,"
-      title2="measure growth"
-      description="A state-of-the-art training management platform to deliver structured educational paths, map coordinator competencies, and track measurable outcomes."
+      title1="Learn smarter,"
+      title2="grow faster"
+      description="A state-of-the-art training management platform to deliver structured educational paths."
       color1="#EA580C"
       color2="#fdfdfdff"
+      opacity={0.85}
     >
       <div className="flex flex-wrap gap-4 justify-center pt-2">
         <Link

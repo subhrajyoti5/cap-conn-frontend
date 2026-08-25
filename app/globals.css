@@ -628,3 +628,71 @@
     rgba(17, 24, 39, 0) 100%
   );
 }
+
+/**
+ * Copper Shadow aura — CTA card background
+ * Base #100e0b is a sibling under the layers (see CopperShadowAura).
+ */
+.copper-shadow-layer-1,
+.copper-shadow-layer-2,
+.copper-shadow-layer-3,
+.copper-shadow-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.copper-shadow-layer-1 {
+  background: radial-gradient(
+    58% 62% at 72% 64%,
+    rgba(127, 72, 39, 0.32) 0%,
+    rgba(74, 43, 26, 0.16) 42%,
+    transparent 80%
+  );
+  mix-blend-mode: screen;
+  filter: blur(145px);
+}
+
+.copper-shadow-layer-2 {
+  background: linear-gradient(
+    135deg,
+    transparent 35%,
+    rgba(160, 91, 45, 0.2) 52%,
+    transparent 70%
+  );
+  mix-blend-mode: screen;
+  filter: blur(113px);
+  opacity: 0.8;
+}
+
+.copper-shadow-layer-3 {
+  background: radial-gradient(
+    28% 30% at 84% 22%,
+    rgba(194, 119, 69, 0.13) 0%,
+    transparent 78%
+  );
+  mix-blend-mode: soft-light;
+  filter: blur(88px);
+  opacity: 0.8;
+}
+
+.copper-shadow-grain {
+  mix-blend-mode: overlay;
+  opacity: 0.85;
+}
+
+@media (min-width: 768px) {
+  .copper-shadow-layer-1 {
+    filter: blur(209px);
+  }
+
+  .copper-shadow-layer-2 {
+    filter: blur(162px);
+  }
+
+  .copper-shadow-layer-3 {
+    filter: blur(126px);
+  }
+}
