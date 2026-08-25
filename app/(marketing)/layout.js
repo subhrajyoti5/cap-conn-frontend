@@ -5,7 +5,7 @@ export default function MarketingLayout({ children }) {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       <div className="relative z-10 min-h-screen flex flex-col">
-        <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/80 backdrop-blur-md">
+        <header className="glass-nav fixed top-0 inset-x-0 z-40 h-14">
           <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
             <Link href="/" className="flex items-center gap-2" aria-label="Capacity Connect Home">
               <Logo className="w-8 h-8 text-accent" />
@@ -30,7 +30,7 @@ export default function MarketingLayout({ children }) {
             </nav>
           </div>
         </header>
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pt-14">{children}</main>
       </div>
     </div>
   );

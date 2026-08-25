@@ -81,7 +81,7 @@ export function Navbar({ onMenuClick, onToggleSidebar }) {
   }
 
   return (
-    <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/80 backdrop-blur-sm">
+    <header className="glass-nav sticky top-0 z-40 h-14">
       <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
         
         {/* Left section: Hamburger toggles and Branding logo */}
