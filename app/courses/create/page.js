@@ -86,20 +86,30 @@ export default function CreateCoursePage() {
 
           <div className="form-field">
             <label className="label" htmlFor="subject">Subject</label>
-            <select
-              id="subject"
-              className="select"
-              value={form.subjectId}
-              onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
-              required
-            >
-              <option value="">Select a subject</option>
-              {subjects.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+            {subjects.length === 0 ? (
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-600 dark:text-amber-400">
+                No subjects available in the database yet. Please ask an Admin to add subjects at{" "}
+                <Link href="/admin/subjects" className="font-semibold underline">
+                  /admin/subjects
+                </Link>{" "}
+                first.
+              </div>
+            ) : (
+              <select
+                id="subject"
+                className="select"
+                value={form.subjectId}
+                onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
+                required
+              >
+                <option value="">Select a subject</option>
+                {subjects.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className="flex items-center gap-3 pt-2">

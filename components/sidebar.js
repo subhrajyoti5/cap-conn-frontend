@@ -75,6 +75,11 @@ const NAV_ITEMS = [
     roles: ["ADMIN"],
   },
   {
+    label: "Subjects",
+    href: "/admin/subjects",
+    roles: ["ADMIN"],
+  },
+  {
     label: "Certifications",
     href: "/certifications",
     roles: ["ADMIN"],
