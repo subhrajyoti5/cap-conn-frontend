@@ -31,7 +31,7 @@ export default function AdminSubjectsPage() {
     setCreating(true);
     setError("");
     try {
-      await apiFetch("/subjects", {
+      await apiFetch("/admin/subjects", {
         method: "POST",
         body: JSON.stringify({ name: newName, description: newDesc }),
       });
