@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/features/auth/auth-context";
 import { Logo } from "@/components/logo";
+import { apiFetch } from "@/lib/api";
 
 export function Navbar({ onMenuClick, onToggleSidebar }) {
   const { isSignedIn, signOut, user } = useAuth();
