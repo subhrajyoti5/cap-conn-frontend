@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/auth-context";
 import { useParams } from "next/navigation";
 import { getCourse, enrollCourse, publishCourse } from "@/features/courses/api/courses.api";
+import { getResource } from "@/features/resources/api/resources.api";
 import { UploadResourceModal } from "@/components/upload-resource-modal";
 import Link from "next/link";
 
@@ -63,6 +64,29 @@ export default function CourseDetailPage() {
       console.error(e);
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function handleOpenResource(resource) {
+    if (!resource) return;
+    if (resource.storageKey?.startsWith("http://") || resource.storageKey?.startsWith("https://")) {
+      window.open(resource.storageKey, "_blank", "noopener,noreferrer");
+      return;
+    }
+    if (resource.downloadUrl) {
+      window.open(resource.downloadUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const res = await getResource(token, resource.id);
+      const url = res.data?.downloadUrl || res.downloadUrl;
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+    } catch (err) {
+      console.error("Failed to fetch download url:", err);
     }
   }
 
@@ -256,15 +280,14 @@ export default function CourseDetailPage() {
                           
                           {/* Quick access preview buttons */}
                           {post.type === "resource" && (
-                            <a
-                              href={post.data.downloadUrl || (post.data.storageKey?.startsWith("http") ? post.data.storageKey : `https://ae1f41394679d95ee9a8407ea7d91efb.r2.cloudflarestorage.com/capconn/${post.data.storageKey}`)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted transition-colors mt-2"
+                            <button
+                              type="button"
+                              onClick={() => handleOpenResource(post.data)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted transition-colors mt-2 cursor-pointer"
                             >
                               <span>📂</span>
                               Open Resource
-                            </a>
+                            </button>
                           )}
                           
                           {post.type === "assessment" && (
@@ -324,14 +347,13 @@ export default function CourseDetailPage() {
                             )}
                           </div>
                         </div>
-                        <a
-                          href={res.downloadUrl || (res.storageKey?.startsWith("http") ? res.storageKey : `https://ae1f41394679d95ee9a8407ea7d91efb.r2.cloudflarestorage.com/capconn/${res.storageKey}`)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-secondary btn-sm px-3 py-1 text-[10px] shrink-0"
+                        <button
+                          type="button"
+                          onClick={() => handleOpenResource(res)}
+                          className="btn-secondary btn-sm px-3 py-1 text-[10px] shrink-0 cursor-pointer"
                         >
                           Open ↗
-                        </a>
+                        </button>
                       </div>
                     ))}
                   </div>
