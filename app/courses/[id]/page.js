@@ -257,7 +257,7 @@ export default function CourseDetailPage() {
                           {/* Quick access preview buttons */}
                           {post.type === "resource" && (
                             <a
-                              href={post.data.storageKey}
+                              href={post.data.downloadUrl || (post.data.storageKey?.startsWith("http") ? post.data.storageKey : `https://ae1f41394679d95ee9a8407ea7d91efb.r2.cloudflarestorage.com/capconn/${post.data.storageKey}`)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted transition-colors mt-2"
@@ -325,7 +325,7 @@ export default function CourseDetailPage() {
                           </div>
                         </div>
                         <a
-                          href={res.storageKey}
+                          href={res.downloadUrl || (res.storageKey?.startsWith("http") ? res.storageKey : `https://ae1f41394679d95ee9a8407ea7d91efb.r2.cloudflarestorage.com/capconn/${res.storageKey}`)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="btn-secondary btn-sm px-3 py-1 text-[10px] shrink-0"
