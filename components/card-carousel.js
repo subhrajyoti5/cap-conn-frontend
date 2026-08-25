@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const DEFAULT_CAROUSEL_ITEMS = [
   {
@@ -169,7 +168,9 @@ export function CardCarousel({
           className="p-1.5 cursor-pointer hover:bg-accent/10 rounded-full transition-colors border-0 bg-transparent text-muted-foreground hover:text-foreground"
           aria-label="Previous card"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
         </button>
 
         <div className="flex justify-center items-center gap-1.5 px-1">
@@ -194,7 +195,9 @@ export function CardCarousel({
           className="p-1.5 cursor-pointer hover:bg-accent/10 rounded-full transition-colors border-0 bg-transparent text-muted-foreground hover:text-foreground"
           aria-label="Next card"
         >
-          <ChevronRight className="w-4 h-4" />
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
         </button>
       </div>
     </div>
