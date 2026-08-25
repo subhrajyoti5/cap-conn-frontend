@@ -92,16 +92,21 @@ export default function TrainerDashboardPage() {
     <div className="space-y-8 animate-in stagger-1">
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-800 text-white p-8 shadow-lg shadow-emerald/10">
-        <div className="relative z-10 max-w-2xl">
-          <span className="badge bg-white/20 text-white border-transparent text-xs font-mono uppercase tracking-wider">
-            Trainer Portal
-          </span>
-          <h1 className="font-display text-display-lg text-white mt-3 leading-tight">
-            Teacher Dashboard{user?.name ? `, ${user.name}` : ""}
-          </h1>
-          <p className="text-white/80 text-sm mt-2 leading-relaxed">
-            Create courses, design multiple-choice assessments, grade trainee work, and track enrollment metrics to support India&apos;s meteorological capacity.
-          </p>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="max-w-2xl">
+            <span className="badge bg-white/20 text-white border-transparent text-xs font-mono uppercase tracking-wider">
+              Trainer Portal
+            </span>
+            <h1 className="font-display text-display-lg text-white mt-3 leading-tight">
+              Teacher Dashboard{user?.name ? `, ${user.name}` : ""}
+            </h1>
+            <p className="text-white/80 text-sm mt-2 leading-relaxed">
+              Create courses, design multiple-choice assessments, grade trainee work, and track enrollment metrics to support India&apos;s meteorological capacity.
+            </p>
+          </div>
+          <Link href="/trainer/profile" className="btn-secondary bg-white text-emerald-800 border-transparent hover:bg-white/90 shrink-0 self-start sm:self-center">
+            Edit Profile
+          </Link>
         </div>
         <div className="absolute right-0 bottom-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mb-16" />
       </div>

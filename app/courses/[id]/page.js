@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { getCourse, enrollCourse, publishCourse } from "@/features/courses/api/courses.api";
 import { getResource } from "@/features/resources/api/resources.api";
 import { UploadResourceModal } from "@/components/upload-resource-modal";
+import { apiFetch } from "@/lib/api";
 import Link from "next/link";
 
 export default function CourseDetailPage() {
@@ -18,8 +19,27 @@ export default function CourseDetailPage() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [authToken, setAuthToken] = useState("");
   
+  // Trainer Modal State
+  const [showTrainerModal, setShowTrainerModal] = useState(false);
+  const [trainerProfile, setTrainerProfile] = useState(null);
+  const [loadingTrainer, setLoadingTrainer] = useState(false);
+  
   // Tabs State
   const [activeTab, setActiveTab] = useState("stream"); // stream, classwork, people
+
+  async function handleViewTrainer() {
+    if (!course?.trainerId) return;
+    setShowTrainerModal(true);
+    setLoadingTrainer(true);
+    try {
+      const res = await apiFetch(`/profiles/trainers/${course.trainerId}`);
+      setTrainerProfile(res.data);
+    } catch (e) {
+      console.error("Error loading trainer public profile:", e);
+    } finally {
+      setLoadingTrainer(false);
+    }
+  }
 
   async function load() {
     const token = await getToken();
@@ -191,42 +211,112 @@ export default function CourseDetailPage() {
         <div className="absolute right-0 top-0 w-32 h-32 bg-white/5 rounded-full -mr-8 -mt-8" />
       </div>
 
-      {/* Classroom Navigation Tabs */}
-      <div className="border-b border-border flex items-center gap-6">
-        <button
-          onClick={() => setActiveTab("stream")}
-          className={`py-3 text-sm font-semibold border-b-2 transition-colors ${
-            activeTab === "stream" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Stream
-        </button>
-        <button
-          onClick={() => setActiveTab("classwork")}
-          className={`py-3 text-sm font-semibold border-b-2 transition-colors ${
-            activeTab === "classwork" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Classwork
-        </button>
-        <button
-          onClick={() => setActiveTab("people")}
-          className={`py-3 text-sm font-semibold border-b-2 transition-colors ${
-            activeTab === "people" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          People
-        </button>
-      </div>
-
-      {/* Tab Panels */}
       {!hasAccess && user?.role === "TRAINEE" ? (
-        <div className="empty-state bg-card border border-border rounded-xl py-12 text-center">
-          <p className="empty-state-title">Access Restricted</p>
-          <p className="empty-state-desc">Please enroll in this course to view resources, stream feed, and classwork.</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="card border border-border p-6 bg-card space-y-4">
+              <h3 className="font-display font-bold text-base text-foreground">Course Overview</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {course.description || "No description provided for this classroom course."}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="card border border-border p-5 bg-card flex flex-col justify-between">
+                <span className="text-2xl font-bold font-display text-primary">
+                  {(course?.resources || []).filter((r) => r.type === "LECTURE").length}
+                </span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase mt-1 tracking-wider">
+                  Lectures
+                </span>
+              </div>
+              <div className="card border border-border p-5 bg-card flex flex-col justify-between">
+                <span className="text-2xl font-bold font-display text-accent">
+                  {(course?.resources || []).filter((r) => ["DOCUMENT", "PRESENTATION", "STUDY_MATERIAL"].includes(r.type)).length}
+                </span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase mt-1 tracking-wider">
+                  Documents
+                </span>
+              </div>
+              <div className="card border border-border p-5 bg-card flex flex-col justify-between">
+                <span className="text-2xl font-bold font-display text-emerald-600">
+                  {(course?.assessments || []).filter((a) => a.status === "PUBLISHED").length}
+                </span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase mt-1 tracking-wider">
+                  Assignments
+                </span>
+              </div>
+            </div>
+
+            <div className="p-6 bg-primary/5 border border-primary/10 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <h4 className="font-bold text-sm text-foreground">Ready to start learning?</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">Enroll to get access to all lectures, classwork materials, and certificates.</p>
+              </div>
+              {course.status === "PUBLISHED" && (
+                <button
+                  onClick={handleEnroll}
+                  disabled={actionLoading}
+                  className="btn-primary py-2 px-5 text-xs font-semibold shrink-0"
+                >
+                  {actionLoading ? "Enrolling..." : "Enroll in Course"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="lg:col-span-1 space-y-6">
+            <div className="card border border-border p-6 bg-card space-y-4">
+              <h3 className="font-display font-bold text-sm text-foreground">Instructor</h3>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                  {course.trainer?.name ? course.trainer.name[0].toUpperCase() : "T"}
+                </div>
+                <div>
+                  <h4 className="font-semibold text-xs text-foreground">{course.trainer?.name || "Unassigned Trainer"}</h4>
+                  <p className="text-[10px] text-muted-foreground truncate">{course.trainer?.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleViewTrainer}
+                className="btn-secondary w-full text-xs py-2 text-center block font-semibold border-border hover:bg-muted/40"
+              >
+                View Instructor Profile
+              </button>
+            </div>
+          </div>
         </div>
       ) : (
-        <div className="space-y-6">
+        <>
+          {/* Classroom Navigation Tabs */}
+          <div className="border-b border-border flex items-center gap-6">
+            <button
+              onClick={() => setActiveTab("stream")}
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${
+                activeTab === "stream" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Stream
+            </button>
+            <button
+              onClick={() => setActiveTab("classwork")}
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${
+                activeTab === "classwork" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Classwork
+            </button>
+            <button
+              onClick={() => setActiveTab("people")}
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${
+                activeTab === "people" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              People
+            </button>
+          </div>
+
+          <div className="space-y-6">
           {/* TAB: STREAM */}
           {activeTab === "stream" && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -462,7 +552,8 @@ export default function CourseDetailPage() {
             </div>
           )}
         </div>
-      )}
+      </>
+    )}
 
       {/* Resource Upload Modal */}
       <UploadResourceModal
@@ -472,6 +563,163 @@ export default function CourseDetailPage() {
         token={authToken}
         onResourceUploaded={load}
       />
+
+      {/* Trainer Profile Modal Overlay */}
+      {showTrainerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in-50 duration-200">
+          <div className="bg-card border border-border w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl shadow-elevated flex flex-col p-6 space-y-6 relative">
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setShowTrainerModal(false);
+                setTrainerProfile(null);
+              }}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-sm font-semibold p-1 hover:bg-muted/40 rounded-full w-7 h-7 flex items-center justify-center transition-colors"
+            >
+              ✕
+            </button>
+
+            {loadingTrainer ? (
+              <div className="py-12 flex flex-col items-center justify-center space-y-4 animate-pulse w-full">
+                <div className="w-16 h-16 rounded-full bg-muted" />
+                <div className="h-6 w-48 bg-muted rounded" />
+                <div className="h-4 w-72 bg-muted rounded" />
+              </div>
+            ) : trainerProfile ? (
+              <div className="space-y-6">
+                {/* Header Banner */}
+                <div className="flex items-center gap-4 border-b border-border pb-4">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
+                    {trainerProfile.fullName ? trainerProfile.fullName[0].toUpperCase() : "T"}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold font-display text-foreground">{trainerProfile.fullName || "Trainer"}</h3>
+                    <p className="text-xs text-muted-foreground">{trainerProfile.phone || "No phone contact"}</p>
+                  </div>
+                </div>
+
+                {/* Biography */}
+                {trainerProfile.bio && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Biography</h4>
+                    <p className="text-xs text-foreground leading-relaxed italic bg-muted/20 border border-border/40 p-3 rounded-lg">
+                      &ldquo;{trainerProfile.bio}&rdquo;
+                    </p>
+                  </div>
+                )}
+
+                {/* Qualifications & Degrees */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Qualifications</h4>
+                    {trainerProfile.qualifications?.length > 0 ? (
+                      <ul className="space-y-2 text-xs">
+                        {trainerProfile.qualifications.map((q) => (
+                          <li key={q.id} className="p-2 rounded bg-muted/30 border border-border/40">
+                            <span className="font-semibold block text-foreground">{q.degree}</span>
+                            <span className="text-[10px] text-muted-foreground">{q.institution} ({q.year})</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No qualifications declared.</p>
+                    )}
+                  </div>
+
+                  {/* Work Experience */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Experience</h4>
+                    {trainerProfile.workExperiences?.length > 0 ? (
+                      <ul className="space-y-2 text-xs">
+                        {trainerProfile.workExperiences.map((w) => (
+                          <li key={w.id} className="p-2 rounded bg-muted/30 border border-border/40">
+                            <span className="font-semibold block text-foreground">{w.role}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {w.organization} ({new Date(w.startDate).toLocaleDateString()} –{" "}
+                              {w.endDate ? new Date(w.endDate).toLocaleDateString() : "Present"})
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No work experience declared.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Skills and Competencies */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Skills */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Skills</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {trainerProfile.skills?.length > 0 ? (
+                        trainerProfile.skills.map((s) => (
+                          <span key={s.id} className="badge bg-muted/60 border border-border text-[9px] py-0.5 px-2">
+                            {s.name}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground">No skills declared.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Competencies */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Competencies</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {trainerProfile.trainerCompetencies?.length > 0 ? (
+                        trainerProfile.trainerCompetencies.map((tc) => (
+                          <span key={tc.id} className="badge bg-primary/10 border border-primary/20 text-primary text-[9px] py-0.5 px-2">
+                            {tc.competency?.name || "Competency"}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground">No competencies declared.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Courses Taught */}
+                <div className="space-y-3 pt-3 border-t border-border">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Other Courses Taught</h4>
+                  {trainerProfile.courses?.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {trainerProfile.courses.map((c) => (
+                        <Link
+                          key={c.id}
+                          href={`/courses/${c.id}`}
+                          onClick={() => {
+                            setShowTrainerModal(false);
+                            setTrainerProfile(null);
+                          }}
+                          className="p-3 bg-muted/10 hover:bg-muted/30 border border-border rounded-xl flex flex-col justify-between hover:border-primary/40 transition-all text-xs"
+                        >
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-primary font-semibold font-mono">
+                              {c.subject?.name || "LMS Subject"}
+                            </span>
+                            <span className="font-semibold block text-foreground mt-0.5 line-clamp-1">{c.title}</span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground mt-2">
+                            {c.enrollments?.length || 0} enrolled
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No other published courses taught.</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-6">Could not load trainer profile.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
