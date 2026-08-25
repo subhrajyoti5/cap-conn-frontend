@@ -7,20 +7,20 @@ import Link from "next/link";
 
 export default function TrainerProfilePage() {
   const { getToken } = useAuth();
-  
-  // Base details state
+
+
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
-  
-  // Lists state
+
+
   const [qualifications, setQualifications] = useState([]);
   const [workExperiences, setWorkExperiences] = useState([]);
   const [skills, setSkills] = useState([]);
   const [trainerCompetencies, setTrainerCompetencies] = useState([]);
   const [allCompetencies, setAllCompetencies] = useState([]);
-  
-  // Form input states
+
+
   const [newQual, setNewQual] = useState({ degree: "", institution: "", year: "" });
   const [newExp, setNewExp] = useState({ role: "", organization: "", startDate: "", endDate: "" });
   const [newSkill, setNewSkill] = useState("");
@@ -34,7 +34,7 @@ export default function TrainerProfilePage() {
     try {
       const token = await getToken();
       if (!token) return;
-      
+
       const [profileRes, competenciesRes] = await Promise.all([
         apiFetch("/profiles/me"),
         apiFetch("/competencies"),
@@ -49,7 +49,7 @@ export default function TrainerProfilePage() {
         setSkills(profileRes.data.skills || []);
         setTrainerCompetencies(profileRes.data.trainerCompetencies || []);
       }
-      
+
       setAllCompetencies(competenciesRes.data || competenciesRes || []);
     } catch (e) {
       console.error("Error loading profile:", e);
@@ -171,8 +171,8 @@ export default function TrainerProfilePage() {
   async function handleAddCompetency(e) {
     e.preventDefault();
     if (!selectedCompetencyId) return;
-    
-    // Check if already added
+
+
     if (trainerCompetencies.some(tc => tc.competencyId === selectedCompetencyId)) {
       alert("Competency already added to profile!");
       return;
@@ -183,8 +183,8 @@ export default function TrainerProfilePage() {
         method: "POST",
         body: JSON.stringify({ competencyId: selectedCompetencyId }),
       });
-      
-      // Reload profile to get populated competency details
+
+
       const profileRes = await apiFetch("/profiles/me");
       if (profileRes.data) {
         setTrainerCompetencies(profileRes.data.trainerCompetencies || []);
@@ -231,7 +231,7 @@ export default function TrainerProfilePage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Base Details */}
+
         <div className="space-y-6 md:col-span-1">
           <div className="card border border-border p-6 bg-card">
             <h2 className="font-bold text-sm text-foreground mb-4">Basic Details</h2>
@@ -276,17 +276,16 @@ export default function TrainerProfilePage() {
           </div>
         </div>
 
-        {/* Right Column: Qualifications, Work Experience, Skills, Competencies */}
+
         <div className="space-y-6 md:col-span-2">
-          {/* Qualifications Panel */}
+
           <div className="card border border-border p-6 bg-card space-y-4">
             <h2 className="font-bold text-sm text-foreground">Qualifications & Degrees</h2>
-            
-            {/* List */}
+
             {qualifications.length > 0 && (
-              <ul className="data-list divide-y divide-border border-b border-border mb-4">
+              <div className="space-y-2.5 mb-4">
                 {qualifications.map((q) => (
-                  <li key={q.id} className="py-2.5 flex items-center justify-between text-xs">
+                  <div key={q.id} className="flex items-center justify-between p-3.5 bg-card border border-border rounded-xl text-xs hover:shadow-sm transition-shadow">
                     <div>
                       <p className="font-semibold text-foreground">{q.degree}</p>
                       <p className="text-muted-foreground">{q.institution} ({q.year})</p>
@@ -294,16 +293,17 @@ export default function TrainerProfilePage() {
                     <button
                       onClick={() => handleRemoveQual(q.id)}
                       disabled={actionId === q.id}
-                      className="btn-danger btn-sm px-2 py-1 text-[10px]"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs transition-colors shrink-0"
+                      title="Remove"
                     >
-                      {actionId === q.id ? "..." : "Remove"}
+                      {actionId === q.id ? "..." : "✕"}
                     </button>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
 
-            {/* Add form */}
+
             <form onSubmit={handleAddQual} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
               <div>
                 <label className="label text-xs">Degree / Qualification</label>
@@ -348,15 +348,14 @@ export default function TrainerProfilePage() {
             </form>
           </div>
 
-          {/* Work Experience Panel */}
+
           <div className="card border border-border p-6 bg-card space-y-4">
             <h2 className="font-bold text-sm text-foreground">Work Experience</h2>
-            
-            {/* List */}
+
             {workExperiences.length > 0 && (
-              <ul className="data-list divide-y divide-border border-b border-border mb-4">
+              <div className="space-y-2.5 mb-4">
                 {workExperiences.map((w) => (
-                  <li key={w.id} className="py-2.5 flex items-center justify-between text-xs">
+                  <div key={w.id} className="flex items-center justify-between p-3.5 bg-card border border-border rounded-xl text-xs hover:shadow-sm transition-shadow">
                     <div>
                       <p className="font-semibold text-foreground">{w.role}</p>
                       <p className="text-muted-foreground">
@@ -367,16 +366,17 @@ export default function TrainerProfilePage() {
                     <button
                       onClick={() => handleRemoveExp(w.id)}
                       disabled={actionId === w.id}
-                      className="btn-danger btn-sm px-2 py-1 text-[10px]"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs transition-colors shrink-0"
+                      title="Remove"
                     >
-                      {actionId === w.id ? "..." : "Remove"}
+                      {actionId === w.id ? "..." : "✕"}
                     </button>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
 
-            {/* Add form */}
+
             <form onSubmit={handleAddExp} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label text-xs">Role / Job Title</label>
@@ -427,13 +427,13 @@ export default function TrainerProfilePage() {
             </form>
           </div>
 
-          {/* Skills and Competencies Row */}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Skills Panel */}
+
             <div className="card border border-border p-6 bg-card space-y-4">
               <h2 className="font-bold text-sm text-foreground">Skills</h2>
-              
-              {/* List */}
+
+
               <div className="flex flex-wrap gap-1.5">
                 {skills.length === 0 ? (
                   <p className="text-xs text-muted-foreground">No skills added yet.</p>
@@ -452,7 +452,7 @@ export default function TrainerProfilePage() {
                 )}
               </div>
 
-              {/* Add form */}
+
               <form onSubmit={handleAddSkill} className="flex gap-2">
                 <input
                   type="text"
@@ -468,11 +468,11 @@ export default function TrainerProfilePage() {
               </form>
             </div>
 
-            {/* Competencies Panel */}
+
             <div className="card border border-border p-6 bg-card space-y-4">
               <h2 className="font-bold text-sm text-foreground">My Competencies</h2>
-              
-              {/* List */}
+
+
               <div className="flex flex-wrap gap-1.5">
                 {trainerCompetencies.length === 0 ? (
                   <p className="text-xs text-muted-foreground">No competencies added yet.</p>
@@ -492,7 +492,7 @@ export default function TrainerProfilePage() {
                 )}
               </div>
 
-              {/* Add form */}
+
               <form onSubmit={handleAddCompetency} className="flex gap-2">
                 <select
                   required

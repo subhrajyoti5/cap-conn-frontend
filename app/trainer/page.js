@@ -16,23 +16,33 @@ export default function TrainerDashboardPage() {
   const { getToken, user } = useAuth();
   const [data, setData] = useState(null);
   const [courses, setCourses] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [actionMessage, setActionMessage] = useState("");
 
   async function load() {
     try {
       const token = await getToken();
       if (!token) return;
 
-      const [dashRes, coursesRes] = await Promise.all([
+      const [dashRes, coursesRes, profileRes, invitesRes] = await Promise.all([
         apiFetch("/dashboard/trainer"),
         apiFetch("/courses"),
+        apiFetch("/profiles/me"),
+        apiFetch("/courses/invitations/pending"),
       ]);
 
       setData(dashRes.data || dashRes);
+      setProfile(profileRes.data || null);
+      setInvitations(invitesRes.data || []);
       
-      // Filter only the courses created by this trainer
       const allCourses = coursesRes.data || coursesRes || [];
-      const trainerCourses = allCourses.filter((c) => c.trainerId === user?.id);
+      const trainerCourses = allCourses.filter((c) => 
+        c.trainerId === user?.id || 
+        (c.trainers && c.trainers.some((ct) => ct.trainerId === user?.id))
+      );
       setCourses(trainerCourses);
     } catch (e) {
       console.error("Error loading trainer dashboard:", e);
@@ -44,6 +54,40 @@ export default function TrainerDashboardPage() {
   useEffect(() => {
     load();
   }, [user]);
+
+  async function handleAcceptInvite(courseId) {
+    setActionLoadingId(courseId);
+    setActionMessage("");
+    try {
+      await apiFetch(`/courses/${courseId}/accept-invitation`, { method: "POST" });
+      setActionMessage("Successfully joined course as co-trainer.");
+      setTimeout(() => setActionMessage(""), 4000);
+      load();
+    } catch (e) {
+      console.error(e);
+      setActionMessage("Failed to accept invitation.");
+      setTimeout(() => setActionMessage(""), 4000);
+    } finally {
+      setActionLoadingId(null);
+    }
+  }
+
+  async function handleRejectInvite(courseId) {
+    setActionLoadingId(courseId);
+    setActionMessage("");
+    try {
+      await apiFetch(`/courses/${courseId}/reject-invitation`, { method: "POST" });
+      setActionMessage("Invitation rejected.");
+      setTimeout(() => setActionMessage(""), 4000);
+      load();
+    } catch (e) {
+      console.error(e);
+      setActionMessage("Failed to reject invitation.");
+      setTimeout(() => setActionMessage(""), 4000);
+    } finally {
+      setActionLoadingId(null);
+    }
+  }
 
   if (loading) {
     return (
@@ -90,7 +134,6 @@ export default function TrainerDashboardPage() {
 
   return (
     <div className="space-y-8 animate-in stagger-1">
-      {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-800 text-white p-8 shadow-lg shadow-emerald/10">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="max-w-2xl">
@@ -98,11 +141,20 @@ export default function TrainerDashboardPage() {
               Trainer Portal
             </span>
             <h1 className="font-display text-display-lg text-white mt-3 leading-tight">
-              Teacher Dashboard{user?.name ? `, ${user.name}` : ""}
+              {profile?.fullName || user?.name || "Trainer"}
             </h1>
-            <p className="text-white/80 text-sm mt-2 leading-relaxed">
-              Create courses, design multiple-choice assessments, grade trainee work, and track enrollment metrics to support India&apos;s meteorological capacity.
+            <p className="text-white/80 text-xs mt-2 leading-relaxed italic max-w-xl">
+              {profile?.bio || "No biography details configured yet. Update your profile info to add a biography."}
             </p>
+            {profile?.qualifications?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {profile.qualifications.map((q) => (
+                  <span key={q.id} className="text-[10px] bg-white/10 text-white/95 border border-white/25 px-2.5 py-0.5 rounded-full font-medium">
+                    🎓 {q.degree} ({q.institution} - {q.year})
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <Link href="/trainer/profile" className="btn-secondary bg-white text-emerald-800 border-transparent hover:bg-white/90 shrink-0 self-start sm:self-center">
             Edit Profile
@@ -111,7 +163,6 @@ export default function TrainerDashboardPage() {
         <div className="absolute right-0 bottom-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mb-16" />
       </div>
 
-      {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {stats.map((stat, index) => (
           <div key={stat.label} className="card-shell hover:shadow-elevated transition-all duration-300" style={{ animationDelay: `${index * 50}ms` }}>
@@ -129,8 +180,48 @@ export default function TrainerDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Column: Trainer's Courses */}
         <div className="lg:col-span-3 space-y-6">
+          {invitations.length > 0 && (
+            <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-6 space-y-4">
+              <h3 className="font-display font-bold text-xs text-foreground flex items-center gap-1.5">
+                ✉️ Pending Co-Trainer Invitations
+              </h3>
+              {actionMessage && (
+                <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs p-3 rounded-xl">
+                  {actionMessage}
+                </div>
+              )}
+              <div className="space-y-3">
+                {invitations.map((invite) => (
+                  <div key={invite.id} className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-bold text-foreground">{invite.course?.title}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Invited by: {invite.course?.trainer?.name || invite.course?.trainer?.email}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleAcceptInvite(invite.courseId)}
+                        disabled={actionLoadingId !== null}
+                        className="btn-primary text-[10px] py-1 px-3"
+                      >
+                        {actionLoadingId === invite.courseId ? "Accepting..." : "Accept"}
+                      </button>
+                      <button
+                        onClick={() => handleRejectInvite(invite.courseId)}
+                        disabled={actionLoadingId !== null}
+                        className="btn-secondary text-[10px] py-1 px-3 border border-border"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between border-b border-border pb-3">
             <h2 className="font-display text-lg font-bold text-foreground">
               My Classrooms
