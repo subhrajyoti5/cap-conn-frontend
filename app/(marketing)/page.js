@@ -75,9 +75,6 @@ export default function LandingPage() {
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl -z-10" />
 
         <div className="page max-w-4xl text-center space-y-8 px-4">
-          <span className="badge badge-accent uppercase tracking-wider text-xs font-mono py-1 px-3">
-            Next-Generation LMS
-          </span>
           <h1 className="font-display text-display-xl md:text-[3.75rem] text-foreground leading-[1.05] tracking-tight max-w-3xl mx-auto">
             Build capacity, <span className="bg-gradient-to-r from-accent to-orange-500 bg-clip-text text-transparent font-bold">measure growth</span>
           </h1>
