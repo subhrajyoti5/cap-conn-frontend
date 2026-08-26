@@ -119,11 +119,10 @@ export function CardCarousel({
                 >
                   <div
                     onClick={(e) => toSlide(e, i)}
-                    className={`w-full h-[260px] sm:h-[280px] rounded-2xl p-6 text-left flex flex-col justify-between cursor-pointer transition-all duration-300 border ${
-                      isActive
+                    className={`w-full h-[260px] sm:h-[280px] rounded-2xl p-6 text-left flex flex-col justify-between cursor-pointer transition-all duration-300 border ${isActive
                         ? "bg-gradient-to-b from-card to-card/90 text-foreground border-accent/40 shadow-2xl shadow-accent/10 ring-1 ring-accent/20"
                         : "bg-card/60 backdrop-blur-md text-foreground/70 border-border/70 hover:border-border hover:text-foreground shadow-lg"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-mono font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
@@ -148,9 +147,8 @@ export function CardCarousel({
                         {isActive ? "● Active Feature" : "Click to view"}
                       </span>
                       <div
-                        className={`w-2 h-2 rounded-full ${
-                          isActive ? "bg-accent" : "bg-muted-foreground/30"
-                        }`}
+                        className={`w-2 h-2 rounded-full ${isActive ? "bg-accent" : "bg-muted-foreground/30"
+                          }`}
                       />
                     </div>
                   </div>
@@ -180,11 +178,10 @@ export function CardCarousel({
               type="button"
               onClick={(e) => toSlide(e, i)}
               aria-label={`Go to card ${i + 1}`}
-              className={`rounded-full cursor-pointer h-1.5 transition-all duration-300 border-0 p-0 ${
-                activeIndex === i
+              className={`rounded-full cursor-pointer h-1.5 transition-all duration-300 border-0 p-0 ${activeIndex === i
                   ? "w-6 bg-accent"
                   : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/60"
-              }`}
+                }`}
             />
           ))}
         </div>

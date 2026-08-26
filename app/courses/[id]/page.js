@@ -6,8 +6,9 @@ import { useParams } from "next/navigation";
 import { getCourse, enrollCourse, publishCourse } from "@/features/courses/api/courses.api";
 import { getResource } from "@/features/resources/api/resources.api";
 import { UploadResourceModal } from "@/components/upload-resource-modal";
-import { CreateAiAssignmentModal } from "@/components/create-ai-assignment-modal";
+import { AssignmentStudioModal } from "@/components/assignment-studio-modal";
 import { TakeAssessmentModal } from "@/components/take-assessment-modal";
+import { ViewSubmissionsModal } from "@/components/view-submissions-modal";
 import { apiFetch } from "@/lib/api";
 import Link from "next/link";
 
@@ -20,6 +21,8 @@ export default function CourseDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [aiAssignmentOpen, setAiAssignmentOpen] = useState(false);
+  const [editingAssessment, setEditingAssessment] = useState(null);
+  const [viewSubmissionsAssessment, setViewSubmissionsAssessment] = useState(null);
   const [takeAssessment, setTakeAssessment] = useState(null);
   const [authToken, setAuthToken] = useState("");
 
@@ -731,58 +734,138 @@ export default function CourseDetailPage() {
                     {(isOwner || isAdmin) && (
                       <button
                         type="button"
-                        onClick={() => setAiAssignmentOpen(true)}
-                        className="btn-primary btn-sm flex items-center gap-1"
+                        onClick={() => {
+                          setEditingAssessment(null);
+                          setAiAssignmentOpen(true);
+                        }}
+                        className="btn-primary btn-sm flex items-center gap-1.5 shadow-sm"
                       >
-                        <span>✨</span>
-                        Create AI Assignment
+                        Create Assignment
                       </button>
                     )}
                   </div>
 
                   {course.assessments && course.assessments.length > 0 ? (
                     <div className="space-y-3">
-                      {course.assessments.map((a) => (
-                        <div
-                          key={a.id}
-                          className="p-4 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-muted/10 transition-colors"
-                        >
-                          <div className="space-y-1">
-                            <p className="font-semibold text-xs text-foreground">{a.title}</p>
-                            <p className="text-[11px] text-muted-foreground">{a.description}</p>
-                            <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
-                              <span>Total Marks: <strong>{a.totalMarks}</strong></span>
-                              <span>{a.questions?.length || 0} Questions</span>
-                              {a.deadline && (
-                                <span>Due: {new Date(a.deadline).toLocaleDateString()}</span>
+                      {course.assessments.map((a) => {
+                        const now = new Date();
+                        const startTime = a.startTime ? new Date(a.startTime) : new Date(a.createdAt);
+                        const deadline = a.deadline ? new Date(a.deadline) : null;
+                        const isUpcoming = startTime > now;
+                        const isPastDeadline = deadline && now > deadline;
+
+                        let statusBadgeClass = "badge-neutral";
+                        let statusLabel = a.status?.toLowerCase();
+
+                        if (a.status === "DRAFT") {
+                          statusBadgeClass = "badge-neutral";
+                          statusLabel = "Draft";
+                        } else if (isUpcoming) {
+                          statusBadgeClass = "bg-amber-500/10 text-amber-500 border border-amber-500/20";
+                          statusLabel = "Upcoming";
+                        } else if (isPastDeadline) {
+                          statusBadgeClass = "badge-neutral";
+                          statusLabel = "Closed";
+                        } else {
+                          statusBadgeClass = "badge-success";
+                          statusLabel = "Active";
+                        }
+
+                        const traineeSub = a.submissions?.find(
+                          (s) => s.traineeId === user?.id && s.status === "GRADED"
+                        );
+                        const hasSubmitted = Boolean(traineeSub);
+                        const canSeeResults = a.evaluationMode === "INSTANT" || a.resultsReleased;
+
+                        return (
+                          <div
+                            key={a.id}
+                            className="p-4 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-muted/10 transition-colors"
+                          >
+                            <div className="space-y-1">
+                              <p className="font-semibold text-xs text-foreground">{a.title}</p>
+                              <p className="text-[11px] text-muted-foreground">{a.description}</p>
+                              <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-muted-foreground">
+                                <span>Total Marks: <strong>{a.totalMarks}</strong></span>
+                                <span>{a.questions?.length || 0} Questions</span>
+                                {a.startTime && (
+                                  <span>Opens: {new Date(a.startTime).toLocaleString()}</span>
+                                )}
+                                {a.deadline && (
+                                  <span>Due: {new Date(a.deadline).toLocaleString()}</span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                              <span className={`badge text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${statusBadgeClass}`}>
+                                {statusLabel}
+                              </span>
+
+                              {(isOwner || isAdmin) && (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="btn-secondary btn-sm px-3 py-1 text-[10px] font-medium"
+                                    onClick={() => {
+                                      setEditingAssessment(a);
+                                      setAiAssignmentOpen(true);
+                                    }}
+                                  >
+                                    Edit Assignment
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-primary btn-sm px-3 py-1 text-[10px] font-medium"
+                                    onClick={() => setViewSubmissionsAssessment(a)}
+                                  >
+                                    View Submissions ({a.submissions?.length ?? a._count?.submissions ?? 0})
+                                  </button>
+                                </>
+                              )}
+
+                              {user?.role === "TRAINEE" && isEnrolled && a.status === "PUBLISHED" && (
+                                <>
+                                  {hasSubmitted ? (
+                                    <div className="flex items-center gap-2">
+                                      {canSeeResults ? (
+                                        <>
+                                          <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                                            Score: {traineeSub.score} / {a.totalMarks}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            className="btn-secondary btn-sm px-3 py-1 text-[10px]"
+                                            onClick={() => setTakeAssessment({ id: a.id, mode: "result" })}
+                                          >
+                                            View Result
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <span className="text-[10px] font-semibold text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                                          Submitted (Results Pending Release)
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : isUpcoming ? (
+                                    <span className="text-[10px] text-muted-foreground italic font-medium">
+                                      Locked until start time
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="btn-primary btn-sm px-3 py-1 text-[10px]"
+                                      onClick={() => setTakeAssessment({ id: a.id, mode: "take" })}
+                                    >
+                                      Take Quiz
+                                    </button>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-                            <span className={`badge text-[9px] uppercase font-bold tracking-wider ${a.status === "PUBLISHED" ? "badge-success" : "badge-neutral"}`}>
-                              {a.status?.toLowerCase()}
-                            </span>
-                            {user?.role === "TRAINEE" && isEnrolled && a.status === "PUBLISHED" && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="btn-secondary btn-sm px-3 py-1 text-[10px]"
-                                  onClick={() => setTakeAssessment({ id: a.id, mode: "take" })}
-                                >
-                                  Take Quiz
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn-secondary btn-sm px-3 py-1 text-[10px]"
-                                  onClick={() => setTakeAssessment({ id: a.id, mode: "result" })}
-                                >
-                                  View Result
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl text-xs">
@@ -976,12 +1059,13 @@ export default function CourseDetailPage() {
         onResourceUploaded={load}
       />
 
-      <CreateAiAssignmentModal
+      <AssignmentStudioModal
         isOpen={aiAssignmentOpen}
         onClose={() => setAiAssignmentOpen(false)}
         courseId={id}
         token={authToken}
         resources={course?.resources || []}
+        initialAssessment={editingAssessment}
         onSaved={load}
       />
 
@@ -992,6 +1076,14 @@ export default function CourseDetailPage() {
         token={authToken}
         mode={takeAssessment?.mode || "take"}
         onSubmitted={load}
+      />
+
+      <ViewSubmissionsModal
+        isOpen={Boolean(viewSubmissionsAssessment)}
+        onClose={() => setViewSubmissionsAssessment(null)}
+        assessment={viewSubmissionsAssessment}
+        token={authToken}
+        onAssessmentUpdated={load}
       />
 
 

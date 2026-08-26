@@ -25,9 +25,24 @@ export async function createAssessment(token, payload) {
   });
 }
 
+export async function updateAssessment(token, id, payload) {
+  return apiFetch(`/assessments/${id}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function publishAssessment(token, id) {
   return apiFetch(`/assessments/${id}/publish`, {
     method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function deleteAssessment(token, id) {
+  return apiFetch(`/assessments/${id}`, {
+    method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
 }

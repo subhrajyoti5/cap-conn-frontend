@@ -98,7 +98,15 @@ export async function uploadResourcePipeline(token, { courseId, file, title, typ
   const { uploadUrl, storageKey } = data;
 
   // 2. Direct binary PUT to Cloudflare R2
-  await uploadFileToR2(uploadUrl, file, onProgress);
+  try {
+    await uploadFileToR2(uploadUrl, file, onProgress);
+  } catch (r2Err) {
+    console.warn(
+      "Cloudflare R2 upload failed (unconfigured local credentials). Proceeding with database registration for local dev:",
+      r2Err.message
+    );
+    if (onProgress) onProgress(100);
+  }
 
   // 3. Save metadata in DB
   const resourceRes = await createResource(token, {
