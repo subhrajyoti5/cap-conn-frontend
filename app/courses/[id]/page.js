@@ -95,15 +95,23 @@ export default function CourseDetailPage() {
     }
   }
 
+  const [errorMessage, setErrorMessage] = useState("");
+
   async function load() {
     try {
       const token = await getToken();
       if (!token) return;
       setAuthToken(token);
+      setErrorMessage("");
       const res = await getCourse(token, id);
-      setCourse(res.data);
+      if (res?.data) {
+        setCourse(res.data);
+      } else {
+        setErrorMessage("Course details could not be retrieved.");
+      }
     } catch (e) {
       console.error("Error loading course details:", e);
+      setErrorMessage(e.message || "Failed to load course details. Please try again.");
     } finally {
       setLoading(false);
     }
