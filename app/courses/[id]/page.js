@@ -56,6 +56,10 @@ export default function CourseDetailPage() {
   const [rejectingRequest, setRejectingRequest] = useState(false);
 
 
+  const [showUnenrollModal, setShowUnenrollModal] = useState(false);
+  const [unenrolling, setUnenrolling] = useState(false);
+  const [unenrollStatus, setUnenrollStatus] = useState({ type: "", message: "" });
+
   const [activeTab, setActiveTab] = useState("stream");
   const [actionMessage, setActionMessage] = useState("");
   const [inviteStatus, setInviteStatus] = useState({ type: "", message: "" });
@@ -220,9 +224,28 @@ export default function CourseDetailPage() {
       }, 2000);
     } catch (e) {
       console.error(e);
-      setInviteStatus({ type: "error", message: "Failed to send invitation. Please verify the email address." });
+      setInviteStatus({ type: "error", message: e.message || "Failed to send invitation. Please verify the email address." });
     } finally {
       setInvitingTrainer(false);
+    }
+  }
+
+  async function handleUnenroll() {
+    setUnenrolling(true);
+    setUnenrollStatus({ type: "", message: "" });
+    try {
+      await apiFetch(`/courses/${id}/enroll`, { method: "DELETE" });
+      setUnenrollStatus({ type: "success", message: "You have un-enrolled from this course." });
+      setTimeout(() => {
+        setShowUnenrollModal(false);
+        setUnenrollStatus({ type: "", message: "" });
+        load();
+      }, 1500);
+    } catch (e) {
+      console.error(e);
+      setUnenrollStatus({ type: "error", message: e.message || "Failed to un-enroll from course." });
+    } finally {
+      setUnenrolling(false);
     }
   }
 
@@ -409,9 +432,19 @@ export default function CourseDetailPage() {
               </>
             )}
             {isEnrolled && (
-              <span className="badge bg-emerald-500/20 text-emerald-300 border-emerald-500/30 px-3 py-1.5 text-xs font-semibold">
-                ✓ Enrolled
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="badge bg-emerald-500/20 text-emerald-300 border-emerald-500/30 px-3 py-1.5 text-xs font-semibold">
+                  ✓ Enrolled
+                </span>
+                {user?.role === "TRAINEE" && (
+                  <button
+                    onClick={() => setShowUnenrollModal(true)}
+                    className="btn-secondary bg-red-500/20 hover:bg-red-500/30 text-white border-red-500/30 shadow-md text-xs py-1.5 px-3"
+                  >
+                    Un-enroll
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -538,11 +571,14 @@ export default function CourseDetailPage() {
             </button>
             <button
               onClick={() => setActiveTab("people")}
-              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors relative flex items-center gap-2 ${
                 activeTab === "people" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              People
+              <span>People</span>
+              {(isOwner || isAdmin) && (course?.enrollments?.filter((e) => e.status === "PENDING") || []).length > 0 && (
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-sm shadow-red-500/50" title="Pending enrollment requests" />
+              )}
             </button>
           </div>
 
@@ -754,7 +790,7 @@ export default function CourseDetailPage() {
                                   {student.name ? student.name[0].toUpperCase() : student.email[0].toUpperCase()}
                                 </div>
                                 <button
-                                  onClick={() => handleViewTrainee(student.userId)}
+                                  onClick={() => handleViewTrainee(student.id || enrollment.traineeId)}
                                   className="text-left group"
                                 >
                                   <p className="font-medium text-xs text-foreground group-hover:text-primary transition-colors hover:underline">
@@ -765,14 +801,14 @@ export default function CourseDetailPage() {
                               </div>
                               <div className="flex items-center gap-2">
                                 <button
-                                  onClick={() => handleApproveEnrollment(student.userId)}
+                                  onClick={() => handleApproveEnrollment(student.id || enrollment.traineeId)}
                                   className="btn-primary bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] py-1 px-2.5"
                                 >
                                   Approve
                                 </button>
                                 <button
                                   onClick={() => {
-                                    setRejectTraineeId(student.userId);
+                                    setRejectTraineeId(student.id || enrollment.traineeId);
                                     setShowRejectRequestModal(true);
                                   }}
                                   className="btn-secondary border-red-200 text-red-600 hover:bg-red-50 text-[10px] py-1 px-2.5"
@@ -849,44 +885,47 @@ export default function CourseDetailPage() {
                   </span>
                 </h2>
                 {(course.enrollments?.filter((e) => e.status === "ACTIVE") || []).length > 0 ? (
-                  <ul className="divide-y divide-border">
+                  <div className="space-y-2">
                     {course.enrollments
                       .filter((e) => e.status === "ACTIVE")
                       .map((enrollment) => {
                         const student = enrollment.trainee;
                         if (!student) return null;
                         return (
-                          <li key={enrollment.id} className="py-3 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center font-semibold text-xs">
+                          <div
+                            key={enrollment.id}
+                            className="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group"
+                          >
+                            <button
+                              onClick={() => handleViewTrainee(student.id || enrollment.traineeId)}
+                              className="flex-1 text-left flex items-center gap-3 min-w-0"
+                            >
+                              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm group-hover:scale-105 transition-transform shrink-0">
                                 {student.name ? student.name[0].toUpperCase() : student.email[0].toUpperCase()}
                               </div>
-                              <button
-                                onClick={() => handleViewTrainee(student.userId)}
-                                className="text-left group"
-                              >
-                                <p className="font-medium text-xs text-foreground group-hover:text-primary transition-colors hover:underline">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
                                   {student.name || "No profile name"}
                                 </p>
-                                <p className="text-[9px] text-muted-foreground">{student.email}</p>
-                              </button>
-                            </div>
+                                <p className="text-[10px] text-muted-foreground truncate">{student.email}</p>
+                              </div>
+                            </button>
                             {(isOwner || isAdmin) && (
                               <button
                                 onClick={() => {
-                                  setRemoveTraineeId(student.userId);
+                                  setRemoveTraineeId(student.id || enrollment.traineeId);
                                   setShowRemoveTraineeModal(true);
                                 }}
-                                className="w-6 h-6 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors text-xs font-semibold"
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500/10 hover:text-red-600 transition-colors text-xs font-semibold shrink-0"
                                 title="Remove Trainee"
                               >
                                 ✕
                               </button>
                             )}
-                          </li>
+                          </div>
                         );
                       })}
-                  </ul>
+                  </div>
                 ) : (
                   <div className="text-center py-6 text-muted-foreground text-xs">
                     No trainees enrolled in this classroom yet.
@@ -1031,9 +1070,9 @@ export default function CourseDetailPage() {
 
 
                 <div className="space-y-3 pt-3 border-t border-border">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Other Courses Taught</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Courses Taught</h4>
                   {trainerProfile.courses?.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-thin scrollbar-thumb-muted">
                       {trainerProfile.courses.map((c) => (
                         <Link
                           key={c.id}
@@ -1042,7 +1081,7 @@ export default function CourseDetailPage() {
                             setShowTrainerModal(false);
                             setTrainerProfile(null);
                           }}
-                          className="p-3 bg-muted/10 hover:bg-muted/30 border border-border rounded-xl flex flex-col justify-between hover:border-primary/40 transition-all text-xs"
+                          className="p-3 bg-muted/10 hover:bg-muted/30 border border-border rounded-xl flex flex-col justify-between hover:border-primary/40 transition-all text-xs min-w-[200px] shrink-0 text-left"
                         >
                           <div>
                             <span className="text-[9px] uppercase tracking-wider text-primary font-semibold font-mono">
@@ -1057,7 +1096,7 @@ export default function CourseDetailPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground">No other published courses taught.</p>
+                    <p className="text-xs text-muted-foreground">No published courses taught.</p>
                   )}
                 </div>
               </div>
@@ -1097,12 +1136,16 @@ export default function CourseDetailPage() {
                     </div>
                   )}
                   <div className="flex items-center gap-4 bg-muted/10 p-4 rounded-xl border border-border/50">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
                       {traineeProfile.fullName ? traineeProfile.fullName[0].toUpperCase() : "T"}
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold font-display text-foreground">{traineeProfile.fullName || "Trainee"}</h3>
-                      <p className="text-xs text-muted-foreground">{traineeProfile.phone || "No phone contact"}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-bold font-display text-foreground truncate">{traineeProfile.fullName || "Trainee"}</h3>
+                        <span className="badge bg-muted text-muted-foreground text-[9px]">Trainee</span>
+                      </div>
+                      <p className="text-xs text-foreground font-medium truncate">{traineeProfile.email || "No email available"}</p>
+                      {traineeProfile.phone && <p className="text-xs text-muted-foreground mt-0.5">{traineeProfile.phone}</p>}
                     </div>
                   </div>
                   {traineeProfile.bio && (
@@ -1178,9 +1221,42 @@ export default function CourseDetailPage() {
                       </div>
                     </div>
                   </div>
+
+                  <div className="space-y-3 pt-3 border-t border-border text-left">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Enrolled Courses</h4>
+                    {traineeProfile.courses?.length > 0 ? (
+                      <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-thin scrollbar-thumb-muted">
+                        {traineeProfile.courses.map((c) => (
+                          <Link
+                            key={c.id}
+                            href={`/courses/${c.id}`}
+                            onClick={() => {
+                              setShowTraineeModal(false);
+                              setTraineeProfile(null);
+                            }}
+                            className="p-3 bg-muted/10 hover:bg-muted/30 border border-border rounded-xl flex flex-col justify-between hover:border-primary/40 transition-all text-xs min-w-[200px] shrink-0 text-left"
+                          >
+                            <div>
+                              <span className="text-[9px] uppercase tracking-wider text-primary font-semibold font-mono">
+                                {c.subject?.name || "LMS Subject"}
+                              </span>
+                              <span className="font-semibold block text-foreground mt-0.5 line-clamp-1">{c.title}</span>
+                              {c.trainer && (
+                                <span className="text-[10px] text-muted-foreground block mt-0.5">
+                                  Instructor: {c.trainer.name || c.trainer.email}
+                                </span>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No active course enrollments.</p>
+                    )}
+                  </div>
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground text-center py-6">Could not load trainee profile.</p>
+                <p className="text-xs text-muted-foreground text-center py-6">This trainee has not set up their profile details yet.</p>
               )}
             </div>
           </div>
@@ -1325,6 +1401,52 @@ export default function CourseDetailPage() {
 
 
 
+
+      {showUnenrollModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
+              <h3 className="font-display font-bold text-sm text-foreground text-red-600">Un-enroll from Course</h3>
+              <button
+                onClick={() => setShowUnenrollModal(false)}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-bold text-xs"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-4 text-left">
+              <p className="text-xs text-muted-foreground leading-normal">
+                Are you sure you want to un-enroll (drop) from this course? You will lose access to classroom resources, and course instructors will be notified.
+              </p>
+              {unenrollStatus.message && (
+                <div className={`p-3 rounded-xl text-xs border ${
+                  unenrollStatus.type === "success" 
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                    : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                }`}>
+                  {unenrollStatus.message}
+                </div>
+              )}
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowUnenrollModal(false)}
+                  className="btn-secondary text-xs py-1.5 px-4"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUnenroll}
+                  disabled={unenrolling}
+                  className="btn-primary bg-red-600 hover:bg-red-700 text-white text-xs py-1.5 px-4"
+                >
+                  {unenrolling ? "Un-enrolling..." : "Confirm Un-enroll"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showRejectRequestModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
