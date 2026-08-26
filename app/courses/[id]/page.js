@@ -728,6 +728,16 @@ export default function CourseDetailPage() {
                       <span className="text-base">📝</span>
                       <h2 className="font-display text-sm font-bold text-foreground">Assignments & Quizzes</h2>
                     </div>
+                    {(isOwner || isAdmin) && (
+                      <button
+                        type="button"
+                        onClick={() => setAiAssignmentOpen(true)}
+                        className="btn-primary btn-sm flex items-center gap-1"
+                      >
+                        <span>✨</span>
+                        Create AI Assignment
+                      </button>
+                    )}
                   </div>
 
                   {course.assessments && course.assessments.length > 0 ? (
@@ -752,6 +762,24 @@ export default function CourseDetailPage() {
                             <span className={`badge text-[9px] uppercase font-bold tracking-wider ${a.status === "PUBLISHED" ? "badge-success" : "badge-neutral"}`}>
                               {a.status?.toLowerCase()}
                             </span>
+                            {user?.role === "TRAINEE" && isEnrolled && a.status === "PUBLISHED" && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="btn-secondary btn-sm px-3 py-1 text-[10px]"
+                                  onClick={() => setTakeAssessment({ id: a.id, mode: "take" })}
+                                >
+                                  Take Quiz
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-secondary btn-sm px-3 py-1 text-[10px]"
+                                  onClick={() => setTakeAssessment({ id: a.id, mode: "result" })}
+                                >
+                                  View Result
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       ))}
