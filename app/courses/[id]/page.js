@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import { getCourse, enrollCourse, publishCourse } from "@/features/courses/api/courses.api";
 import { getResource } from "@/features/resources/api/resources.api";
 import { UploadResourceModal } from "@/components/upload-resource-modal";
+import { CreateAiAssignmentModal } from "@/components/create-ai-assignment-modal";
+import { TakeAssessmentModal } from "@/components/take-assessment-modal";
 import { apiFetch } from "@/lib/api";
 import Link from "next/link";
 
@@ -17,6 +19,8 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [aiAssignmentOpen, setAiAssignmentOpen] = useState(false);
+  const [takeAssessment, setTakeAssessment] = useState(null);
   const [authToken, setAuthToken] = useState("");
   
   // Trainer Modal State
@@ -382,11 +386,17 @@ export default function CourseDetailPage() {
                           
                           {post.type === "assessment" && (
                             <button
-                              onClick={() => setActiveTab("classwork")}
+                              onClick={() => {
+                                if (user?.role === "TRAINEE" && isEnrolled && post.data?.status === "PUBLISHED") {
+                                  setTakeAssessment({ id: post.data.id, mode: "take" });
+                                } else {
+                                  setActiveTab("classwork");
+                                }
+                              }}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted transition-colors mt-2"
                             >
                               <span>📝</span>
-                              View Assessment
+                              {user?.role === "TRAINEE" ? "Take Quiz" : "View Assessment"}
                             </button>
                           )}
                         </div>
@@ -461,6 +471,15 @@ export default function CourseDetailPage() {
                     <span className="text-base">📝</span>
                     <h2 className="font-display text-sm font-bold text-foreground">Assignments & Quizzes</h2>
                   </div>
+                  {(isOwner || isAdmin) && (
+                    <button
+                      onClick={() => setAiAssignmentOpen(true)}
+                      className="btn-primary btn-sm flex items-center gap-1"
+                    >
+                      <span>✨</span>
+                      Create AI Assignment
+                    </button>
+                  )}
                 </div>
 
                 {course.assessments && course.assessments.length > 0 ? (
@@ -485,6 +504,28 @@ export default function CourseDetailPage() {
                           <span className={`badge text-[9px] uppercase font-bold tracking-wider ${a.status === "PUBLISHED" ? "badge-success" : "badge-neutral"}`}>
                             {a.status?.toLowerCase()}
                           </span>
+                          {user?.role === "TRAINEE" && isEnrolled && a.status === "PUBLISHED" && (
+                            <button
+                              type="button"
+                              className="btn-secondary btn-sm px-3 py-1 text-[10px]"
+                              onClick={() =>
+                                setTakeAssessment({ id: a.id, mode: "take" })
+                              }
+                            >
+                              Take Quiz
+                            </button>
+                          )}
+                          {user?.role === "TRAINEE" && isEnrolled && a.status === "PUBLISHED" && (
+                            <button
+                              type="button"
+                              className="btn-secondary btn-sm px-3 py-1 text-[10px]"
+                              onClick={() =>
+                                setTakeAssessment({ id: a.id, mode: "result" })
+                              }
+                            >
+                              View Result
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -562,6 +603,24 @@ export default function CourseDetailPage() {
         courseId={id}
         token={authToken}
         onResourceUploaded={load}
+      />
+
+      <CreateAiAssignmentModal
+        isOpen={aiAssignmentOpen}
+        onClose={() => setAiAssignmentOpen(false)}
+        courseId={id}
+        token={authToken}
+        resources={course?.resources || []}
+        onSaved={load}
+      />
+
+      <TakeAssessmentModal
+        isOpen={Boolean(takeAssessment)}
+        onClose={() => setTakeAssessment(null)}
+        assessmentId={takeAssessment?.id}
+        token={authToken}
+        mode={takeAssessment?.mode || "take"}
+        onSubmitted={load}
       />
 
       {/* Trainer Profile Modal Overlay */}

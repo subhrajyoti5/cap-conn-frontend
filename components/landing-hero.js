@@ -10,7 +10,7 @@ export function LandingHero() {
       title2="grow faster"
       description="A state-of-the-art training management platform to deliver structured educational paths."
       color1="#EA580C"
-      color2="#fdfdfdff"
+      color2="#fdfdfd"
       opacity={0.85}
     >
       <div className="flex flex-wrap gap-4 justify-center pt-2">
