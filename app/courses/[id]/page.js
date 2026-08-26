@@ -328,12 +328,31 @@ export default function CourseDetailPage() {
 
   if (!course) {
     return (
-      <div className="text-center py-16">
-        <p className="font-display text-lg text-foreground">Course not found</p>
-        <p className="text-sm text-muted-foreground mt-1">The course you are looking for does not exist or has been removed.</p>
-        <Link href="/courses" className="btn-secondary mt-4 inline-block">
-          Back to courses
-        </Link>
+      <div className="text-center py-16 max-w-md mx-auto space-y-3">
+        <div className="w-12 h-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto text-xl font-bold">
+          !
+        </div>
+        <p className="font-display text-lg text-foreground font-semibold">
+          {errorMessage ? "Unable to Load Course" : "Course not found"}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {errorMessage || "The course you are looking for does not exist or has been removed."}
+        </p>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => {
+              setLoading(true);
+              load();
+            }}
+            className="btn-primary text-xs py-2 px-4 shadow-sm"
+          >
+            Retry
+          </button>
+          <Link href="/courses" className="btn-secondary text-xs py-2 px-4">
+            Back to courses
+          </Link>
+        </div>
       </div>
     );
   }
