@@ -6,6 +6,7 @@ import {
   createAssessment,
   generateAiQuestions,
   publishAssessment,
+  uploadAssessmentFilePipeline,
 } from "@/features/assessments/api/assessments.api";
 
 const emptyQuestion = (marks = 1, order = 0) => ({
@@ -36,10 +37,20 @@ export function CreateAiAssignmentModal({
   resources = [],
   onSaved,
 }) {
+  const [assignmentType, setAssignmentType] = useState("DOCUMENT"); // 'DOCUMENT' | 'MCQ'
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [totalMarks, setTotalMarks] = useState(100);
+
+  // Document Assignment state
+  const [docFile, setDocFile] = useState(null);
+  const [docFileUrl, setDocFileUrl] = useState("");
+  const [docFileName, setDocFileName] = useState("");
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+
+  // MCQ / AI quiz state
   const [questionCount, setQuestionCount] = useState(5);
   const [marksPerQuestion, setMarksPerQuestion] = useState(1);
   const [customInstructions, setCustomInstructions] = useState("");
@@ -47,6 +58,7 @@ export function CreateAiAssignmentModal({
   const [localResources, setLocalResources] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [generating, setGenerating] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -65,10 +77,16 @@ export function CreateAiAssignmentModal({
 
   useEffect(() => {
     if (!isOpen) return;
+    setAssignmentType("DOCUMENT");
     setStep(1);
     setTitle("");
     setDescription("");
     setDeadline("");
+    setTotalMarks(100);
+    setDocFile(null);
+    setDocFileUrl("");
+    setDocFileName("");
+    setUploadingDoc(false);
     setQuestionCount(5);
     setMarksPerQuestion(1);
     setCustomInstructions("");
@@ -87,6 +105,14 @@ export function CreateAiAssignmentModal({
     setSelectedResourceIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
+  };
+
+  const handleDocFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDocFile(file);
+    setDocFileName(file.name);
+    setError("");
   };
 
   const handleUploadImages = async (e) => {
@@ -254,12 +280,69 @@ export function CreateAiAssignmentModal({
     return selected;
   };
 
-  const handleSave = async (publish) => {
+  const handleSaveDocAssignment = async (publish) => {
+    setError("");
+    if (!title.trim()) {
+      setError("Assignment title is required.");
+      return;
+    }
+    if (!deadline) {
+      setError("Deadline is required.");
+      return;
+    }
+    if (!totalMarks || Number(totalMarks) <= 0) {
+      setError("Total marks must be greater than 0.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      let finalFileUrl = docFileUrl;
+      let finalFileName = docFileName;
+
+      if (docFile) {
+        setUploadingDoc(true);
+        const uploaded = await uploadAssessmentFilePipeline(token, {
+          courseId,
+          file: docFile,
+        });
+        finalFileUrl = uploaded.storageKey;
+        finalFileName = uploaded.fileName;
+        setUploadingDoc(false);
+      }
+
+      const payload = {
+        courseId,
+        title: title.trim(),
+        description: description.trim() || null,
+        type: "DOCUMENT",
+        fileUrl: finalFileUrl || null,
+        fileName: finalFileName || null,
+        totalMarks: Number(totalMarks),
+        deadline: new Date(deadline).toISOString(),
+      };
+
+      const created = await createAssessment(token, payload);
+      const assessmentId = created.data?.id;
+      if (publish && assessmentId) {
+        await publishAssessment(token, assessmentId);
+      }
+      if (onSaved) onSaved();
+      onClose();
+    } catch (err) {
+      setError(err.message || "Failed to create document assignment");
+    } finally {
+      setSaving(false);
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleSaveMcq = async (publish) => {
     setError("");
     const selected = validateSelected();
     if (!selected) return;
 
-    const totalMarks = selected.reduce(
+    const calcTotalMarks = selected.reduce(
       (sum, q) => sum + (Number(q.marks) || 1),
       0
     );
@@ -270,7 +353,8 @@ export function CreateAiAssignmentModal({
         courseId,
         title: title.trim(),
         description: description.trim() || null,
-        totalMarks,
+        type: "MCQ",
+        totalMarks: calcTotalMarks,
         deadline: new Date(deadline).toISOString(),
         questions: selected.map((q, order) => ({
           text: q.text.trim(),
@@ -298,34 +382,205 @@ export function CreateAiAssignmentModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl bg-card border border-border shadow-xl p-6">
-        <div className="flex items-center justify-between pb-3 border-b border-border">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-card border border-border shadow-2xl p-6">
+        <div className="flex items-center justify-between pb-4 border-b border-border">
           <div>
-            <h2 className="font-display text-base font-semibold text-foreground">
-              Create AI Assignment
+            <h2 className="font-display text-base font-semibold text-foreground flex items-center gap-2">
+              <span>{assignmentType === "DOCUMENT" ? "📄" : "✨"}</span>
+              Create Assignment
             </h2>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Step {step} of 3
+              {assignmentType === "DOCUMENT"
+                ? "Upload task document, set editable deadline & marks"
+                : `AI Quiz Generator · Step ${step} of 3`}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            disabled={generating || saving}
-            className="text-muted-foreground hover:text-foreground text-sm"
+            disabled={generating || saving || uploadingDoc}
+            className="text-muted-foreground hover:text-foreground text-sm p-1 rounded-lg hover:bg-muted/50 transition-colors"
           >
             ✕
           </button>
         </div>
 
-        {error && (
-          <div className="mt-3 p-3 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
-            {error}
+        {/* Tab Selection: Document vs MCQ */}
+        {step === 1 && (
+          <div className="flex items-center gap-2 mt-4 p-1 bg-muted/40 rounded-xl border border-border">
+            <button
+              type="button"
+              onClick={() => setAssignmentType("DOCUMENT")}
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+                assignmentType === "DOCUMENT"
+                  ? "bg-card text-foreground shadow-sm border border-border/60"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <span>📄</span>
+              Document Assignment (Doc / PDF upload)
+            </button>
+            <button
+              type="button"
+              onClick={() => setAssignmentType("MCQ")}
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+                assignmentType === "MCQ"
+                  ? "bg-card text-foreground shadow-sm border border-border/60"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <span>✨</span>
+              AI Quiz / MCQ Assessment
+            </button>
           </div>
         )}
 
-        {step === 1 && (
+        {error && (
+          <div className="mt-3 p-3 rounded-xl bg-destructive/10 text-destructive text-xs border border-destructive/20 flex items-center gap-2">
+            <span>⚠️</span>
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* DOCUMENT ASSIGNMENT FORM */}
+        {assignmentType === "DOCUMENT" && (
+          <div className="mt-4 space-y-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="sm:col-span-2">
+                <label className="block font-semibold text-foreground mb-1">
+                  Assignment Title <span className="text-destructive">*</span>
+                </label>
+                <input
+                  className="input w-full"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Capstone Research Project & Analysis"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-semibold text-foreground mb-1">
+                  Instructions & Guidelines
+                </label>
+                <textarea
+                  className="input w-full min-h-[85px]"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Provide instructions, submission requirements, or rubric details for trainees..."
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-foreground mb-1">
+                  Submission Deadline <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  className="input w-full"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  You can edit this deadline anytime after creation.
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-foreground mb-1">
+                  Total Marks / Max Score <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  className="input w-full"
+                  value={totalMarks}
+                  onChange={(e) => setTotalMarks(e.target.value)}
+                  placeholder="100"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-semibold text-foreground mb-1">
+                  Assignment Document / Brief (PDF, DOCX, etc.)
+                </label>
+                <div className="border border-dashed border-border rounded-xl p-4 text-center bg-muted/5 hover:bg-muted/10 transition-colors">
+                  {docFileName ? (
+                    <div className="flex items-center justify-between bg-card p-3 rounded-lg border border-border">
+                      <div className="flex items-center gap-2.5 truncate">
+                        <span className="text-lg">📄</span>
+                        <div className="text-left truncate">
+                          <p className="font-medium text-foreground truncate">{docFileName}</p>
+                          <p className="text-[10px] text-muted-foreground">Ready to attach</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDocFile(null);
+                          setDocFileName("");
+                        }}
+                        className="text-xs text-destructive hover:underline ml-3 shrink-0"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer block">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2 text-base">
+                        📎
+                      </div>
+                      <p className="font-medium text-foreground text-xs">
+                        Click to upload assignment brief or worksheet
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        PDF, Word (.docx, .doc), Presentations, or Text files (up to 50MB)
+                      </p>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip"
+                        onChange={handleDocFileSelect}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center pt-4 border-t border-border">
+              <button
+                type="button"
+                className="btn-secondary text-xs py-2 px-3.5"
+                onClick={onClose}
+                disabled={saving || uploadingDoc}
+              >
+                Cancel
+              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="btn-secondary text-xs py-2 px-3.5"
+                  disabled={saving || uploadingDoc}
+                  onClick={() => handleSaveDocAssignment(false)}
+                >
+                  {saving ? "Saving..." : "Save as Draft"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary text-xs py-2 px-4 shadow-sm"
+                  disabled={saving || uploadingDoc}
+                  onClick={() => handleSaveDocAssignment(true)}
+                >
+                  {saving ? (uploadingDoc ? "Uploading File..." : "Publishing...") : "Publish Assignment"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI MCQ ASSIGNMENT STEP 1 */}
+        {assignmentType === "MCQ" && step === 1 && (
           <div className="mt-4 space-y-4 text-xs">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="sm:col-span-2">
@@ -334,7 +589,7 @@ export function CreateAiAssignmentModal({
                   className="input w-full"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Module 2 Quiz"
+                  placeholder="e.g. Module 2 Assessment Quiz"
                 />
               </div>
               <div className="sm:col-span-2">
@@ -394,7 +649,7 @@ export function CreateAiAssignmentModal({
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="font-medium text-foreground">Image resources</label>
+                <label className="font-medium text-foreground">Image resources for AI</label>
                 <label className="btn-secondary btn-sm cursor-pointer">
                   {uploading ? "Uploading..." : "Upload images"}
                   <input
@@ -467,7 +722,8 @@ export function CreateAiAssignmentModal({
           </div>
         )}
 
-        {step === 2 && (
+        {/* AI MCQ ASSIGNMENT STEP 2 */}
+        {assignmentType === "MCQ" && step === 2 && (
           <div className="mt-4 space-y-4 text-xs">
             <div className="flex items-center justify-between">
               <p className="font-medium text-foreground">
@@ -585,7 +841,8 @@ export function CreateAiAssignmentModal({
           </div>
         )}
 
-        {step === 3 && (
+        {/* AI MCQ ASSIGNMENT STEP 3 */}
+        {assignmentType === "MCQ" && step === 3 && (
           <div className="mt-4 space-y-4 text-xs">
             <div className="rounded-xl border border-border p-4 space-y-2 bg-muted/10">
               <p className="font-semibold text-foreground">{title}</p>
@@ -614,7 +871,7 @@ export function CreateAiAssignmentModal({
                   type="button"
                   className="btn-secondary text-xs py-1.5 px-3"
                   disabled={saving}
-                  onClick={() => handleSave(false)}
+                  onClick={() => handleSaveMcq(false)}
                 >
                   {saving ? "Saving..." : "Save as Draft"}
                 </button>
@@ -622,7 +879,7 @@ export function CreateAiAssignmentModal({
                   type="button"
                   className="btn-primary text-xs py-1.5 px-4"
                   disabled={saving}
-                  onClick={() => handleSave(true)}
+                  onClick={() => handleSaveMcq(true)}
                 >
                   {saving ? "Publishing..." : "Publish Immediately"}
                 </button>
