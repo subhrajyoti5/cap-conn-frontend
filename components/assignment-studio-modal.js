@@ -6,6 +6,7 @@ import {
   updateAssessment,
   publishAssessment,
   deleteAssessment,
+  uploadAssessmentFilePipeline,
 } from "@/features/assessments/api/assessments.api";
 import { AiGeneratorSubmodal } from "@/components/ai-generator-submodal";
 
@@ -18,27 +19,43 @@ export function AssignmentStudioModal({
   initialAssessment = null,
   onSaved,
 }) {
+  const [assignmentType, setAssignmentType] = useState("DOCUMENT"); // DOCUMENT | MCQ
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startTime, setStartTime] = useState("");
   const [deadline, setDeadline] = useState("");
   const [evaluationMode, setEvaluationMode] = useState("INSTANT");
   const [questions, setQuestions] = useState([]);
+  const [docTotalMarks, setDocTotalMarks] = useState(100);
+  const [docFile, setDocFile] = useState(null);
+  const [docFileName, setDocFileName] = useState("");
+  const [uploadingDoc, setUploadingDoc] = useState(false);
 
   const [showAiModal, setShowAiModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
+  const isEditing = Boolean(initialAssessment);
+  const isDocMode = !isEditing && assignmentType === "DOCUMENT";
+
   // Prepopulate if editing an existing assessment
   useEffect(() => {
     if (!isOpen) return;
     setError("");
+    setDocFile(null);
+    setDocFileName("");
+    setUploadingDoc(false);
+    setDocTotalMarks(100);
 
     if (initialAssessment) {
+      // Editing always uses the MCQ studio path (document edits use EditAssignmentModal)
+      setAssignmentType(initialAssessment.type === "DOCUMENT" ? "DOCUMENT" : "MCQ");
       setTitle(initialAssessment.title || "");
       setDescription(initialAssessment.description || "");
       setEvaluationMode(initialAssessment.evaluationMode || "INSTANT");
+      setDocTotalMarks(initialAssessment.totalMarks || 100);
+      setDocFileName(initialAssessment.fileName || "");
 
       if (initialAssessment.startTime) {
         const d = new Date(initialAssessment.startTime);
@@ -83,9 +100,13 @@ export function AssignmentStudioModal({
   }, [isOpen, initialAssessment]);
 
   const resetForm = () => {
+    setAssignmentType("DOCUMENT");
     setTitle("");
     setDescription("");
     setEvaluationMode("INSTANT");
+    setDocTotalMarks(100);
+    setDocFile(null);
+    setDocFileName("");
 
     const now = new Date();
     const future = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -115,8 +136,18 @@ export function AssignmentStudioModal({
 
   if (!isOpen) return null;
 
-  const totalMarks = questions.reduce((sum, q) => sum + (Number(q.marks) || 0), 0);
+  const totalMarks = isDocMode
+    ? Number(docTotalMarks) || 0
+    : questions.reduce((sum, q) => sum + (Number(q.marks) || 0), 0);
   const isEditingPublished = initialAssessment?.status === "PUBLISHED";
+
+  const handleDocFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDocFile(file);
+    setDocFileName(file.name);
+    setError("");
+  };
 
   // Add Question
   const handleAddQuestion = () => {
@@ -250,8 +281,73 @@ export function AssignmentStudioModal({
     }
   };
 
+  const handleSaveDocumentAssignment = async (publishImmediate = false) => {
+    setError("");
+
+    if (!title.trim()) {
+      setError("Please provide an assignment title.");
+      return;
+    }
+    if (!deadline) {
+      setError("Please set a submission deadline date & time.");
+      return;
+    }
+    if (!docTotalMarks || Number(docTotalMarks) <= 0) {
+      setError("Total marks must be greater than 0.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      let finalFileUrl = null;
+      let finalFileName = docFileName || null;
+
+      if (docFile) {
+        setUploadingDoc(true);
+        const uploaded = await uploadAssessmentFilePipeline(token, {
+          courseId,
+          file: docFile,
+        });
+        finalFileUrl = uploaded.storageKey;
+        finalFileName = uploaded.fileName;
+        setUploadingDoc(false);
+      }
+
+      const payload = {
+        courseId,
+        title: title.trim(),
+        description: description.trim() || null,
+        type: "DOCUMENT",
+        fileUrl: finalFileUrl,
+        fileName: finalFileName,
+        totalMarks: Number(docTotalMarks),
+        deadline: new Date(deadline).toISOString(),
+        startTime: startTime ? new Date(startTime).toISOString() : new Date().toISOString(),
+      };
+
+      const res = await createAssessment(token, payload);
+      const targetId = res?.data?.id;
+
+      if (publishImmediate && targetId) {
+        await publishAssessment(token, targetId);
+      }
+
+      onSaved?.();
+      onClose();
+    } catch (err) {
+      setError(err.message || "Failed to create document assignment.");
+    } finally {
+      setSaving(false);
+      setUploadingDoc(false);
+    }
+  };
+
   // Save / Publish Assessment
   const handleSaveAssessment = async (publishImmediate = false) => {
+    if (isDocMode) {
+      return handleSaveDocumentAssignment(publishImmediate);
+    }
+
     setError("");
 
     if (!title.trim()) {
@@ -293,6 +389,7 @@ export function AssignmentStudioModal({
         courseId,
         title: title.trim(),
         description: description.trim() || undefined,
+        type: "MCQ",
         startTime: startTime ? new Date(startTime).toISOString() : new Date().toISOString(),
         deadline: new Date(deadline).toISOString(),
         evaluationMode,
@@ -347,30 +444,40 @@ export function AssignmentStudioModal({
           </button>
           <div>
             <h1 className="font-display font-bold text-base text-foreground flex items-center gap-2">
-              Assignment Editorial Studio
+              {isDocMode ? "📄 Document Assignment" : "Assignment Editorial Studio"}
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-accent/10 text-accent font-semibold">
-                {isEditingPublished ? "Published Edit" : initialAssessment ? "Draft Edit" : "Authoring Studio"}
+                {isEditingPublished
+                  ? "Published Edit"
+                  : initialAssessment
+                  ? "Draft Edit"
+                  : isDocMode
+                  ? "Document Task"
+                  : "MCQ Studio"}
               </span>
             </h1>
             <p className="text-[11px] text-muted-foreground">
-              {questions.length} Question{questions.length !== 1 ? "s" : ""} • Total Marks: {totalMarks}
+              {isDocMode
+                ? `Total Marks: ${totalMarks}`
+                : `${questions.length} Question${questions.length !== 1 ? "s" : ""} • Total Marks: ${totalMarks}`}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setShowAiModal(true)}
-            className="btn-secondary py-2 px-3 text-xs inline-flex items-center gap-1.5 border-accent/40 text-accent hover:bg-accent/10 shadow-sm font-medium"
-          >
-            AI Generate
-          </button>
+          {!isDocMode && (
+            <button
+              type="button"
+              onClick={() => setShowAiModal(true)}
+              className="btn-secondary py-2 px-3 text-xs inline-flex items-center gap-1.5 border-accent/40 text-accent hover:bg-accent/10 shadow-sm font-medium"
+            >
+              AI Generate
+            </button>
+          )}
 
           {initialAssessment && (
             <button
               type="button"
-              disabled={deleting || saving}
+              disabled={deleting || saving || uploadingDoc}
               onClick={handleDeleteAssessment}
               className="py-2 px-3.5 rounded-lg text-xs font-semibold bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
             >
@@ -381,7 +488,7 @@ export function AssignmentStudioModal({
           {isEditingPublished ? (
             <button
               type="button"
-              disabled={saving || deleting}
+              disabled={saving || deleting || uploadingDoc}
               onClick={() => handleSaveAssessment(false)}
               className="btn-primary py-2 px-5 text-xs font-medium inline-flex items-center gap-2 shadow-md"
             >
@@ -398,7 +505,7 @@ export function AssignmentStudioModal({
             <>
               <button
                 type="button"
-                disabled={saving || deleting}
+                disabled={saving || deleting || uploadingDoc}
                 onClick={() => handleSaveAssessment(false)}
                 className="btn-secondary py-2 px-4 text-xs font-medium"
               >
@@ -407,14 +514,14 @@ export function AssignmentStudioModal({
 
               <button
                 type="button"
-                disabled={saving || deleting}
+                disabled={saving || deleting || uploadingDoc}
                 onClick={() => handleSaveAssessment(true)}
                 className="btn-primary py-2 px-5 text-xs font-medium inline-flex items-center gap-2 shadow-md"
               >
                 {saving ? (
                   <>
                     <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Publishing...
+                    {uploadingDoc ? "Uploading File..." : "Publishing..."}
                   </>
                 ) : (
                   "Publish Assignment"
@@ -435,6 +542,36 @@ export function AssignmentStudioModal({
             </div>
           )}
 
+          {/* Type selector — create mode only */}
+          {!isEditing && (
+            <div className="flex items-center gap-2 p-1 bg-muted/40 rounded-xl border border-border">
+              <button
+                type="button"
+                onClick={() => setAssignmentType("DOCUMENT")}
+                className={`flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  assignmentType === "DOCUMENT"
+                    ? "bg-card text-foreground shadow-sm border border-border/60"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span>📄</span>
+                Document Assignment (Doc / PDF upload)
+              </button>
+              <button
+                type="button"
+                onClick={() => setAssignmentType("MCQ")}
+                className={`flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  assignmentType === "MCQ"
+                    ? "bg-card text-foreground shadow-sm border border-border/60"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span>✨</span>
+                AI Quiz / MCQ Assessment
+              </button>
+            </div>
+          )}
+
           {/* Section 1: Assignment Overview & Settings */}
           <div className="card-shell p-6 bg-card border border-border rounded-2xl shadow-sm space-y-4">
             <h2 className="font-display font-semibold text-sm text-foreground border-b border-border/60 pb-2">
@@ -450,7 +587,11 @@ export function AssignmentStudioModal({
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Midterm Evaluation - Data Structures & Algorithms"
+                  placeholder={
+                    isDocMode
+                      ? "e.g. Capstone Research Project & Analysis"
+                      : "e.g. Midterm Evaluation - Data Structures & Algorithms"
+                  }
                   className="input py-2 text-sm font-medium"
                   required
                 />
@@ -458,31 +599,37 @@ export function AssignmentStudioModal({
 
               <div className="sm:col-span-2">
                 <label className="label text-xs font-semibold mb-1 block">
-                  Description / Instructions for Trainees
+                  {isDocMode ? "Instructions & Guidelines" : "Description / Instructions for Trainees"}
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  rows={2}
-                  placeholder="Provide instructions regarding format, rules, and scoring..."
+                  rows={isDocMode ? 3 : 2}
+                  placeholder={
+                    isDocMode
+                      ? "Provide instructions, submission requirements, or rubric details for trainees..."
+                      : "Provide instructions regarding format, rules, and scoring..."
+                  }
                   className="input py-2 text-xs"
                 />
               </div>
 
-              <div>
-                <label className="label text-xs font-semibold mb-1 block">
-                  Start Time (When Quiz Opens) <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="input py-2 text-xs"
-                  required
-                />
-              </div>
+              {!isDocMode && (
+                <div>
+                  <label className="label text-xs font-semibold mb-1 block">
+                    Start Time (When Quiz Opens) <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="input py-2 text-xs"
+                    required
+                  />
+                </div>
+              )}
 
-              <div>
+              <div className={isDocMode ? "" : undefined}>
                 <label className="label text-xs font-semibold mb-1 block">
                   Submission Deadline <span className="text-destructive">*</span>
                 </label>
@@ -493,235 +640,312 @@ export function AssignmentStudioModal({
                   className="input py-2 text-xs"
                   required
                 />
+                {isDocMode && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    You can edit this deadline anytime after creation.
+                  </p>
+                )}
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="label text-xs font-semibold mb-1 block">
-                  Evaluation & Results Mode
-                </label>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <label
-                    onClick={() => setEvaluationMode("INSTANT")}
-                    className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
-                      evaluationMode === "INSTANT"
-                        ? "border-accent bg-accent/5"
-                        : "border-border bg-card"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="evaluationMode"
-                      checked={evaluationMode === "INSTANT"}
-                      onChange={() => setEvaluationMode("INSTANT")}
-                      className="mt-0.5"
-                    />
-                    <div>
-                      <p className="font-semibold text-xs text-foreground">Instant Release</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Trainees see their score & detailed explanations immediately upon submission.
-                      </p>
-                    </div>
-                  </label>
-
-                  <label
-                    onClick={() => setEvaluationMode("MANUAL_RELEASE")}
-                    className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
-                      evaluationMode === "MANUAL_RELEASE"
-                        ? "border-accent bg-accent/5"
-                        : "border-border bg-card"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="evaluationMode"
-                      checked={evaluationMode === "MANUAL_RELEASE"}
-                      onChange={() => setEvaluationMode("MANUAL_RELEASE")}
-                      className="mt-0.5"
-                    />
-                    <div>
-                      <p className="font-semibold text-xs text-foreground">Manual Release by Trainer</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Scores are hidden until trainer manually clicks 'Release Results' for all trainees.
-                      </p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2: Questions Editor */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display font-semibold text-sm text-foreground">
-                Question Items ({questions.length})
-              </h2>
-              <button
-                type="button"
-                onClick={handleAddQuestion}
-                className="btn-secondary py-1.5 px-3.5 text-xs font-semibold text-accent border-accent/30 hover:bg-accent/10"
-              >
-                + Add Question
-              </button>
-            </div>
-
-            {questions.map((q, qIdx) => (
-              <div
-                key={q.id}
-                className="card-shell p-6 bg-card border border-border rounded-2xl shadow-sm space-y-4 relative group"
-              >
-                <div className="flex items-center justify-between border-b border-border/60 pb-3">
-                  <span className="font-bold text-xs text-accent font-mono uppercase tracking-wider">
-                    Question {qIdx + 1}
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] text-muted-foreground font-medium">Marks:</span>
-                      <input
-                        type="number"
-                        min="1"
-                        value={q.marks}
-                        onChange={(e) =>
-                          handleQuestionChange(qIdx, "marks", Math.max(1, parseInt(e.target.value) || 1))
-                        }
-                        className="input py-1 px-2 text-xs w-16 text-center font-bold"
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveQuestion(qIdx)}
-                      className="text-xs text-destructive hover:bg-destructive/10 px-2 py-1 rounded transition-colors font-medium"
-                      title="Remove Question"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-
-                {/* Question Prompt */}
+              {isDocMode && (
                 <div>
                   <label className="label text-xs font-semibold mb-1 block">
-                    Question Prompt <span className="text-destructive">*</span>
+                    Total Marks / Max Score <span className="text-destructive">*</span>
                   </label>
-                  <textarea
-                    value={q.text}
-                    onChange={(e) => handleQuestionChange(qIdx, "text", e.target.value)}
-                    rows={2}
-                    placeholder="Enter the question text here..."
-                    className="input py-2 text-xs font-medium"
+                  <input
+                    type="number"
+                    min={1}
+                    value={docTotalMarks}
+                    onChange={(e) => setDocTotalMarks(e.target.value)}
+                    placeholder="100"
+                    className="input py-2 text-xs"
                     required
                   />
                 </div>
+              )}
 
-                {/* Question Optional Media & Explanation */}
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="label text-[11px] font-medium mb-1 block">
-                      Optional Image URL
-                    </label>
-                    <input
-                      type="url"
-                      value={q.imageUrl}
-                      onChange={(e) => handleQuestionChange(qIdx, "imageUrl", e.target.value)}
-                      placeholder="https://example.com/diagram.png"
-                      className="input py-1.5 text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="label text-[11px] font-medium mb-1 block">
-                      Optional Answer Explanation
-                    </label>
-                    <input
-                      type="text"
-                      value={q.explanation}
-                      onChange={(e) => handleQuestionChange(qIdx, "explanation", e.target.value)}
-                      placeholder="Explanation displayed when reviewing results..."
-                      className="input py-1.5 text-xs"
-                    />
-                  </div>
-                </div>
-
-                {/* Options List */}
-                <div className="space-y-2 pt-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-muted-foreground uppercase">
-                      Multiple Choice Options (Select radio for correct answer)
-                    </span>
-                    {q.options.length < 6 && (
-                      <button
-                        type="button"
-                        onClick={() => handleAddOption(qIdx)}
-                        className="text-[11px] text-accent hover:underline font-semibold"
-                      >
-                        + Add Option
-                      </button>
+              {isDocMode && (
+                <div className="sm:col-span-2">
+                  <label className="label text-xs font-semibold mb-1 block">
+                    Assignment Document / Brief (PDF, DOCX, etc.)
+                  </label>
+                  <div className="border border-dashed border-border rounded-xl p-4 text-center bg-muted/5 hover:bg-muted/10 transition-colors">
+                    {docFileName ? (
+                      <div className="flex items-center justify-between bg-card p-3 rounded-lg border border-border">
+                        <div className="flex items-center gap-2.5 truncate">
+                          <span className="text-lg">📄</span>
+                          <div className="text-left truncate">
+                            <p className="font-medium text-foreground truncate text-xs">{docFileName}</p>
+                            <p className="text-[10px] text-muted-foreground">Ready to attach</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDocFile(null);
+                            setDocFileName("");
+                          }}
+                          className="text-xs text-destructive hover:underline ml-3 shrink-0"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer block">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2 text-base">
+                          📎
+                        </div>
+                        <p className="font-medium text-foreground text-xs">
+                          Click to upload assignment brief or worksheet
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          PDF, Word (.docx, .doc), Presentations, or Text files (up to 50MB)
+                        </p>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip"
+                          onChange={handleDocFileSelect}
+                        />
+                      </label>
                     )}
                   </div>
+                </div>
+              )}
 
-                  <div className="space-y-2">
-                    {q.options.map((opt, oIdx) => (
-                      <div key={oIdx} className="flex items-center gap-2.5">
-                        <input
-                          type="radio"
-                          name={`correct-opt-${qIdx}`}
-                          checked={opt.isCorrect}
-                          onChange={() => handleSetCorrectOption(qIdx, oIdx)}
-                          className="shrink-0 accent-accent cursor-pointer"
-                          title="Set as correct answer"
-                        />
-                        <input
-                          type="text"
-                          value={opt.text}
-                          onChange={(e) => handleOptionTextChange(qIdx, oIdx, e.target.value)}
-                          placeholder={`Option ${oIdx + 1}`}
-                          className={`input py-1.5 text-xs flex-1 ${
-                            opt.isCorrect
-                              ? "border-emerald-500/50 bg-emerald-500/5 font-semibold text-emerald-700"
-                              : ""
-                          }`}
-                          required
-                        />
-                        {q.options.length > 2 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveOption(qIdx, oIdx)}
-                            className="text-xs text-muted-foreground hover:text-destructive px-1.5 py-1"
-                            title="Remove option"
-                          >
-                            ✕
-                          </button>
-                        )}
+              {!isDocMode && (
+                <div className="sm:col-span-2">
+                  <label className="label text-xs font-semibold mb-1 block">
+                    Evaluation & Results Mode
+                  </label>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <label
+                      onClick={() => setEvaluationMode("INSTANT")}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
+                        evaluationMode === "INSTANT"
+                          ? "border-accent bg-accent/5"
+                          : "border-border bg-card"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="evaluationMode"
+                        checked={evaluationMode === "INSTANT"}
+                        onChange={() => setEvaluationMode("INSTANT")}
+                        className="mt-0.5"
+                      />
+                      <div>
+                        <p className="font-semibold text-xs text-foreground">Instant Release</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Trainees see their score & detailed explanations immediately upon submission.
+                        </p>
                       </div>
-                    ))}
+                    </label>
+
+                    <label
+                      onClick={() => setEvaluationMode("MANUAL_RELEASE")}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
+                        evaluationMode === "MANUAL_RELEASE"
+                          ? "border-accent bg-accent/5"
+                          : "border-border bg-card"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="evaluationMode"
+                        checked={evaluationMode === "MANUAL_RELEASE"}
+                        onChange={() => setEvaluationMode("MANUAL_RELEASE")}
+                        className="mt-0.5"
+                      />
+                      <div>
+                        <p className="font-semibold text-xs text-foreground">Manual Release by Trainer</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Scores are hidden until trainer manually clicks &apos;Release Results&apos; for all trainees.
+                        </p>
+                      </div>
+                    </label>
                   </div>
                 </div>
-              </div>
-            ))}
-
-            <div className="pt-2 text-center">
-              <button
-                type="button"
-                onClick={handleAddQuestion}
-                className="btn-secondary py-2.5 px-6 text-xs font-semibold text-accent border-accent/40 hover:bg-accent/10 shadow-sm"
-              >
-                + Add Question
-              </button>
+              )}
             </div>
           </div>
+
+          {/* Section 2: Questions Editor (MCQ only) */}
+          {!isDocMode && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display font-semibold text-sm text-foreground">
+                  Question Items ({questions.length})
+                </h2>
+                <button
+                  type="button"
+                  onClick={handleAddQuestion}
+                  className="btn-secondary py-1.5 px-3.5 text-xs font-semibold text-accent border-accent/30 hover:bg-accent/10"
+                >
+                  + Add Question
+                </button>
+              </div>
+
+              {questions.map((q, qIdx) => (
+                <div
+                  key={q.id}
+                  className="card-shell p-6 bg-card border border-border rounded-2xl shadow-sm space-y-4 relative group"
+                >
+                  <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                    <span className="font-bold text-xs text-accent font-mono uppercase tracking-wider">
+                      Question {qIdx + 1}
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] text-muted-foreground font-medium">Marks:</span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={q.marks}
+                          onChange={(e) =>
+                            handleQuestionChange(qIdx, "marks", Math.max(1, parseInt(e.target.value) || 1))
+                          }
+                          className="input py-1 px-2 text-xs w-16 text-center font-bold"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveQuestion(qIdx)}
+                        className="text-xs text-destructive hover:bg-destructive/10 px-2 py-1 rounded transition-colors font-medium"
+                        title="Remove Question"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Question Prompt */}
+                  <div>
+                    <label className="label text-xs font-semibold mb-1 block">
+                      Question Prompt <span className="text-destructive">*</span>
+                    </label>
+                    <textarea
+                      value={q.text}
+                      onChange={(e) => handleQuestionChange(qIdx, "text", e.target.value)}
+                      rows={2}
+                      placeholder="Enter the question text here..."
+                      className="input py-2 text-xs font-medium"
+                      required
+                    />
+                  </div>
+
+                  {/* Question Optional Media & Explanation */}
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="label text-[11px] font-medium mb-1 block">
+                        Optional Image URL
+                      </label>
+                      <input
+                        type="url"
+                        value={q.imageUrl}
+                        onChange={(e) => handleQuestionChange(qIdx, "imageUrl", e.target.value)}
+                        placeholder="https://example.com/diagram.png"
+                        className="input py-1.5 text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label text-[11px] font-medium mb-1 block">
+                        Optional Answer Explanation
+                      </label>
+                      <input
+                        type="text"
+                        value={q.explanation}
+                        onChange={(e) => handleQuestionChange(qIdx, "explanation", e.target.value)}
+                        placeholder="Explanation displayed when reviewing results..."
+                        className="input py-1.5 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Options List */}
+                  <div className="space-y-2 pt-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-muted-foreground uppercase">
+                        Multiple Choice Options (Select radio for correct answer)
+                      </span>
+                      {q.options.length < 6 && (
+                        <button
+                          type="button"
+                          onClick={() => handleAddOption(qIdx)}
+                          className="text-[11px] text-accent hover:underline font-semibold"
+                        >
+                          + Add Option
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      {q.options.map((opt, oIdx) => (
+                        <div key={oIdx} className="flex items-center gap-2.5">
+                          <input
+                            type="radio"
+                            name={`correct-opt-${qIdx}`}
+                            checked={opt.isCorrect}
+                            onChange={() => handleSetCorrectOption(qIdx, oIdx)}
+                            className="shrink-0 accent-accent cursor-pointer"
+                            title="Set as correct answer"
+                          />
+                          <input
+                            type="text"
+                            value={opt.text}
+                            onChange={(e) => handleOptionTextChange(qIdx, oIdx, e.target.value)}
+                            placeholder={`Option ${oIdx + 1}`}
+                            className={`input py-1.5 text-xs flex-1 ${
+                              opt.isCorrect
+                                ? "border-emerald-500/50 bg-emerald-500/5 font-semibold text-emerald-700"
+                                : ""
+                            }`}
+                            required
+                          />
+                          {q.options.length > 2 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveOption(qIdx, oIdx)}
+                              className="text-xs text-muted-foreground hover:text-destructive px-1.5 py-1"
+                              title="Remove option"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={handleAddQuestion}
+                  className="btn-secondary py-2.5 px-6 text-xs font-semibold text-accent border-accent/40 hover:bg-accent/10 shadow-sm"
+                >
+                  + Add Question
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
       {/* AI Submodal */}
-      <AiGeneratorSubmodal
-        isOpen={showAiModal}
-        onClose={() => setShowAiModal(false)}
-        courseId={courseId}
-        token={token}
-        resources={resources}
-        onQuestionsGenerated={handleAiQuestionsGenerated}
-      />
+      {!isDocMode && (
+        <AiGeneratorSubmodal
+          isOpen={showAiModal}
+          onClose={() => setShowAiModal(false)}
+          courseId={courseId}
+          token={token}
+          resources={resources}
+          onQuestionsGenerated={handleAiQuestionsGenerated}
+        />
+      )}
     </div>
   );
 }

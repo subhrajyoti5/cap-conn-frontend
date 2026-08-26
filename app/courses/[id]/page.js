@@ -7,7 +7,6 @@ import { getCourse, enrollCourse, publishCourse } from "@/features/courses/api/c
 import { getResource } from "@/features/resources/api/resources.api";
 import { UploadResourceModal } from "@/components/upload-resource-modal";
 import { AssignmentStudioModal } from "@/components/assignment-studio-modal";
-import { CreateAiAssignmentModal } from "@/components/create-ai-assignment-modal";
 import { EditAssignmentModal } from "@/components/edit-assignment-modal";
 import { SubmitDocumentModal } from "@/components/submit-document-modal";
 import { GradeSubmissionsModal } from "@/components/grade-submissions-modal";
@@ -785,7 +784,11 @@ export default function CourseDetailPage() {
                         const canSeeResults = a.evaluationMode === "INSTANT" || a.resultsReleased;
                         const isDoc = a.type === "DOCUMENT";
                         const isDeadlinePassed = a.deadline && new Date() > new Date(a.deadline);
-                        const mySub = a.submission;
+                        const mySub =
+                          a.submission ||
+                          a.mySubmission ||
+                          a.submissions?.find((s) => s.traineeId === user?.id) ||
+                          null;
 
                         return (
                           <div
