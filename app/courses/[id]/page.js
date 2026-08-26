@@ -559,25 +559,22 @@ export default function CourseDetailPage() {
           <div className="border-b border-border flex items-center gap-6">
             <button
               onClick={() => setActiveTab("stream")}
-              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${
-                activeTab === "stream" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === "stream" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
             >
               Stream
             </button>
             <button
               onClick={() => setActiveTab("classwork")}
-              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${
-                activeTab === "classwork" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === "classwork" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
             >
               Classwork
             </button>
             <button
               onClick={() => setActiveTab("people")}
-              className={`py-3 text-sm font-semibold border-b-2 transition-colors relative flex items-center gap-2 ${
-                activeTab === "people" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors relative flex items-center gap-2 ${activeTab === "people" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
             >
               <span>People</span>
               {(isOwner || isAdmin) && (course?.enrollments?.filter((e) => e.status === "PENDING") || []).length > 0 && (
@@ -588,396 +585,359 @@ export default function CourseDetailPage() {
 
           <div className="space-y-6">
 
-          {activeTab === "stream" && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {activeTab === "stream" && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
-              <div className="md:col-span-1 space-y-4">
-                <div className="card border border-border p-4 bg-card">
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Upcoming Due</h3>
-                  {course.assessments?.filter(a => a.status === "PUBLISHED").length > 0 ? (
-                    <div className="space-y-2">
-                      {course.assessments.filter(a => a.status === "PUBLISHED").slice(0, 2).map(a => (
-                        <p key={a.id} className="text-xs text-foreground leading-normal">
-                          <span className="font-semibold block">{a.title}</span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {a.deadline ? `Due: ${new Date(a.deadline).toLocaleDateString()}` : "No deadline"}
-                          </span>
-                        </p>
+                <div className="md:col-span-1 space-y-4">
+                  <div className="card border border-border p-4 bg-card">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Upcoming Due</h3>
+                    {course.assessments?.filter(a => a.status === "PUBLISHED").length > 0 ? (
+                      <div className="space-y-2">
+                        {course.assessments.filter(a => a.status === "PUBLISHED").slice(0, 2).map(a => (
+                          <p key={a.id} className="text-xs text-foreground leading-normal">
+                            <span className="font-semibold block">{a.title}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {a.deadline ? `Due: ${new Date(a.deadline).toLocaleDateString()}` : "No deadline"}
+                            </span>
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Woohoo, no work due soon!</p>
+                    )}
+                  </div>
+                </div>
+
+
+                <div className="md:col-span-3 space-y-4">
+
+                  <div className="card border border-border p-5 bg-card">
+                    <h3 className="font-semibold text-sm text-foreground mb-1">About this course</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{course.description || "No description provided."}</p>
+                  </div>
+
+
+                  <div className="space-y-4">
+                    {streamFeed.length === 0 ? (
+                      <div className="text-center py-10 bg-muted/10 border border-dashed border-border rounded-xl">
+                        <p className="text-xs text-muted-foreground">Nothing has been posted to the stream yet.</p>
+                      </div>
+                    ) : (
+                      streamFeed.map((post) => (
+                        <div key={post.id} className="card border border-border p-5 bg-card flex gap-4">
+                          <div className="w-10 h-10 rounded-full flex-shrink-0 bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                            {course.trainer?.name ? course.trainer.name[0].toUpperCase() : "I"}
+                          </div>
+                          <div className="flex-1 space-y-2">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-semibold text-foreground">{course.trainer?.name || "Instructor"}</span>
+                              <span className="text-[10px] text-muted-foreground">{post.date.toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-xs text-foreground leading-relaxed">{post.title}</p>
+
+
+                            {post.type === "resource" && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenResource(post.data)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted transition-colors mt-2 cursor-pointer"
+                              >
+                                <span>📂</span>
+                                Open Resource
+                              </button>
+                            )}
+
+                            {post.type === "assessment" && (
+                              <button
+                                onClick={() => setActiveTab("classwork")}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted transition-colors mt-2"
+                              >
+                                <span>📝</span>
+                                View Assessment
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+
+            {activeTab === "classwork" && (
+              <div className="space-y-6">
+
+                <div className="card border border-border p-6 bg-card space-y-4">
+                  <div className="flex items-center justify-between border-b border-border pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">📁</span>
+                      <h2 className="font-display text-sm font-bold text-foreground">Course Resources</h2>
+                    </div>
+                    {(isOwner || isAdmin) && (
+                      <button
+                        onClick={() => setUploadModalOpen(true)}
+                        className="btn-primary btn-sm flex items-center gap-1"
+                      >
+                        <span>➕</span>
+                        Upload File
+                      </button>
+                    )}
+                  </div>
+
+                  {course.resources && course.resources.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {course.resources.map((res, index) => (
+                        <div
+                          key={res.id || index}
+                          className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card hover:bg-muted/10 transition-colors gap-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-semibold text-xs text-foreground truncate">{res.title}</p>
+                            <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                              <span className="uppercase font-bold text-[9px] bg-muted px-1.5 py-0.5 rounded">
+                                {res.type}
+                              </span>
+                              {res.createdAt && (
+                                <span>&bull; {new Date(res.createdAt).toLocaleDateString()}</span>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenResource(res)}
+                            className="btn-secondary btn-sm px-3 py-1 text-[10px] shrink-0 cursor-pointer"
+                          >
+                            Open ↗
+                          </button>
+                        </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground">Woohoo, no work due soon!</p>
+                    <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl text-xs">
+                      No learning resources uploaded for this course yet.
+                    </div>
                   )}
                 </div>
-              </div>
 
 
-              <div className="md:col-span-3 space-y-4">
+                <div className="card border border-border p-6 bg-card space-y-4">
+                  <div className="flex items-center justify-between border-b border-border pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">📝</span>
+                      <h2 className="font-display text-sm font-bold text-foreground">Assignments & Quizzes</h2>
+                    </div>
+                  </div>
 
-                <div className="card border border-border p-5 bg-card">
-                  <h3 className="font-semibold text-sm text-foreground mb-1">About this course</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{course.description || "No description provided."}</p>
-                </div>
-
-
-                <div className="space-y-4">
-                  {streamFeed.length === 0 ? (
-                    <div className="text-center py-10 bg-muted/10 border border-dashed border-border rounded-xl">
-                      <p className="text-xs text-muted-foreground">Nothing has been posted to the stream yet.</p>
+                  {course.assessments && course.assessments.length > 0 ? (
+                    <div className="space-y-3">
+                      {course.assessments.map((a) => (
+                        <div
+                          key={a.id}
+                          className="p-4 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-muted/10 transition-colors"
+                        >
+                          <div className="space-y-1">
+                            <p className="font-semibold text-xs text-foreground">{a.title}</p>
+                            <p className="text-[11px] text-muted-foreground">{a.description}</p>
+                            <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
+                              <span>Total Marks: <strong>{a.totalMarks}</strong></span>
+                              <span>{a.questions?.length || 0} Questions</span>
+                              {a.deadline && (
+                                <span>Due: {new Date(a.deadline).toLocaleDateString()}</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                            <span className={`badge text-[9px] uppercase font-bold tracking-wider ${a.status === "PUBLISHED" ? "badge-success" : "badge-neutral"}`}>
+                              {a.status?.toLowerCase()}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ) : (
-                    streamFeed.map((post) => (
-                      <div key={post.id} className="card border border-border p-5 bg-card flex gap-4">
-                        <div className="w-10 h-10 rounded-full flex-shrink-0 bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                          {course.trainer?.name ? course.trainer.name[0].toUpperCase() : "I"}
-                        </div>
-                        <div className="flex-1 space-y-2">
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="font-semibold text-foreground">{course.trainer?.name || "Instructor"}</span>
-                            <span className="text-[10px] text-muted-foreground">{post.date.toLocaleDateString()}</span>
-                          </div>
-                          <p className="text-xs text-foreground leading-relaxed">{post.title}</p>
-
-
-                          {post.type === "resource" && (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenResource(post.data)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted transition-colors mt-2 cursor-pointer"
-                            >
-                              <span>📂</span>
-                              Open Resource
-                            </button>
-                          )}
-
-                          {post.type === "assessment" && (
-                            <button
-                              onClick={() => {
-                                if (user?.role === "TRAINEE" && isEnrolled && post.data?.status === "PUBLISHED") {
-                                  setTakeAssessment({ id: post.data.id, mode: "take" });
-                                } else {
-                                  setActiveTab("classwork");
-                                }
-                              }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted transition-colors mt-2"
-                            >
-                              <span>📝</span>
-                              {user?.role === "TRAINEE" ? "Take Quiz" : "View Assessment"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))
+                    <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl text-xs">
+                      No assessments assigned yet.
+                    </div>
                   )}
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
 
-          {activeTab === "classwork" && (
-            <div className="space-y-6">
+            {activeTab === "people" && (
+              <div className="space-y-6">
 
-              <div className="card border border-border p-6 bg-card space-y-4">
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">📁</span>
-                    <h2 className="font-display text-sm font-bold text-foreground">Course Resources</h2>
-                  </div>
-                  {(isOwner || isAdmin) && (
-                    <button
-                      onClick={() => setUploadModalOpen(true)}
-                      className="btn-primary btn-sm flex items-center gap-1"
-                    >
-                      <span>➕</span>
-                      Upload File
-                    </button>
-                  )}
-                </div>
-
-                {course.resources && course.resources.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {course.resources.map((res, index) => (
-                      <div
-                        key={res.id || index}
-                        className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card hover:bg-muted/10 transition-colors gap-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="font-semibold text-xs text-foreground truncate">{res.title}</p>
-                          <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
-                            <span className="uppercase font-bold text-[9px] bg-muted px-1.5 py-0.5 rounded">
-                              {res.type}
-                            </span>
-                            {res.createdAt && (
-                              <span>&bull; {new Date(res.createdAt).toLocaleDateString()}</span>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenResource(res)}
-                          className="btn-secondary btn-sm px-3 py-1 text-[10px] shrink-0 cursor-pointer"
-                        >
-                          Open ↗
-                        </button>
+                {(isOwner || isAdmin) && (
+                  <div className="card border border-amber-500/20 p-6 bg-amber-500/5 space-y-4">
+                    <h2 className="font-display text-sm font-bold text-amber-600 border-b border-amber-500/10 pb-2 flex justify-between items-center">
+                      <span>Pending Enrollment Requests</span>
+                      <span className="text-xs bg-amber-500/20 text-amber-800 px-2 py-0.5 rounded-full font-mono">
+                        {(course.enrollments?.filter((e) => e.status === "PENDING") || []).length} requests
+                      </span>
+                    </h2>
+                    {(course.enrollments?.filter((e) => e.status === "PENDING") || []).length > 0 ? (
+                      <ul className="divide-y divide-amber-500/10">
+                        {course.enrollments
+                          .filter((e) => e.status === "PENDING")
+                          .map((enrollment) => {
+                            const student = enrollment.trainee;
+                            if (!student) return null;
+                            return (
+                              <li key={enrollment.id} className="py-3 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-700 flex items-center justify-center font-semibold text-xs">
+                                    {student.name ? student.name[0].toUpperCase() : student.email[0].toUpperCase()}
+                                  </div>
+                                  <button
+                                    onClick={() => handleViewTrainee(student.id || enrollment.traineeId)}
+                                    className="text-left group"
+                                  >
+                                    <p className="font-medium text-xs text-foreground group-hover:text-primary transition-colors hover:underline">
+                                      {student.name || "No profile name"}
+                                    </p>
+                                    <p className="text-[9px] text-muted-foreground">{student.email}</p>
+                                  </button>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleApproveEnrollment(student.id || enrollment.traineeId)}
+                                    className="btn-primary bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] py-1 px-2.5"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setRejectTraineeId(student.id || enrollment.traineeId);
+                                      setShowRejectRequestModal(true);
+                                    }}
+                                    className="btn-secondary border-red-200 text-red-600 hover:bg-red-50 text-[10px] py-1 px-2.5"
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                              </li>
+                            );
+                          })}
+                      </ul>
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground text-xs">
+                        No pending enrollment requests.
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl text-xs">
-                    No learning resources uploaded for this course yet.
+                    )}
                   </div>
                 )}
-              </div>
 
 
-              <div className="card border border-border p-6 bg-card space-y-4">
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">📝</span>
-                    <h2 className="font-display text-sm font-bold text-foreground">Assignments & Quizzes</h2>
-                  </div>
-                  {(isOwner || isAdmin) && (
-                    <button
-                      onClick={() => setAiAssignmentOpen(true)}
-                      className="btn-primary btn-sm flex items-center gap-1"
-                    >
-                      <span>✨</span>
-                      Create AI Assignment
-                    </button>
-                  )}
+                <div className="card border border-border p-6 bg-card space-y-4">
+                  <h2 className="font-display text-sm font-bold text-primary border-b border-border pb-2 flex justify-between items-center">
+                    <span>Teachers</span>
+                    {(isOwner || isAdmin) && (
+                      <button
+                        onClick={() => setShowInviteTrainerModal(true)}
+                        className="btn-primary text-[10px] py-1 px-2.5"
+                      >
+                        + Invite Trainer
+                      </button>
+                    )}
+                  </h2>
+
+                  <button
+                    onClick={() => handleViewTrainer(course.trainerId)}
+                    className="w-full text-left flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm group-hover:scale-105 transition-transform shrink-0">
+                      {course.trainer?.name ? course.trainer.name[0].toUpperCase() : "I"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">{course.trainer?.name || "Instructor"}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{course.trainer?.email} (Primary)</p>
+                    </div>
+                  </button>
+
+                  {course.trainers?.map((ct) => {
+                    const t = ct.trainer;
+                    if (!t) return null;
+                    return (
+                      <button
+                        key={ct.id}
+                        onClick={() => handleViewTrainer(t.id)}
+                        className="w-full text-left flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group pt-3 border-t border-border/50"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm group-hover:scale-105 transition-transform shrink-0">
+                          {t.name ? t.name[0].toUpperCase() : "I"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">{t.name || "Instructor"}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{t.email} (Secondary)</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {course.assessments && course.assessments.length > 0 ? (
-                  <div className="space-y-3">
-                    {course.assessments.map((a) => (
-                      <div
-                        key={a.id}
-                        className="p-4 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-muted/10 transition-colors"
-                      >
-                        <div className="space-y-1">
-                          <p className="font-semibold text-xs text-foreground">{a.title}</p>
-                          <p className="text-[11px] text-muted-foreground">{a.description}</p>
-                          <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
-                            <span>Total Marks: <strong>{a.totalMarks}</strong></span>
-                            <span>{a.questions?.length || 0} Questions</span>
-                            {a.deadline && (
-                              <span>Due: {new Date(a.deadline).toLocaleDateString()}</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-                          <span className={`badge text-[9px] uppercase font-bold tracking-wider ${a.status === "PUBLISHED" ? "badge-success" : "badge-neutral"}`}>
-                            {a.status?.toLowerCase()}
-                          </span>
-                          {user?.role === "TRAINEE" && isEnrolled && a.status === "PUBLISHED" && (
-                            <button
-                              type="button"
-                              className="btn-secondary btn-sm px-3 py-1 text-[10px]"
-                              onClick={() =>
-                                setTakeAssessment({ id: a.id, mode: "take" })
-                              }
-                            >
-                              Take Quiz
-                            </button>
-                          )}
-                          {user?.role === "TRAINEE" && isEnrolled && a.status === "PUBLISHED" && (
-                            <button
-                              type="button"
-                              className="btn-secondary btn-sm px-3 py-1 text-[10px]"
-                              onClick={() =>
-                                setTakeAssessment({ id: a.id, mode: "result" })
-                              }
-                            >
-                              View Result
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl text-xs">
-                    No assessments assigned yet.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
-
-          {activeTab === "people" && (
-            <div className="space-y-6">
-
-              {(isOwner || isAdmin) && (
-                <div className="card border border-amber-500/20 p-6 bg-amber-500/5 space-y-4">
-                  <h2 className="font-display text-sm font-bold text-amber-600 border-b border-amber-500/10 pb-2 flex justify-between items-center">
-                    <span>Pending Enrollment Requests</span>
-                    <span className="text-xs bg-amber-500/20 text-amber-800 px-2 py-0.5 rounded-full font-mono">
-                      {(course.enrollments?.filter((e) => e.status === "PENDING") || []).length} requests
+                <div className="card border border-border p-6 bg-card space-y-4">
+                  <h2 className="font-display text-sm font-bold text-primary border-b border-border pb-2 flex justify-between items-center">
+                    <span>Classmates</span>
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {(course.enrollments?.filter((e) => e.status === "ACTIVE") || []).length} enrolled
                     </span>
                   </h2>
-                  {(course.enrollments?.filter((e) => e.status === "PENDING") || []).length > 0 ? (
-                    <ul className="divide-y divide-amber-500/10">
+                  {(course.enrollments?.filter((e) => e.status === "ACTIVE") || []).length > 0 ? (
+                    <div className="space-y-2">
                       {course.enrollments
-                        .filter((e) => e.status === "PENDING")
+                        .filter((e) => e.status === "ACTIVE")
                         .map((enrollment) => {
                           const student = enrollment.trainee;
                           if (!student) return null;
                           return (
-                            <li key={enrollment.id} className="py-3 flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-700 flex items-center justify-center font-semibold text-xs">
+                            <div
+                              key={enrollment.id}
+                              className="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group"
+                            >
+                              <button
+                                onClick={() => handleViewTrainee(student.id || enrollment.traineeId)}
+                                className="flex-1 text-left flex items-center gap-3 min-w-0"
+                              >
+                                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm group-hover:scale-105 transition-transform shrink-0">
                                   {student.name ? student.name[0].toUpperCase() : student.email[0].toUpperCase()}
                                 </div>
-                                <button
-                                  onClick={() => handleViewTrainee(student.id || enrollment.traineeId)}
-                                  className="text-left group"
-                                >
-                                  <p className="font-medium text-xs text-foreground group-hover:text-primary transition-colors hover:underline">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
                                     {student.name || "No profile name"}
                                   </p>
-                                  <p className="text-[9px] text-muted-foreground">{student.email}</p>
-                                </button>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleApproveEnrollment(student.id || enrollment.traineeId)}
-                                  className="btn-primary bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] py-1 px-2.5"
-                                >
-                                  Approve
-                                </button>
+                                  <p className="text-[10px] text-muted-foreground truncate">{student.email}</p>
+                                </div>
+                              </button>
+                              {(isOwner || isAdmin) && (
                                 <button
                                   onClick={() => {
-                                    setRejectTraineeId(student.id || enrollment.traineeId);
-                                    setShowRejectRequestModal(true);
+                                    setRemoveTraineeId(student.id || enrollment.traineeId);
+                                    setShowRemoveTraineeModal(true);
                                   }}
-                                  className="btn-secondary border-red-200 text-red-600 hover:bg-red-50 text-[10px] py-1 px-2.5"
+                                  className="w-7 h-7 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500/10 hover:text-red-600 transition-colors text-xs font-semibold shrink-0"
+                                  title="Remove Trainee"
                                 >
-                                  Reject
+                                  ✕
                                 </button>
-                              </div>
-                            </li>
+                              )}
+                            </div>
                           );
                         })}
-                    </ul>
+                    </div>
                   ) : (
-                    <div className="text-center py-4 text-muted-foreground text-xs">
-                      No pending enrollment requests.
+                    <div className="text-center py-6 text-muted-foreground text-xs">
+                      No trainees enrolled in this classroom yet.
                     </div>
                   )}
                 </div>
-              )}
-
-
-              <div className="card border border-border p-6 bg-card space-y-4">
-                <h2 className="font-display text-sm font-bold text-primary border-b border-border pb-2 flex justify-between items-center">
-                  <span>Teachers</span>
-                  {(isOwner || isAdmin) && (
-                    <button
-                      onClick={() => setShowInviteTrainerModal(true)}
-                      className="btn-primary text-[10px] py-1 px-2.5"
-                    >
-                      + Invite Trainer
-                    </button>
-                  )}
-                </h2>
-
-                <button
-                  onClick={() => handleViewTrainer(course.trainerId)}
-                  className="w-full text-left flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm group-hover:scale-105 transition-transform shrink-0">
-                    {course.trainer?.name ? course.trainer.name[0].toUpperCase() : "I"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">{course.trainer?.name || "Instructor"}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{course.trainer?.email} (Primary)</p>
-                  </div>
-                </button>
-
-                {course.trainers?.map((ct) => {
-                  const t = ct.trainer;
-                  if (!t) return null;
-                  return (
-                    <button
-                      key={ct.id}
-                      onClick={() => handleViewTrainer(t.id)}
-                      className="w-full text-left flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group pt-3 border-t border-border/50"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm group-hover:scale-105 transition-transform shrink-0">
-                        {t.name ? t.name[0].toUpperCase() : "I"}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">{t.name || "Instructor"}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">{t.email} (Secondary)</p>
-                      </div>
-                    </button>
-                  );
-                })}
               </div>
-
-
-              <div className="card border border-border p-6 bg-card space-y-4">
-                <h2 className="font-display text-sm font-bold text-primary border-b border-border pb-2 flex justify-between items-center">
-                  <span>Classmates</span>
-                  <span className="text-xs text-muted-foreground font-mono">
-                    {(course.enrollments?.filter((e) => e.status === "ACTIVE") || []).length} enrolled
-                  </span>
-                </h2>
-                {(course.enrollments?.filter((e) => e.status === "ACTIVE") || []).length > 0 ? (
-                  <div className="space-y-2">
-                    {course.enrollments
-                      .filter((e) => e.status === "ACTIVE")
-                      .map((enrollment) => {
-                        const student = enrollment.trainee;
-                        if (!student) return null;
-                        return (
-                          <div
-                            key={enrollment.id}
-                            className="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group"
-                          >
-                            <button
-                              onClick={() => handleViewTrainee(student.id || enrollment.traineeId)}
-                              className="flex-1 text-left flex items-center gap-3 min-w-0"
-                            >
-                              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm group-hover:scale-105 transition-transform shrink-0">
-                                {student.name ? student.name[0].toUpperCase() : student.email[0].toUpperCase()}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
-                                  {student.name || "No profile name"}
-                                </p>
-                                <p className="text-[10px] text-muted-foreground truncate">{student.email}</p>
-                              </div>
-                            </button>
-                            {(isOwner || isAdmin) && (
-                              <button
-                                onClick={() => {
-                                  setRemoveTraineeId(student.id || enrollment.traineeId);
-                                  setShowRemoveTraineeModal(true);
-                                }}
-                                className="w-7 h-7 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500/10 hover:text-red-600 transition-colors text-xs font-semibold shrink-0"
-                                title="Remove Trainee"
-                              >
-                                ✕
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 text-muted-foreground text-xs">
-                    No trainees enrolled in this classroom yet.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </>
-    )}
+            )}
+          </div>
+        </>
+      )}
 
 
       <UploadResourceModal
@@ -1345,11 +1305,10 @@ export default function CourseDetailPage() {
                 Enter the email address of the trainer you want to invite as a co-instructor for this course. They will receive a notification to join.
               </p>
               {inviteStatus.message && (
-                <div className={`p-3 rounded-xl text-xs border ${
-                  inviteStatus.type === "success" 
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
-                    : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
-                }`}>
+                <div className={`p-3 rounded-xl text-xs border ${inviteStatus.type === "success"
+                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                  }`}>
                   {inviteStatus.message}
                 </div>
               )}
@@ -1413,11 +1372,10 @@ export default function CourseDetailPage() {
                 Are you sure you want to remove this trainee from the classroom? They will lose access to all resources and assessments.
               </p>
               {removeStatus.message && (
-                <div className={`p-3 rounded-xl text-xs border ${
-                  removeStatus.type === "success" 
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
-                    : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
-                }`}>
+                <div className={`p-3 rounded-xl text-xs border ${removeStatus.type === "success"
+                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                  }`}>
                   {removeStatus.message}
                 </div>
               )}
@@ -1478,11 +1436,10 @@ export default function CourseDetailPage() {
                 Are you sure you want to un-enroll (drop) from this course? You will lose access to classroom resources, and course instructors will be notified.
               </p>
               {unenrollStatus.message && (
-                <div className={`p-3 rounded-xl text-xs border ${
-                  unenrollStatus.type === "success" 
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
-                    : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
-                }`}>
+                <div className={`p-3 rounded-xl text-xs border ${unenrollStatus.type === "success"
+                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                  }`}>
                   {unenrollStatus.message}
                 </div>
               )}
@@ -1528,11 +1485,10 @@ export default function CourseDetailPage() {
                 Please enter a message explaining the reason for rejecting this enrollment request. The trainee will see this reason in notifications.
               </p>
               {rejectStatus.message && (
-                <div className={`p-3 rounded-xl text-xs border ${
-                  rejectStatus.type === "success" 
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
-                    : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
-                }`}>
+                <div className={`p-3 rounded-xl text-xs border ${rejectStatus.type === "success"
+                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                  }`}>
                   {rejectStatus.message}
                 </div>
               )}
@@ -1590,11 +1546,10 @@ export default function CourseDetailPage() {
             </div>
             <form onSubmit={handleUpdateCourse} className="p-6 space-y-4">
               {editStatus.message && (
-                <div className={`p-3 rounded-xl text-xs border ${
-                  editStatus.type === "success" 
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
-                    : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
-                }`}>
+                <div className={`p-3 rounded-xl text-xs border ${editStatus.type === "success"
+                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                  : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                  }`}>
                   {editStatus.message}
                 </div>
               )}
