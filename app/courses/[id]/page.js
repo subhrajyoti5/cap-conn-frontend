@@ -14,7 +14,7 @@ import Link from "next/link";
 export default function CourseDetailPage() {
   const { id } = useParams();
   const { getToken, userId, user } = useAuth();
-  
+
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -22,21 +22,62 @@ export default function CourseDetailPage() {
   const [aiAssignmentOpen, setAiAssignmentOpen] = useState(false);
   const [takeAssessment, setTakeAssessment] = useState(null);
   const [authToken, setAuthToken] = useState("");
-  
-  // Trainer Modal State
+
+
   const [showTrainerModal, setShowTrainerModal] = useState(false);
   const [trainerProfile, setTrainerProfile] = useState(null);
   const [loadingTrainer, setLoadingTrainer] = useState(false);
-  
-  // Tabs State
-  const [activeTab, setActiveTab] = useState("stream"); // stream, classwork, people
 
-  async function handleViewTrainer() {
-    if (!course?.trainerId) return;
+
+  const [showTraineeModal, setShowTraineeModal] = useState(false);
+  const [traineeProfile, setTraineeProfile] = useState(null);
+  const [loadingTrainee, setLoadingTrainee] = useState(false);
+
+
+  const [showInviteTrainerModal, setShowInviteTrainerModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [invitingTrainer, setInvitingTrainer] = useState(false);
+
+
+  const [showRemoveTraineeModal, setShowRemoveTraineeModal] = useState(false);
+  const [removeTraineeId, setRemoveTraineeId] = useState(null);
+  const [removeReason, setRemoveReason] = useState("");
+  const [removingTrainee, setRemovingTrainee] = useState(false);
+
+
+  const [showEditCourseModal, setShowEditCourseModal] = useState(false);
+  const [editCourseTitle, setEditCourseTitle] = useState("");
+  const [editCourseDesc, setEditCourseDesc] = useState("");
+  const [updatingCourse, setUpdatingCourse] = useState(false);
+
+
+  const [showCourseDetailsModal, setShowCourseDetailsModal] = useState(false);
+
+
+  const [showRejectRequestModal, setShowRejectRequestModal] = useState(false);
+  const [rejectTraineeId, setRejectTraineeId] = useState(null);
+  const [rejectMessage, setRejectMessage] = useState("");
+  const [rejectingRequest, setRejectingRequest] = useState(false);
+
+
+  const [showUnenrollModal, setShowUnenrollModal] = useState(false);
+  const [unenrolling, setUnenrolling] = useState(false);
+  const [unenrollStatus, setUnenrollStatus] = useState({ type: "", message: "" });
+
+  const [activeTab, setActiveTab] = useState("stream");
+  const [actionMessage, setActionMessage] = useState("");
+  const [inviteStatus, setInviteStatus] = useState({ type: "", message: "" });
+  const [editStatus, setEditStatus] = useState({ type: "", message: "" });
+  const [removeStatus, setRemoveStatus] = useState({ type: "", message: "" });
+  const [rejectStatus, setRejectStatus] = useState({ type: "", message: "" });
+
+  async function handleViewTrainer(trainerId) {
+    const targetId = trainerId || course?.trainerId;
+    if (!targetId) return;
     setShowTrainerModal(true);
     setLoadingTrainer(true);
     try {
-      const res = await apiFetch(`/profiles/trainers/${course.trainerId}`);
+      const res = await apiFetch(`/profiles/trainers/${targetId}`);
       setTrainerProfile(res.data);
     } catch (e) {
       console.error("Error loading trainer public profile:", e);
@@ -91,6 +132,150 @@ export default function CourseDetailPage() {
     }
   }
 
+  async function handleViewTrainee(traineeId) {
+    setShowTraineeModal(true);
+    setLoadingTrainee(true);
+    try {
+      const res = await apiFetch(`/profiles/trainees/${traineeId}`);
+      setTraineeProfile(res.data);
+    } catch (e) {
+      console.error("Error loading trainee public profile:", e);
+    } finally {
+      setLoadingTrainee(false);
+    }
+  }
+
+  async function handleApproveEnrollment(traineeId) {
+    setActionMessage("");
+    try {
+      await apiFetch(`/courses/${id}/enrollments/${traineeId}/approve`, { method: "POST" });
+      setActionMessage("Enrollment request approved successfully!");
+      setTimeout(() => setActionMessage(""), 4000);
+      load();
+    } catch (e) {
+      console.error(e);
+      setActionMessage("Failed to approve enrollment request.");
+      setTimeout(() => setActionMessage(""), 4000);
+    }
+  }
+
+  async function handleRejectEnrollment() {
+    if (!rejectTraineeId) return;
+    setRejectingRequest(true);
+    setRejectStatus({ type: "", message: "" });
+    try {
+      await apiFetch(`/courses/${id}/enrollments/${rejectTraineeId}/reject`, {
+        method: "POST",
+        body: JSON.stringify({ message: rejectMessage }),
+      });
+      setRejectStatus({ type: "success", message: "Enrollment request rejected successfully." });
+      setTimeout(() => {
+        setShowRejectRequestModal(false);
+        setRejectTraineeId(null);
+        setRejectMessage("");
+        setRejectStatus({ type: "", message: "" });
+        load();
+      }, 1500);
+    } catch (e) {
+      console.error(e);
+      setRejectStatus({ type: "error", message: "Failed to reject enrollment request." });
+    } finally {
+      setRejectingRequest(false);
+    }
+  }
+
+  async function handleRemoveTrainee() {
+    if (!removeTraineeId) return;
+    setRemovingTrainee(true);
+    setRemoveStatus({ type: "", message: "" });
+    try {
+      await apiFetch(`/courses/${id}/remove-trainee`, {
+        method: "POST",
+        body: JSON.stringify({ traineeId: removeTraineeId, reason: removeReason }),
+      });
+      setRemoveStatus({ type: "success", message: "Trainee removed successfully." });
+      setTimeout(() => {
+        setShowRemoveTraineeModal(false);
+        setRemoveTraineeId(null);
+        setRemoveReason("");
+        setRemoveStatus({ type: "", message: "" });
+        load();
+      }, 1500);
+    } catch (e) {
+      console.error(e);
+      setRemoveStatus({ type: "error", message: "Failed to remove trainee." });
+    } finally {
+      setRemovingTrainee(false);
+    }
+  }
+
+  async function handleInviteTrainer(e) {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+    setInvitingTrainer(true);
+    setInviteStatus({ type: "", message: "" });
+    try {
+      await apiFetch(`/courses/${id}/invite-trainer`, {
+        method: "POST",
+        body: JSON.stringify({ email: inviteEmail.trim() }),
+      });
+      setInviteStatus({ type: "success", message: "Invitation sent successfully! They can accept it once they log in." });
+      setTimeout(() => {
+        setShowInviteTrainerModal(false);
+        setInviteEmail("");
+        setInviteStatus({ type: "", message: "" });
+        load();
+      }, 2000);
+    } catch (e) {
+      console.error(e);
+      setInviteStatus({ type: "error", message: e.message || "Failed to send invitation. Please verify the email address." });
+    } finally {
+      setInvitingTrainer(false);
+    }
+  }
+
+  async function handleUnenroll() {
+    setUnenrolling(true);
+    setUnenrollStatus({ type: "", message: "" });
+    try {
+      await apiFetch(`/courses/${id}/enroll`, { method: "DELETE" });
+      setUnenrollStatus({ type: "success", message: "You have un-enrolled from this course." });
+      setTimeout(() => {
+        setShowUnenrollModal(false);
+        setUnenrollStatus({ type: "", message: "" });
+        load();
+      }, 1500);
+    } catch (e) {
+      console.error(e);
+      setUnenrollStatus({ type: "error", message: e.message || "Failed to un-enroll from course." });
+    } finally {
+      setUnenrolling(false);
+    }
+  }
+
+  async function handleUpdateCourse(e) {
+    e.preventDefault();
+    setUpdatingCourse(true);
+    setEditStatus({ type: "", message: "" });
+    try {
+      await apiFetch(`/courses/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ title: editCourseTitle, description: editCourseDesc }),
+      });
+      setEditStatus({ type: "success", message: "Course details updated successfully!" });
+      setTimeout(() => {
+        setShowEditCourseModal(false);
+        setEditStatus({ type: "", message: "" });
+        load();
+      }, 1500);
+    } catch (e) {
+      console.error(e);
+      setEditStatus({ type: "error", message: "Failed to update course details." });
+    } finally {
+      setUpdatingCourse(false);
+    }
+  }
+
   async function handleOpenResource(resource) {
     if (!resource) return;
     if (resource.storageKey?.startsWith("http://") || resource.storageKey?.startsWith("https://")) {
@@ -136,12 +321,16 @@ export default function CourseDetailPage() {
     );
   }
 
-  const isOwner = course.trainerId === userId;
-  const isEnrolled = course.enrollments?.some((e) => e.traineeId === userId || e.userId === userId);
+  const isSecondaryTrainer = course.trainers?.some((t) => t.trainerId === userId);
+  const isOwner = course.trainerId === userId || isSecondaryTrainer;
+  const myEnrollment = course.enrollments?.find((e) => e.traineeId === userId || e.userId === userId);
+  const isEnrolled = myEnrollment?.status === "ACTIVE";
+  const isPending = myEnrollment?.status === "PENDING";
+  const isRejected = myEnrollment?.status === "REJECTED";
   const isAdmin = user?.role === "ADMIN";
   const hasAccess = isOwner || isEnrolled || isAdmin;
 
-  // Build Chronological Stream Feed (Announcements + Uploads combined)
+
   const streamFeed = [];
   if (course.resources) {
     course.resources.forEach((r) => {
@@ -165,12 +354,12 @@ export default function CourseDetailPage() {
       });
     });
   }
-  // Sort descending
+
   streamFeed.sort((a, b) => b.date - a.date);
 
   return (
     <div className="space-y-6 max-w-5xl animate-in stagger-1">
-      {/* Classroom Banner */}
+
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-600 to-indigo-800 text-white p-8 shadow-lg relative">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -187,33 +376,91 @@ export default function CourseDetailPage() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {(isOwner || isAdmin) && course.status === "DRAFT" && (
+            {(isOwner || isAdmin) && (
+              <button
+                onClick={() => {
+                  setEditCourseTitle(course.title);
+                  setEditCourseDesc(course.description);
+                  setShowEditCourseModal(true);
+                }}
+                className="btn-secondary bg-white/10 hover:bg-white/20 text-white border-white/20 shadow-md text-xs py-1.5 px-3"
+              >
+                ⚙ Edit Details
+              </button>
+            )}
+            {hasAccess && (
+              <button
+                onClick={() => setShowCourseDetailsModal(true)}
+                className="btn-secondary bg-white/10 hover:bg-white/20 text-white border-white/20 shadow-md text-xs py-1.5 px-3"
+              >
+                ℹ View Course Info
+              </button>
+            )}
+            {isOwner && course.status === "DRAFT" && (
               <button
                 onClick={handlePublish}
                 disabled={actionLoading}
-                className="btn-secondary bg-white text-primary hover:bg-white/90 border-transparent shadow-md"
+                className="btn-secondary bg-white text-primary hover:bg-white/90 border-transparent shadow-md text-xs py-1.5 px-3"
               >
                 {actionLoading ? "Publishing..." : "Publish Course"}
               </button>
             )}
             {user?.role === "TRAINEE" && course.status === "PUBLISHED" && !isEnrolled && (
-              <button
-                onClick={handleEnroll}
-                disabled={actionLoading}
-                className="btn-secondary bg-white text-primary hover:bg-white/90 border-transparent shadow-md"
-              >
-                {actionLoading ? "Enrolling..." : "Enroll in Course"}
-              </button>
+              <>
+                {isPending ? (
+                  <span className="badge bg-amber-500/20 text-amber-300 border-amber-500/30 px-3 py-1.5 text-xs font-semibold">
+                    Request Pending
+                  </span>
+                ) : isRejected ? (
+                  <div className="flex items-center gap-2">
+                    <span className="badge bg-red-500/20 text-red-300 border-red-500/30 px-3 py-1.5 text-xs font-semibold">
+                      Request Rejected
+                    </span>
+                    <button
+                      onClick={handleEnroll}
+                      disabled={actionLoading}
+                      className="btn-secondary bg-white text-primary hover:bg-white/90 border-transparent shadow-md text-xs py-1.5 px-3"
+                    >
+                      {actionLoading ? "Enrolling..." : "Retry Enroll"}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleEnroll}
+                    disabled={actionLoading}
+                    className="btn-secondary bg-white text-primary hover:bg-white/90 border-transparent shadow-md text-xs py-1.5 px-3"
+                  >
+                    {actionLoading ? "Enrolling..." : "Enroll in Course"}
+                  </button>
+                )}
+              </>
             )}
             {isEnrolled && (
-              <span className="badge bg-emerald-500/20 text-emerald-300 border-emerald-500/30 px-3 py-1.5 text-xs font-semibold">
-                ✓ Enrolled
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="badge bg-emerald-500/20 text-emerald-300 border-emerald-500/30 px-3 py-1.5 text-xs font-semibold">
+                  ✓ Enrolled
+                </span>
+                {user?.role === "TRAINEE" && (
+                  <button
+                    onClick={() => setShowUnenrollModal(true)}
+                    className="btn-secondary bg-red-500/20 hover:bg-red-500/30 text-white border-red-500/30 shadow-md text-xs py-1.5 px-3"
+                  >
+                    Un-enroll
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
         <div className="absolute right-0 top-0 w-32 h-32 bg-white/5 rounded-full -mr-8 -mt-8" />
       </div>
+
+      {actionMessage && (
+        <div className="bg-primary/5 border border-primary/10 text-primary text-xs p-4 rounded-2xl flex items-center justify-between animate-in fade-in duration-200">
+          <span>{actionMessage}</span>
+          <button onClick={() => setActionMessage("")} className="font-bold hover:opacity-80 font-mono text-[10px]">✕</button>
+        </div>
+      )}
 
       {!hasAccess && user?.role === "TRAINEE" ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -258,13 +505,29 @@ export default function CourseDetailPage() {
                 <p className="text-xs text-muted-foreground mt-0.5">Enroll to get access to all lectures, classwork materials, and certificates.</p>
               </div>
               {course.status === "PUBLISHED" && (
-                <button
-                  onClick={handleEnroll}
-                  disabled={actionLoading}
-                  className="btn-primary py-2 px-5 text-xs font-semibold shrink-0"
-                >
-                  {actionLoading ? "Enrolling..." : "Enroll in Course"}
-                </button>
+                <>
+                  {isPending ? (
+                    <span className="badge bg-amber-500/20 text-amber-300 border-amber-500/30 px-3 py-2 text-xs font-semibold shrink-0">
+                      Request Pending
+                    </span>
+                  ) : isRejected ? (
+                    <button
+                      onClick={handleEnroll}
+                      disabled={actionLoading}
+                      className="btn-primary py-2 px-5 text-xs font-semibold shrink-0"
+                    >
+                      {actionLoading ? "Enrolling..." : "Retry Enroll"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleEnroll}
+                      disabled={actionLoading}
+                      className="btn-primary py-2 px-5 text-xs font-semibold shrink-0"
+                    >
+                      {actionLoading ? "Enrolling..." : "Enroll in Course"}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -292,7 +555,7 @@ export default function CourseDetailPage() {
         </div>
       ) : (
         <>
-          {/* Classroom Navigation Tabs */}
+
           <div className="border-b border-border flex items-center gap-6">
             <button
               onClick={() => setActiveTab("stream")}
@@ -312,19 +575,22 @@ export default function CourseDetailPage() {
             </button>
             <button
               onClick={() => setActiveTab("people")}
-              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors relative flex items-center gap-2 ${
                 activeTab === "people" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              People
+              <span>People</span>
+              {(isOwner || isAdmin) && (course?.enrollments?.filter((e) => e.status === "PENDING") || []).length > 0 && (
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-sm shadow-red-500/50" title="Pending enrollment requests" />
+              )}
             </button>
           </div>
 
           <div className="space-y-6">
-          {/* TAB: STREAM */}
+
           {activeTab === "stream" && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {/* Left sidebar: Course details info */}
+
               <div className="md:col-span-1 space-y-4">
                 <div className="card border border-border p-4 bg-card">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Upcoming Due</h3>
@@ -345,15 +611,15 @@ export default function CourseDetailPage() {
                 </div>
               </div>
 
-              {/* Right area: Announcements feed */}
+
               <div className="md:col-span-3 space-y-4">
-                {/* Course description card */}
+
                 <div className="card border border-border p-5 bg-card">
                   <h3 className="font-semibold text-sm text-foreground mb-1">About this course</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{course.description || "No description provided."}</p>
                 </div>
 
-                {/* Announcement stream feed */}
+
                 <div className="space-y-4">
                   {streamFeed.length === 0 ? (
                     <div className="text-center py-10 bg-muted/10 border border-dashed border-border rounded-xl">
@@ -371,8 +637,8 @@ export default function CourseDetailPage() {
                             <span className="text-[10px] text-muted-foreground">{post.date.toLocaleDateString()}</span>
                           </div>
                           <p className="text-xs text-foreground leading-relaxed">{post.title}</p>
-                          
-                          {/* Quick access preview buttons */}
+
+
                           {post.type === "resource" && (
                             <button
                               type="button"
@@ -383,7 +649,7 @@ export default function CourseDetailPage() {
                               Open Resource
                             </button>
                           )}
-                          
+
                           {post.type === "assessment" && (
                             <button
                               onClick={() => {
@@ -408,10 +674,10 @@ export default function CourseDetailPage() {
             </div>
           )}
 
-          {/* TAB: CLASSWORK */}
+
           {activeTab === "classwork" && (
             <div className="space-y-6">
-              {/* Course Resources block */}
+
               <div className="card border border-border p-6 bg-card space-y-4">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <div className="flex items-center gap-2">
@@ -464,7 +730,7 @@ export default function CourseDetailPage() {
                 )}
               </div>
 
-              {/* Assessments block */}
+
               <div className="card border border-border p-6 bg-card space-y-4">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <div className="flex items-center gap-2">
@@ -539,51 +805,168 @@ export default function CourseDetailPage() {
             </div>
           )}
 
-          {/* TAB: PEOPLE */}
+
           {activeTab === "people" && (
             <div className="space-y-6">
-              {/* Teachers */}
+
+              {(isOwner || isAdmin) && (
+                <div className="card border border-amber-500/20 p-6 bg-amber-500/5 space-y-4">
+                  <h2 className="font-display text-sm font-bold text-amber-600 border-b border-amber-500/10 pb-2 flex justify-between items-center">
+                    <span>Pending Enrollment Requests</span>
+                    <span className="text-xs bg-amber-500/20 text-amber-800 px-2 py-0.5 rounded-full font-mono">
+                      {(course.enrollments?.filter((e) => e.status === "PENDING") || []).length} requests
+                    </span>
+                  </h2>
+                  {(course.enrollments?.filter((e) => e.status === "PENDING") || []).length > 0 ? (
+                    <ul className="divide-y divide-amber-500/10">
+                      {course.enrollments
+                        .filter((e) => e.status === "PENDING")
+                        .map((enrollment) => {
+                          const student = enrollment.trainee;
+                          if (!student) return null;
+                          return (
+                            <li key={enrollment.id} className="py-3 flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-700 flex items-center justify-center font-semibold text-xs">
+                                  {student.name ? student.name[0].toUpperCase() : student.email[0].toUpperCase()}
+                                </div>
+                                <button
+                                  onClick={() => handleViewTrainee(student.id || enrollment.traineeId)}
+                                  className="text-left group"
+                                >
+                                  <p className="font-medium text-xs text-foreground group-hover:text-primary transition-colors hover:underline">
+                                    {student.name || "No profile name"}
+                                  </p>
+                                  <p className="text-[9px] text-muted-foreground">{student.email}</p>
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleApproveEnrollment(student.id || enrollment.traineeId)}
+                                  className="btn-primary bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] py-1 px-2.5"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setRejectTraineeId(student.id || enrollment.traineeId);
+                                    setShowRejectRequestModal(true);
+                                  }}
+                                  className="btn-secondary border-red-200 text-red-600 hover:bg-red-50 text-[10px] py-1 px-2.5"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </li>
+                          );
+                        })}
+                    </ul>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground text-xs">
+                      No pending enrollment requests.
+                    </div>
+                  )}
+                </div>
+              )}
+
+
               <div className="card border border-border p-6 bg-card space-y-4">
-                <h2 className="font-display text-sm font-bold text-primary border-b border-border pb-2">
-                  Teachers
+                <h2 className="font-display text-sm font-bold text-primary border-b border-border pb-2 flex justify-between items-center">
+                  <span>Teachers</span>
+                  {(isOwner || isAdmin) && (
+                    <button
+                      onClick={() => setShowInviteTrainerModal(true)}
+                      className="btn-primary text-[10px] py-1 px-2.5"
+                    >
+                      + Invite Trainer
+                    </button>
+                  )}
                 </h2>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+
+                <button
+                  onClick={() => handleViewTrainer(course.trainerId)}
+                  className="w-full text-left flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm group-hover:scale-105 transition-transform shrink-0">
                     {course.trainer?.name ? course.trainer.name[0].toUpperCase() : "I"}
                   </div>
-                  <div>
-                    <p className="font-semibold text-xs text-foreground">{course.trainer?.name || "Instructor"}</p>
-                    <p className="text-[10px] text-muted-foreground">{course.trainer?.email}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">{course.trainer?.name || "Instructor"}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{course.trainer?.email} (Primary)</p>
                   </div>
-                </div>
+                </button>
+
+                {course.trainers?.map((ct) => {
+                  const t = ct.trainer;
+                  if (!t) return null;
+                  return (
+                    <button
+                      key={ct.id}
+                      onClick={() => handleViewTrainer(t.id)}
+                      className="w-full text-left flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group pt-3 border-t border-border/50"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm group-hover:scale-105 transition-transform shrink-0">
+                        {t.name ? t.name[0].toUpperCase() : "I"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">{t.name || "Instructor"}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{t.email} (Secondary)</p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* Classmates */}
+
               <div className="card border border-border p-6 bg-card space-y-4">
                 <h2 className="font-display text-sm font-bold text-primary border-b border-border pb-2 flex justify-between items-center">
                   <span>Classmates</span>
                   <span className="text-xs text-muted-foreground font-mono">
-                    {course.enrollments?.length || 0} enrolled
+                    {(course.enrollments?.filter((e) => e.status === "ACTIVE") || []).length} enrolled
                   </span>
                 </h2>
-                {course.enrollments && course.enrollments.length > 0 ? (
-                  <ul className="divide-y divide-border">
-                    {course.enrollments.map((enrollment) => {
-                      const student = enrollment.trainee;
-                      if (!student) return null;
-                      return (
-                        <li key={enrollment.id} className="py-3 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center font-semibold text-xs">
-                            {student.name ? student.name[0].toUpperCase() : student.email[0].toUpperCase()}
+                {(course.enrollments?.filter((e) => e.status === "ACTIVE") || []).length > 0 ? (
+                  <div className="space-y-2">
+                    {course.enrollments
+                      .filter((e) => e.status === "ACTIVE")
+                      .map((enrollment) => {
+                        const student = enrollment.trainee;
+                        if (!student) return null;
+                        return (
+                          <div
+                            key={enrollment.id}
+                            className="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group"
+                          >
+                            <button
+                              onClick={() => handleViewTrainee(student.id || enrollment.traineeId)}
+                              className="flex-1 text-left flex items-center gap-3 min-w-0"
+                            >
+                              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm group-hover:scale-105 transition-transform shrink-0">
+                                {student.name ? student.name[0].toUpperCase() : student.email[0].toUpperCase()}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
+                                  {student.name || "No profile name"}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground truncate">{student.email}</p>
+                              </div>
+                            </button>
+                            {(isOwner || isAdmin) && (
+                              <button
+                                onClick={() => {
+                                  setRemoveTraineeId(student.id || enrollment.traineeId);
+                                  setShowRemoveTraineeModal(true);
+                                }}
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500/10 hover:text-red-600 transition-colors text-xs font-semibold shrink-0"
+                                title="Remove Trainee"
+                              >
+                                ✕
+                              </button>
+                            )}
                           </div>
-                          <div>
-                            <p className="font-medium text-xs text-foreground">{student.name || "No profile name"}</p>
-                            <p className="text-[9px] text-muted-foreground">{student.email}</p>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                        );
+                      })}
+                  </div>
                 ) : (
                   <div className="text-center py-6 text-muted-foreground text-xs">
                     No trainees enrolled in this classroom yet.
@@ -596,7 +979,7 @@ export default function CourseDetailPage() {
       </>
     )}
 
-      {/* Resource Upload Modal */}
+
       <UploadResourceModal
         isOpen={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
@@ -623,11 +1006,11 @@ export default function CourseDetailPage() {
         onSubmitted={load}
       />
 
-      {/* Trainer Profile Modal Overlay */}
+
       {showTrainerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in-50 duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in-50 duration-200">
           <div className="bg-card border border-border w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl shadow-elevated flex flex-col p-6 space-y-6 relative">
-            {/* Close Button */}
+
             <button
               onClick={() => {
                 setShowTrainerModal(false);
@@ -646,7 +1029,11 @@ export default function CourseDetailPage() {
               </div>
             ) : trainerProfile ? (
               <div className="space-y-6">
-                {/* Header Banner */}
+                {trainerProfile.id === "temp-profile-id" && (
+                  <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs p-3.5 rounded-xl flex items-center gap-2">
+                    <span>⚠️ This trainer has not set up their profile yet. Displaying basic registration info.</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-4 border-b border-border pb-4">
                   <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
                     {trainerProfile.fullName ? trainerProfile.fullName[0].toUpperCase() : "T"}
@@ -657,7 +1044,6 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
 
-                {/* Biography */}
                 {trainerProfile.bio && (
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Biography</h4>
@@ -667,7 +1053,7 @@ export default function CourseDetailPage() {
                   </div>
                 )}
 
-                {/* Qualifications & Degrees */}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Qualifications</h4>
@@ -685,7 +1071,7 @@ export default function CourseDetailPage() {
                     )}
                   </div>
 
-                  {/* Work Experience */}
+
                   <div className="space-y-3">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Experience</h4>
                     {trainerProfile.workExperiences?.length > 0 ? (
@@ -706,9 +1092,9 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
 
-                {/* Skills and Competencies */}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Skills */}
+
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Skills</h4>
                     <div className="flex flex-wrap gap-1.5">
@@ -724,7 +1110,7 @@ export default function CourseDetailPage() {
                     </div>
                   </div>
 
-                  {/* Competencies */}
+
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Competencies</h4>
                     <div className="flex flex-wrap gap-1.5">
@@ -741,11 +1127,11 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
 
-                {/* Courses Taught */}
+
                 <div className="space-y-3 pt-3 border-t border-border">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Other Courses Taught</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Courses Taught</h4>
                   {trainerProfile.courses?.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-thin scrollbar-thumb-muted">
                       {trainerProfile.courses.map((c) => (
                         <Link
                           key={c.id}
@@ -754,7 +1140,7 @@ export default function CourseDetailPage() {
                             setShowTrainerModal(false);
                             setTrainerProfile(null);
                           }}
-                          className="p-3 bg-muted/10 hover:bg-muted/30 border border-border rounded-xl flex flex-col justify-between hover:border-primary/40 transition-all text-xs"
+                          className="p-3 bg-muted/10 hover:bg-muted/30 border border-border rounded-xl flex flex-col justify-between hover:border-primary/40 transition-all text-xs min-w-[200px] shrink-0 text-left"
                         >
                           <div>
                             <span className="text-[9px] uppercase tracking-wider text-primary font-semibold font-mono">
@@ -769,7 +1155,7 @@ export default function CourseDetailPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground">No other published courses taught.</p>
+                    <p className="text-xs text-muted-foreground">No published courses taught.</p>
                   )}
                 </div>
               </div>
@@ -779,6 +1165,585 @@ export default function CourseDetailPage() {
           </div>
         </div>
       )}
+
+      {showTraineeModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[85vh] flex flex-col">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
+              <h3 className="font-display font-bold text-sm text-foreground">Trainee Profile Overview</h3>
+              <button
+                onClick={() => {
+                  setShowTraineeModal(false);
+                  setTraineeProfile(null);
+                }}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-bold text-xs"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              {loadingTrainee ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-3">
+                  <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                  <p className="text-xs text-muted-foreground">Loading trainee profile...</p>
+                </div>
+              ) : traineeProfile ? (
+                <div className="space-y-6">
+                  {traineeProfile.id === "temp-profile-id" && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs p-3.5 rounded-xl flex items-center gap-2">
+                      <span>⚠️ This trainee has not set up their profile yet. Displaying basic registration info.</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-4 bg-muted/10 p-4 rounded-xl border border-border/50">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
+                      {traineeProfile.fullName ? traineeProfile.fullName[0].toUpperCase() : "T"}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-bold font-display text-foreground truncate">{traineeProfile.fullName || "Trainee"}</h3>
+                        <span className="badge bg-muted text-muted-foreground text-[9px]">Trainee</span>
+                      </div>
+                      <p className="text-xs text-foreground font-medium truncate">{traineeProfile.email || "No email available"}</p>
+                      {traineeProfile.phone && <p className="text-xs text-muted-foreground mt-0.5">{traineeProfile.phone}</p>}
+                    </div>
+                  </div>
+                  {traineeProfile.bio && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Biography</h4>
+                      <p className="text-xs text-foreground leading-relaxed italic bg-muted/20 border border-border/40 p-3 rounded-lg">
+                        &ldquo;{traineeProfile.bio}&rdquo;
+                      </p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Qualifications</h4>
+                      {traineeProfile.qualifications?.length > 0 ? (
+                        <ul className="space-y-2 text-xs">
+                          {traineeProfile.qualifications.map((q) => (
+                            <li key={q.id} className="p-2 rounded bg-muted/30 border border-border/40">
+                              <span className="font-semibold block text-foreground">{q.degree}</span>
+                              <span className="text-[10px] text-muted-foreground">{q.institution} ({q.year})</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">No qualifications declared.</p>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Experience</h4>
+                      {traineeProfile.workExperiences?.length > 0 ? (
+                        <ul className="space-y-2 text-xs">
+                          {traineeProfile.workExperiences.map((w) => (
+                            <li key={w.id} className="p-2 rounded bg-muted/30 border border-border/40">
+                              <span className="font-semibold block text-foreground">{w.role}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {w.organization} ({new Date(w.startDate).toLocaleDateString()} –{" "}
+                                {w.endDate ? new Date(w.endDate).toLocaleDateString() : "Present"})
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">No work experience declared.</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Skills</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {traineeProfile.skills?.length > 0 ? (
+                          traineeProfile.skills.map((s) => (
+                            <span key={s.id} className="badge bg-muted/60 border border-border text-[9px] py-0.5 px-2">
+                              {s.name}
+                            </span>
+                          ))
+                        ) : (
+                          <p className="text-xs text-muted-foreground">No skills declared.</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Interests</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {traineeProfile.interests?.length > 0 ? (
+                          traineeProfile.interests.map((i) => (
+                            <span key={i.id} className="badge bg-primary/10 border border-primary/20 text-primary text-[9px] py-0.5 px-2">
+                              {i.name}
+                            </span>
+                          ))
+                        ) : (
+                          <p className="text-xs text-muted-foreground">No interests declared.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-3 border-t border-border text-left">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Enrolled Courses</h4>
+                    {traineeProfile.courses?.length > 0 ? (
+                      <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-thin scrollbar-thumb-muted">
+                        {traineeProfile.courses.map((c) => (
+                          <Link
+                            key={c.id}
+                            href={`/courses/${c.id}`}
+                            onClick={() => {
+                              setShowTraineeModal(false);
+                              setTraineeProfile(null);
+                            }}
+                            className="p-3 bg-muted/10 hover:bg-muted/30 border border-border rounded-xl flex flex-col justify-between hover:border-primary/40 transition-all text-xs min-w-[200px] shrink-0 text-left"
+                          >
+                            <div>
+                              <span className="text-[9px] uppercase tracking-wider text-primary font-semibold font-mono">
+                                {c.subject?.name || "LMS Subject"}
+                              </span>
+                              <span className="font-semibold block text-foreground mt-0.5 line-clamp-1">{c.title}</span>
+                              {c.trainer && (
+                                <span className="text-[10px] text-muted-foreground block mt-0.5">
+                                  Instructor: {c.trainer.name || c.trainer.email}
+                                </span>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No active course enrollments.</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-6">This trainee has not set up their profile details yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+
+      {showInviteTrainerModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
+              <h3 className="font-display font-bold text-sm text-foreground">Invite Co-Trainer</h3>
+              <button
+                onClick={() => {
+                  setShowInviteTrainerModal(false);
+                  setInviteEmail("");
+                }}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-bold text-xs"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleInviteTrainer} className="p-6 space-y-4">
+              <p className="text-xs text-muted-foreground leading-normal">
+                Enter the email address of the trainer you want to invite as a co-instructor for this course. They will receive a notification to join.
+              </p>
+              {inviteStatus.message && (
+                <div className={`p-3 rounded-xl text-xs border ${
+                  inviteStatus.type === "success" 
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                    : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                }`}>
+                  {inviteStatus.message}
+                </div>
+              )}
+              <div className="flex flex-col gap-1 text-left w-full">
+                <label htmlFor="inviteEmail" className="label text-xs font-semibold">Trainer Email</label>
+                <input
+                  id="inviteEmail"
+                  type="email"
+                  required
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="trainer@example.com"
+                  className="input text-xs w-full py-2"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowInviteTrainerModal(false);
+                    setInviteEmail("");
+                  }}
+                  className="btn-secondary text-xs py-1.5 px-4"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={invitingTrainer}
+                  className="btn-primary text-xs py-1.5 px-4"
+                >
+                  {invitingTrainer ? "Sending Invitation..." : "Send Invitation"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+
+
+      {showRemoveTraineeModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
+              <h3 className="font-display font-bold text-sm text-foreground text-red-600">Remove Trainee</h3>
+              <button
+                onClick={() => {
+                  setShowRemoveTraineeModal(false);
+                  setRemoveTraineeId(null);
+                  setRemoveReason("");
+                }}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-bold text-xs"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-4 text-left">
+              <p className="text-xs text-muted-foreground leading-normal">
+                Are you sure you want to remove this trainee from the classroom? They will lose access to all resources and assessments.
+              </p>
+              {removeStatus.message && (
+                <div className={`p-3 rounded-xl text-xs border ${
+                  removeStatus.type === "success" 
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                    : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                }`}>
+                  {removeStatus.message}
+                </div>
+              )}
+              <div className="flex flex-col gap-1 text-left w-full">
+                <label htmlFor="removeReason" className="label text-xs font-semibold">Reason for Removal</label>
+                <textarea
+                  id="removeReason"
+                  required
+                  rows={3}
+                  value={removeReason}
+                  onChange={(e) => setRemoveReason(e.target.value)}
+                  placeholder="Please specify a reason. They will be notified of this reason."
+                  className="input text-xs w-full py-2 resize-none"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRemoveTraineeModal(false);
+                    setRemoveTraineeId(null);
+                    setRemoveReason("");
+                  }}
+                  className="btn-secondary text-xs py-1.5 px-4"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRemoveTrainee}
+                  disabled={removingTrainee || !removeReason.trim()}
+                  className="btn-primary bg-red-600 hover:bg-red-700 text-white text-xs py-1.5 px-4"
+                >
+                  {removingTrainee ? "Removing..." : "Remove Trainee"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+
+      {showUnenrollModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
+              <h3 className="font-display font-bold text-sm text-foreground text-red-600">Un-enroll from Course</h3>
+              <button
+                onClick={() => setShowUnenrollModal(false)}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-bold text-xs"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-4 text-left">
+              <p className="text-xs text-muted-foreground leading-normal">
+                Are you sure you want to un-enroll (drop) from this course? You will lose access to classroom resources, and course instructors will be notified.
+              </p>
+              {unenrollStatus.message && (
+                <div className={`p-3 rounded-xl text-xs border ${
+                  unenrollStatus.type === "success" 
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                    : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                }`}>
+                  {unenrollStatus.message}
+                </div>
+              )}
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowUnenrollModal(false)}
+                  className="btn-secondary text-xs py-1.5 px-4"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUnenroll}
+                  disabled={unenrolling}
+                  className="btn-primary bg-red-600 hover:bg-red-700 text-white text-xs py-1.5 px-4"
+                >
+                  {unenrolling ? "Un-enrolling..." : "Confirm Un-enroll"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRejectRequestModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
+              <h3 className="font-display font-bold text-sm text-foreground">Reject Enrollment Request</h3>
+              <button
+                onClick={() => {
+                  setShowRejectRequestModal(false);
+                  setRejectTraineeId(null);
+                  setRejectMessage("");
+                }}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-bold text-xs"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-4 text-left">
+              <p className="text-xs text-muted-foreground leading-normal">
+                Please enter a message explaining the reason for rejecting this enrollment request. The trainee will see this reason in notifications.
+              </p>
+              {rejectStatus.message && (
+                <div className={`p-3 rounded-xl text-xs border ${
+                  rejectStatus.type === "success" 
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                    : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                }`}>
+                  {rejectStatus.message}
+                </div>
+              )}
+              <div className="flex flex-col gap-1 text-left w-full">
+                <label htmlFor="rejectMessage" className="label text-xs font-semibold">Reason Message</label>
+                <textarea
+                  id="rejectMessage"
+                  required
+                  rows={3}
+                  value={rejectMessage}
+                  onChange={(e) => setRejectMessage(e.target.value)}
+                  placeholder="Write reason for rejection..."
+                  className="input text-xs w-full py-2 resize-none"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRejectRequestModal(false);
+                    setRejectTraineeId(null);
+                    setRejectMessage("");
+                  }}
+                  className="btn-secondary text-xs py-1.5 px-4"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRejectEnrollment}
+                  disabled={rejectingRequest || !rejectMessage.trim()}
+                  className="btn-primary bg-red-600 hover:bg-red-700 text-white text-xs py-1.5 px-4"
+                >
+                  {rejectingRequest ? "Rejecting..." : "Reject Request"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {showEditCourseModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border w-full max-w-lg rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
+              <h3 className="font-display font-bold text-sm text-foreground">Update Course Details</h3>
+              <button
+                onClick={() => {
+                  setShowEditCourseModal(false);
+                }}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-bold text-xs"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleUpdateCourse} className="p-6 space-y-4">
+              {editStatus.message && (
+                <div className={`p-3 rounded-xl text-xs border ${
+                  editStatus.type === "success" 
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                    : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                }`}>
+                  {editStatus.message}
+                </div>
+              )}
+              <div className="flex flex-col gap-1 text-left w-full">
+                <label htmlFor="courseTitle" className="label text-xs font-semibold">Course Title</label>
+                <input
+                  id="courseTitle"
+                  type="text"
+                  required
+                  value={editCourseTitle}
+                  onChange={(e) => setEditCourseTitle(e.target.value)}
+                  className="input text-xs w-full py-2"
+                />
+              </div>
+              <div className="flex flex-col gap-1 text-left w-full">
+                <label htmlFor="courseDesc" className="label text-xs font-semibold">Description</label>
+                <textarea
+                  id="courseDesc"
+                  required
+                  rows={4}
+                  value={editCourseDesc}
+                  onChange={(e) => setEditCourseDesc(e.target.value)}
+                  className="input text-xs w-full py-2 resize-none"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditCourseModal(false)}
+                  className="btn-secondary text-xs py-1.5 px-4"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updatingCourse}
+                  className="btn-primary text-xs py-1.5 px-4"
+                >
+                  {updatingCourse ? "Saving changes..." : "Save changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+
+      {showCourseDetailsModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
+              <h3 className="font-display font-bold text-sm text-foreground">Course Details</h3>
+              <button
+                onClick={() => setShowCourseDetailsModal(false)}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-bold text-xs"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-left">
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase font-bold text-primary font-mono tracking-wider">
+                  {course.subject?.name || "LMS Classroom"}
+                </span>
+                <h4 className="text-base font-bold text-foreground font-display">{course.title}</h4>
+              </div>
+
+              <div className="space-y-2">
+                <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</h5>
+                <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                  {course.description || "No description available."}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 border-t border-b border-border py-4">
+                <div className="text-center">
+                  <span className="block text-lg font-bold text-foreground">
+                    {(course.resources || []).filter((r) => r.type === "LECTURE").length}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Lectures</span>
+                </div>
+                <div className="text-center border-l border-r border-border">
+                  <span className="block text-lg font-bold text-foreground">
+                    {(course.resources || []).filter((r) => ["DOCUMENT", "PRESENTATION", "STUDY_MATERIAL"].includes(r.type)).length}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Documents</span>
+                </div>
+                <div className="text-center">
+                  <span className="block text-lg font-bold text-foreground">
+                    {(course.assessments || []).filter((a) => a.status === "PUBLISHED").length}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Assignments</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Lead Trainer</h5>
+                <button
+                  onClick={() => {
+                    setShowCourseDetailsModal(false);
+                    handleViewTrainer(course.trainerId);
+                  }}
+                  className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs group-hover:scale-105 transition-transform shrink-0">
+                    {course.trainer?.name ? course.trainer.name[0].toUpperCase() : "T"}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">{course.trainer?.name || "Unassigned"}</p>
+                    <p className="text-[10px] text-muted-foreground">{course.trainer?.email}</p>
+                  </div>
+                </button>
+              </div>
+
+              {course.trainers?.length > 0 && (
+                <div className="space-y-2">
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Co-Trainers</h5>
+                  <div className="space-y-2">
+                    {course.trainers.map((ct) => {
+                      const t = ct.trainer;
+                      if (!t) return null;
+                      return (
+                        <button
+                          key={ct.id}
+                          onClick={() => {
+                            setShowCourseDetailsModal(false);
+                            handleViewTrainer(t.id);
+                          }}
+                          className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition-transform shrink-0">
+                            {t.name ? t.name[0].toUpperCase() : "T"}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">{t.name || "Co-Trainer"}</p>
+                            <p className="text-[10px] text-muted-foreground">{t.email}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
