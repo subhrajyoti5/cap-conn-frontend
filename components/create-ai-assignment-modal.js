@@ -159,15 +159,11 @@ export function CreateAiAssignmentModal({
       setError("Deadline is required.");
       return;
     }
-    if (selectedResourceIds.length === 0) {
-      setError("Select at least one image resource.");
-      return;
-    }
 
     setGenerating(true);
     try {
       const res = await generateAiQuestions(token, courseId, {
-        resourceIds: selectedResourceIds,
+        resourceIds: selectedResourceIds || [],
         customInstructions,
         questionCount: Number(questionCount),
         marksPerQuestion: Number(marksPerQuestion),
@@ -649,7 +645,9 @@ export function CreateAiAssignmentModal({
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="font-medium text-foreground">Image resources for AI</label>
+                <label className="font-medium text-foreground">
+                  Image resources for AI <span className="text-muted-foreground font-normal">(Optional)</span>
+                </label>
                 <label className="btn-secondary btn-sm cursor-pointer">
                   {uploading ? "Uploading..." : "Upload images"}
                   <input
@@ -663,8 +661,8 @@ export function CreateAiAssignmentModal({
                 </label>
               </div>
               {imageResources.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground border border-dashed border-border rounded-xl">
-                  No course images yet. Upload images to generate questions.
+                <div className="text-center py-5 text-muted-foreground border border-dashed border-border rounded-xl">
+                  No images selected (optional). AI will generate questions from your prompt instructions.
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-56 overflow-y-auto">
