@@ -7,13 +7,7 @@ export async function listCourses(token, query = {}) {
   });
 }
 
-export async function getCourse(tokenOrId, idOrToken) {
-  let token = tokenOrId;
-  let id = idOrToken;
-  if (typeof tokenOrId === "string" && !tokenOrId.startsWith("ey") && typeof idOrToken === "string" && idOrToken.startsWith("ey")) {
-    id = tokenOrId;
-    token = idOrToken;
-  }
+export async function getCourse(token, id) {
   return apiFetch(`/courses/${id}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
