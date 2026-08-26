@@ -792,17 +792,6 @@ export default function CourseDetailPage() {
                             key={a.id}
                             className="p-4 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-muted/10 transition-colors"
                           >
-                            <div className="space-y-1">
-                              <p className="font-semibold text-xs text-foreground">{a.title}</p>
-                              <p className="text-[11px] text-muted-foreground">{a.description}</p>
-                              <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-muted-foreground">
-                                <span>Total Marks: <strong>{a.totalMarks}</strong></span>
-                                <span>{a.questions?.length || 0} Questions</span>
-                                {a.startTime && (
-                                  <span>Opens: {new Date(a.startTime).toLocaleString()}</span>
-                                )}
-                                {a.deadline && (
-                                  <span>Due: {new Date(a.deadline).toLocaleString()}</span>
                             <div className="space-y-1.5 flex-1 min-w-0 pr-2">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span
@@ -842,14 +831,9 @@ export default function CourseDetailPage() {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                            <div className="flex items-center gap-2 self-start sm:self-center shrink-0 flex-wrap">
                               <span className={`badge text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${statusBadgeClass}`}>
                                 {statusLabel}
-                              </span>
-
-                            <div className="flex items-center gap-2 self-start sm:self-center shrink-0 flex-wrap">
-                              <span className={`badge text-[9px] uppercase font-bold tracking-wider ${a.status === "PUBLISHED" ? "badge-success" : "badge-neutral"}`}>
-                                {a.status?.toLowerCase()}
                               </span>
 
                               {/* TRAINER / ADMIN CONTROLS */}
@@ -857,21 +841,14 @@ export default function CourseDetailPage() {
                                 <>
                                   <button
                                     type="button"
-                                    className="btn-secondary btn-sm px-3 py-1 text-[10px] font-medium"
                                     onClick={() => {
-                                      setEditingAssessment(a);
-                                      setAiAssignmentOpen(true);
+                                      if (isDoc) {
+                                        setEditAssignmentData(a);
+                                      } else {
+                                        setEditingAssessment(a);
+                                        setAiAssignmentOpen(true);
+                                      }
                                     }}
-                                  >
-                                    Edit Assignment
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn-primary btn-sm px-3 py-1 text-[10px] font-medium"
-                                    onClick={() => setViewSubmissionsAssessment(a)}
-                                  >
-                                    View Submissions ({a.submissions?.length ?? a._count?.submissions ?? 0})
-                                    onClick={() => setEditAssignmentData(a)}
                                     className="btn-secondary btn-sm px-2.5 py-1 text-[10px] flex items-center gap-1"
                                     title="Edit Assignment Details & Deadline"
                                   >
@@ -879,89 +856,78 @@ export default function CourseDetailPage() {
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => setGradeAssessmentId(a.id)}
+                                    onClick={() => {
+                                      if (isDoc) {
+                                        setGradeAssessmentId(a.id);
+                                      } else {
+                                        setViewSubmissionsAssessment(a);
+                                      }
+                                    }}
                                     className="btn-primary bg-indigo-600 hover:bg-indigo-700 text-white btn-sm px-3 py-1 text-[10px] flex items-center gap-1 shadow-sm"
                                   >
-                                    <span>📝</span> Submissions & Grades
+                                    <span>📝</span> Submissions ({a.submissions?.length ?? a._count?.submissions ?? 0})
                                   </button>
                                 </>
                               )}
 
-                              {user?.role === "TRAINEE" && isEnrolled && a.status === "PUBLISHED" && (
-                                <>
-                                  {hasSubmitted ? (
-                                    <div className="flex items-center gap-2">
-                                      {canSeeResults ? (
-                                        <>
-                                          <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                                            Score: {traineeSub.score} / {a.totalMarks}
-                                          </span>
-                                          <button
-                                            type="button"
-                                            className="btn-secondary btn-sm px-3 py-1 text-[10px]"
-                                            onClick={() => setTakeAssessment({ id: a.id, mode: "result" })}
-                                          >
-                                            View Result
-                                          </button>
-                                        </>
-                                      ) : (
-                                        <span className="text-[10px] font-semibold text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
-                                          Submitted (Results Pending Release)
-                                        </span>
-                                      )}
-                                    </div>
-                                  ) : isUpcoming ? (
-                                    <span className="text-[10px] text-muted-foreground italic font-medium">
-                                      Locked until start time
-                                    </span>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      className="btn-primary btn-sm px-3 py-1 text-[10px]"
-                                      onClick={() => setTakeAssessment({ id: a.id, mode: "take" })}
-                                    >
-                                      Take Quiz
-                                    </button>
                               {/* TRAINEE CONTROLS */}
                               {user?.role === "TRAINEE" && isEnrolled && a.status === "PUBLISHED" && (
                                 <>
                                   {isDoc ? (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className={`btn-sm px-3 py-1 text-[10px] font-semibold flex items-center gap-1 ${
-                                          mySub
-                                            ? "btn-secondary border-primary/40 text-primary"
-                                            : "btn-primary shadow-sm"
-                                        }`}
-                                        onClick={() => setSubmitDocAssignmentId(a.id)}
-                                      >
-                                        <span>📄</span>
-                                        {mySub
-                                          ? mySub.status === "GRADED"
-                                            ? `Graded (${mySub.score}/${a.totalMarks})`
-                                            : "View / Update Submission"
-                                          : isDeadlinePassed
-                                          ? "View Assignment"
-                                          : "Submit Answer Doc"}
-                                      </button>
-                                    </>
+                                    <button
+                                      type="button"
+                                      className={`btn-sm px-3 py-1 text-[10px] font-semibold flex items-center gap-1 ${
+                                        mySub
+                                          ? "btn-secondary border-primary/40 text-primary"
+                                          : "btn-primary shadow-sm"
+                                      }`}
+                                      onClick={() => setSubmitDocAssignmentId(a.id)}
+                                    >
+                                      <span>📄</span>
+                                      {mySub
+                                        ? mySub.status === "GRADED"
+                                          ? `Graded (${mySub.score}/${a.totalMarks})`
+                                          : "View / Update Submission"
+                                        : isDeadlinePassed
+                                        ? "View Assignment"
+                                        : "Submit Answer Doc"}
+                                    </button>
                                   ) : (
                                     <>
-                                      <button
-                                        type="button"
-                                        className="btn-primary btn-sm px-3 py-1 text-[10px]"
-                                        onClick={() => setTakeAssessment({ id: a.id, mode: "take" })}
-                                      >
-                                        Take Quiz
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="btn-secondary btn-sm px-3 py-1 text-[10px]"
-                                        onClick={() => setTakeAssessment({ id: a.id, mode: "result" })}
-                                      >
-                                        View Result
-                                      </button>
+                                      {hasSubmitted ? (
+                                        <div className="flex items-center gap-2">
+                                          {canSeeResults ? (
+                                            <>
+                                              <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                                                Score: {traineeSub.score} / {a.totalMarks}
+                                              </span>
+                                              <button
+                                                type="button"
+                                                className="btn-secondary btn-sm px-3 py-1 text-[10px]"
+                                                onClick={() => setTakeAssessment({ id: a.id, mode: "result" })}
+                                              >
+                                                View Result
+                                              </button>
+                                            </>
+                                          ) : (
+                                            <span className="text-[10px] font-semibold text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                                              Submitted (Results Pending Release)
+                                            </span>
+                                          )}
+                                        </div>
+                                      ) : isUpcoming ? (
+                                        <span className="text-[10px] text-muted-foreground italic font-medium">
+                                          Locked until start time
+                                        </span>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          className="btn-primary btn-sm px-3 py-1 text-[10px]"
+                                          onClick={() => setTakeAssessment({ id: a.id, mode: "take" })}
+                                        >
+                                          Take Quiz
+                                        </button>
+                                      )}
                                     </>
                                   )}
                                 </>
