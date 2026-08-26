@@ -96,10 +96,10 @@ export default function CourseDetailPage() {
   }
 
   async function load() {
-    const token = await getToken();
-    if (!token) return;
-    setAuthToken(token);
     try {
+      const token = await getToken();
+      if (!token) return;
+      setAuthToken(token);
       const res = await getCourse(token, id);
       setCourse(res.data);
     } catch (e) {
@@ -111,7 +111,7 @@ export default function CourseDetailPage() {
 
   useEffect(() => {
     load();
-  }, [id]);
+  }, [id, getToken]);
 
   async function handleEnroll() {
     const token = await getToken();
