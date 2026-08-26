@@ -7,6 +7,10 @@ import { getCourse, enrollCourse, publishCourse } from "@/features/courses/api/c
 import { getResource } from "@/features/resources/api/resources.api";
 import { UploadResourceModal } from "@/components/upload-resource-modal";
 import { AssignmentStudioModal } from "@/components/assignment-studio-modal";
+import { CreateAiAssignmentModal } from "@/components/create-ai-assignment-modal";
+import { EditAssignmentModal } from "@/components/edit-assignment-modal";
+import { SubmitDocumentModal } from "@/components/submit-document-modal";
+import { GradeSubmissionsModal } from "@/components/grade-submissions-modal";
 import { TakeAssessmentModal } from "@/components/take-assessment-modal";
 import { ViewSubmissionsModal } from "@/components/view-submissions-modal";
 import { apiFetch } from "@/lib/api";
@@ -23,6 +27,9 @@ export default function CourseDetailPage() {
   const [aiAssignmentOpen, setAiAssignmentOpen] = useState(false);
   const [editingAssessment, setEditingAssessment] = useState(null);
   const [viewSubmissionsAssessment, setViewSubmissionsAssessment] = useState(null);
+  const [editAssignmentData, setEditAssignmentData] = useState(null);
+  const [submitDocAssignmentId, setSubmitDocAssignmentId] = useState(null);
+  const [gradeAssessmentId, setGradeAssessmentId] = useState(null);
   const [takeAssessment, setTakeAssessment] = useState(null);
   const [authToken, setAuthToken] = useState("");
 
@@ -776,6 +783,9 @@ export default function CourseDetailPage() {
                         );
                         const hasSubmitted = Boolean(traineeSub);
                         const canSeeResults = a.evaluationMode === "INSTANT" || a.resultsReleased;
+                        const isDoc = a.type === "DOCUMENT";
+                        const isDeadlinePassed = a.deadline && new Date() > new Date(a.deadline);
+                        const mySub = a.submission;
 
                         return (
                           <div
@@ -793,6 +803,41 @@ export default function CourseDetailPage() {
                                 )}
                                 {a.deadline && (
                                   <span>Due: {new Date(a.deadline).toLocaleString()}</span>
+                            <div className="space-y-1.5 flex-1 min-w-0 pr-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span
+                                  className={`badge text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                                    isDoc
+                                      ? "bg-blue-500/10 text-blue-600 border border-blue-500/20"
+                                      : "bg-purple-500/10 text-purple-600 border border-purple-500/20"
+                                  }`}
+                                >
+                                  {isDoc ? "📄 Document Task" : "✨ MCQ Quiz"}
+                                </span>
+                                <p className="font-bold text-xs text-foreground truncate">{a.title}</p>
+                              </div>
+
+                              {a.description && (
+                                <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                                  {a.description}
+                                </p>
+                              )}
+
+                              {isDoc && a.fileName && (
+                                <div className="flex items-center gap-1.5 text-[10px] text-primary/80 font-medium">
+                                  <span>📎 Brief:</span>
+                                  <span className="truncate">{a.fileName}</span>
+                                </div>
+                              )}
+
+                              <div className="flex items-center gap-3.5 mt-1.5 text-[10px] text-muted-foreground flex-wrap">
+                                <span>Max Marks: <strong>{a.totalMarks}</strong></span>
+                                {!isDoc && <span>{a.questions?.length || 0} Questions</span>}
+                                {a.deadline && (
+                                  <span className={`flex items-center gap-1 ${isDeadlinePassed ? "text-destructive font-semibold" : ""}`}>
+                                    <span>{isDeadlinePassed ? "⚠️ Ended:" : "🕒 Due:"}</span>
+                                    <span>{new Date(a.deadline).toLocaleDateString()} {new Date(a.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                  </span>
                                 )}
                               </div>
                             </div>
@@ -802,6 +847,12 @@ export default function CourseDetailPage() {
                                 {statusLabel}
                               </span>
 
+                            <div className="flex items-center gap-2 self-start sm:self-center shrink-0 flex-wrap">
+                              <span className={`badge text-[9px] uppercase font-bold tracking-wider ${a.status === "PUBLISHED" ? "badge-success" : "badge-neutral"}`}>
+                                {a.status?.toLowerCase()}
+                              </span>
+
+                              {/* TRAINER / ADMIN CONTROLS */}
                               {(isOwner || isAdmin) && (
                                 <>
                                   <button
@@ -820,6 +871,18 @@ export default function CourseDetailPage() {
                                     onClick={() => setViewSubmissionsAssessment(a)}
                                   >
                                     View Submissions ({a.submissions?.length ?? a._count?.submissions ?? 0})
+                                    onClick={() => setEditAssignmentData(a)}
+                                    className="btn-secondary btn-sm px-2.5 py-1 text-[10px] flex items-center gap-1"
+                                    title="Edit Assignment Details & Deadline"
+                                  >
+                                    <span>✏️</span> Edit / Deadline
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setGradeAssessmentId(a.id)}
+                                    className="btn-primary bg-indigo-600 hover:bg-indigo-700 text-white btn-sm px-3 py-1 text-[10px] flex items-center gap-1 shadow-sm"
+                                  >
+                                    <span>📝</span> Submissions & Grades
                                   </button>
                                 </>
                               )}
@@ -859,6 +922,47 @@ export default function CourseDetailPage() {
                                     >
                                       Take Quiz
                                     </button>
+                              {/* TRAINEE CONTROLS */}
+                              {user?.role === "TRAINEE" && isEnrolled && a.status === "PUBLISHED" && (
+                                <>
+                                  {isDoc ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className={`btn-sm px-3 py-1 text-[10px] font-semibold flex items-center gap-1 ${
+                                          mySub
+                                            ? "btn-secondary border-primary/40 text-primary"
+                                            : "btn-primary shadow-sm"
+                                        }`}
+                                        onClick={() => setSubmitDocAssignmentId(a.id)}
+                                      >
+                                        <span>📄</span>
+                                        {mySub
+                                          ? mySub.status === "GRADED"
+                                            ? `Graded (${mySub.score}/${a.totalMarks})`
+                                            : "View / Update Submission"
+                                          : isDeadlinePassed
+                                          ? "View Assignment"
+                                          : "Submit Answer Doc"}
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="btn-primary btn-sm px-3 py-1 text-[10px]"
+                                        onClick={() => setTakeAssessment({ id: a.id, mode: "take" })}
+                                      >
+                                        Take Quiz
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn-secondary btn-sm px-3 py-1 text-[10px]"
+                                        onClick={() => setTakeAssessment({ id: a.id, mode: "result" })}
+                                      >
+                                        View Result
+                                      </button>
+                                    </>
                                   )}
                                 </>
                               )}
@@ -869,7 +973,7 @@ export default function CourseDetailPage() {
                     </div>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl text-xs">
-                      No assessments assigned yet.
+                      No assignments assigned yet.
                     </div>
                   )}
                 </div>
@@ -1067,6 +1171,32 @@ export default function CourseDetailPage() {
         resources={course?.resources || []}
         initialAssessment={editingAssessment}
         onSaved={load}
+      />
+
+      <EditAssignmentModal
+        isOpen={Boolean(editAssignmentData)}
+        onClose={() => setEditAssignmentData(null)}
+        assessment={editAssignmentData}
+        courseId={id}
+        token={authToken}
+        onUpdated={load}
+      />
+
+      <SubmitDocumentModal
+        isOpen={Boolean(submitDocAssignmentId)}
+        onClose={() => setSubmitDocAssignmentId(null)}
+        assessmentId={submitDocAssignmentId}
+        courseId={id}
+        token={authToken}
+        onSubmitted={load}
+      />
+
+      <GradeSubmissionsModal
+        isOpen={Boolean(gradeAssessmentId)}
+        onClose={() => setGradeAssessmentId(null)}
+        assessmentId={gradeAssessmentId}
+        token={authToken}
+        onGraded={load}
       />
 
       <TakeAssessmentModal
