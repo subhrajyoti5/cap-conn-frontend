@@ -34,8 +34,8 @@ export default function SignInPage() {
       localStorage.setItem("token", token);
       document.cookie = `auth_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
       window.location.href = "/redirect";
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      setError(err.message || "Unable to reach server. Please make sure the backend server is running.");
     } finally {
       setLoading(false);
     }
