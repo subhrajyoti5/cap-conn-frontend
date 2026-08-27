@@ -712,14 +712,28 @@ export default function CourseDetailPage() {
                       </h2>
                     </div>
                     {(isOwner || isAdmin) && (
-                      <button
-                        onClick={() => setUploadModalOpen(true)}
-                        className="btn-secondary btn-sm text-[10px] py-1 px-2 flex items-center gap-1"
-                        title="Upload course resource"
-                      >
-                        <span className="icon text-xs">add</span>
-                        Add Content
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setUploadModalOpen(true)}
+                          className="btn-secondary btn-sm text-[10px] py-1 px-2 flex items-center gap-1"
+                          title="Upload course resource"
+                        >
+                          <span className="icon text-xs">add</span>
+                          File
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingAssessment(null);
+                            setAiAssignmentOpen(true);
+                          }}
+                          className="btn-primary btn-sm text-[10px] py-1 px-2 flex items-center gap-1 font-semibold"
+                          title="Create Assignment or Quiz"
+                        >
+                          <span className="icon text-xs">add</span>
+                          Assignment
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -814,9 +828,21 @@ export default function CourseDetailPage() {
 
                     {/* Navigation Accordion: Assignments & AI Quiz */}
                     <div className="border border-border/60 rounded-lg overflow-hidden">
-                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-semibold text-foreground cursor-pointer hover:bg-muted/30">
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-semibold text-foreground">
                         <span>Navigation</span>
-                        <span className="text-xs text-muted-foreground">−</span>
+                        {(isOwner || isAdmin) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingAssessment(null);
+                              setAiAssignmentOpen(true);
+                            }}
+                            className="btn-primary btn-sm text-[10px] py-0.5 px-2 flex items-center gap-1 font-semibold"
+                          >
+                            <span className="icon text-xs">add</span>
+                            Create Task
+                          </button>
+                        )}
                       </div>
                       <div className="p-1 space-y-0.5 bg-card">
                         {course.assessments && course.assessments.length > 0 ? (
