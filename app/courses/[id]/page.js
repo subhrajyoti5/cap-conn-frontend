@@ -18,6 +18,7 @@ import { AssessmentComments } from "@/components/assessment-comments";
 import { apiFetch } from "@/lib/api";
 import { getEmbedUrl, isGoogleDriveUrl } from "@/components/google-drive-viewer";
 import Link from "next/link";
+import { Star, Settings, Info, Folder, FileText, MessageSquare, Plus, Globe } from "lucide-react";
 
 export default function CourseDetailPage() {
   const { id } = useParams();
@@ -105,7 +106,9 @@ export default function CourseDetailPage() {
   async function load() {
     try {
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        return;
+      }
       setAuthToken(token);
       setErrorMessage("");
       const res = await getCourse(token, id);
@@ -123,7 +126,9 @@ export default function CourseDetailPage() {
   }
 
   useEffect(() => {
-    load();
+    if (id) {
+      load();
+    }
   }, [id, getToken]);
 
   async function handleEnroll() {
@@ -409,7 +414,7 @@ export default function CourseDetailPage() {
               )}
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold leading-tight">{course.title}</h1>
-            <p className="text-xs opacity-75 mt-3">Instructor: {course.trainer?.name || "Unassigned"}</p>
+            <p className="text-xs opacity-75 mt-3">Trainer: {course.trainer?.name || "Unassigned"}</p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -420,24 +425,27 @@ export default function CourseDetailPage() {
                   setEditCourseDesc(course.description);
                   setShowEditCourseModal(true);
                 }}
-                className="btn-secondary bg-white/10 hover:bg-white/20 text-white border-white/20 shadow-md text-xs py-1.5 px-3"
+                className="btn-secondary bg-white/10 hover:bg-white/20 text-white border-white/20 shadow-md text-xs py-1.5 px-3 flex items-center gap-1.5 font-medium"
               >
-                ⚙ Edit Details
+                <Settings className="w-3.5 h-3.5" />
+                <span>Edit Details</span>
               </button>
             )}
             {hasAccess && (
               <>
                 <button
                   onClick={() => setShowFeedbackModal(true)}
-                  className="btn-secondary bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border-amber-500/30 shadow-md text-xs py-1.5 px-3 flex items-center gap-1 font-semibold"
+                  className="btn-secondary bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border-amber-500/30 shadow-md text-xs py-1.5 px-3 flex items-center gap-1.5 font-semibold"
                 >
-                  <span>⭐ Reviews & Ratings</span>
+                  <Star className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+                  <span>Reviews & Ratings</span>
                 </button>
                 <button
                   onClick={() => setShowCourseDetailsModal(true)}
-                  className="btn-secondary bg-white/10 hover:bg-white/20 text-white border-white/20 shadow-md text-xs py-1.5 px-3"
+                  className="btn-secondary bg-white/10 hover:bg-white/20 text-white border-white/20 shadow-md text-xs py-1.5 px-3 flex items-center gap-1.5 font-medium"
                 >
-                  ℹ View Course Info
+                  <Info className="w-3.5 h-3.5" />
+                  <span>View Course Info</span>
                 </button>
               </>
             )}
@@ -685,20 +693,20 @@ export default function CourseDetailPage() {
                               <button
                                 type="button"
                                 onClick={() => handleOpenResource(post.data)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted transition-colors mt-2 cursor-pointer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/80 bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted/50 transition-colors mt-2 cursor-pointer shadow-xs"
                               >
-                                <span>📂</span>
-                                Open Resource
+                                <Folder className="w-3.5 h-3.5" />
+                                <span>Open Resource</span>
                               </button>
                             )}
 
                             {post.type === "assessment" && (
                               <button
                                 onClick={() => setActiveTab("classwork")}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted transition-colors mt-2"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/80 bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted/50 transition-colors mt-2 shadow-xs"
                               >
-                                <span>📝</span>
-                                View Assessment
+                                <FileText className="w-3.5 h-3.5" />
+                                <span>View Assessment</span>
                               </button>
                             )}
                           </div>
@@ -911,8 +919,8 @@ export default function CourseDetailPage() {
                       <div className="space-y-3 text-xs text-foreground/90 leading-relaxed">
                         <p><strong>Course ID:</strong> {course.id?.slice(0, 8).toUpperCase()}</p>
                         <p><strong>Course Status:</strong> {course.status}</p>
-                        <p><strong>Instructor:</strong> {course.trainer?.name || "Unassigned Trainer"}</p>
-                        <p><strong>Instructor Contact:</strong> {course.trainer?.email || "N/A"}</p>
+                        <p><strong>Trainer:</strong> {course.trainer?.name || "Unassigned Trainer"}</p>
+                        <p><strong>Trainer Contact:</strong> {course.trainer?.email || "N/A"}</p>
                         
                         <div className="pt-3 border-t border-border/40 space-y-2">
                           <p className="font-semibold text-foreground">Course Overview:</p>
@@ -1275,48 +1283,53 @@ export default function CourseDetailPage() {
         onSaved={load}
       />
 
-      <EditAssignmentModal
-        isOpen={Boolean(editAssignmentData)}
-        onClose={() => setEditAssignmentData(null)}
-        assessment={editAssignmentData}
-        courseId={id}
-        token={authToken}
-        onUpdated={load}
-      />
+      {Boolean(editAssignmentData) && (
+        <EditAssignmentModal
+          isOpen={true}
+          onClose={() => setEditAssignmentData(null)}
+          assessment={editAssignmentData}
+          courseId={id}
+          token={authToken}
+          onUpdated={load}
+        />
+      )}
 
-      <SubmitDocumentModal
-        isOpen={Boolean(submitDocAssignmentId)}
-        onClose={() => setSubmitDocAssignmentId(null)}
-        assessmentId={submitDocAssignmentId}
-        courseId={id}
-        token={authToken}
-        onSubmitted={load}
-      />
+      {Boolean(submitDocAssignmentId) && (
+        <SubmitDocumentModal
+          assessment={course?.assessments?.find((a) => a.id === submitDocAssignmentId) || { id: submitDocAssignmentId, title: "Assignment" }}
+          onClose={() => setSubmitDocAssignmentId(null)}
+          onSuccess={load}
+        />
+      )}
 
-      <GradeSubmissionsModal
-        isOpen={Boolean(gradeAssessmentId)}
-        onClose={() => setGradeAssessmentId(null)}
-        assessmentId={gradeAssessmentId}
-        token={authToken}
-        onGraded={load}
-      />
+      {Boolean(gradeAssessmentId) && (
+        <GradeSubmissionsModal
+          assessment={course?.assessments?.find((a) => a.id === gradeAssessmentId) || { id: gradeAssessmentId, title: "Assessment" }}
+          onClose={() => setGradeAssessmentId(null)}
+          onSuccess={load}
+        />
+      )}
 
-      <TakeAssessmentModal
-        isOpen={Boolean(takeAssessment)}
-        onClose={() => setTakeAssessment(null)}
-        assessmentId={takeAssessment?.id}
-        token={authToken}
-        mode={takeAssessment?.mode || "take"}
-        onSubmitted={load}
-      />
+      {Boolean(takeAssessment) && (
+        <TakeAssessmentModal
+          isOpen={true}
+          onClose={() => setTakeAssessment(null)}
+          assessmentId={takeAssessment?.id}
+          token={authToken}
+          mode={takeAssessment?.mode || "take"}
+          onSubmitted={load}
+        />
+      )}
 
-      <ViewSubmissionsModal
-        isOpen={Boolean(viewSubmissionsAssessment)}
-        onClose={() => setViewSubmissionsAssessment(null)}
-        assessment={viewSubmissionsAssessment}
-        token={authToken}
-        onAssessmentUpdated={load}
-      />
+      {Boolean(viewSubmissionsAssessment) && (
+        <ViewSubmissionsModal
+          isOpen={true}
+          onClose={() => setViewSubmissionsAssessment(null)}
+          assessment={viewSubmissionsAssessment}
+          token={authToken}
+          onAssessmentUpdated={load}
+        />
+      )}
 
 
       {showTrainerModal && (
@@ -1641,7 +1654,7 @@ export default function CourseDetailPage() {
                               <span className="font-semibold block text-foreground mt-0.5 line-clamp-1">{c.title}</span>
                               {c.trainer && (
                                 <span className="text-[10px] text-muted-foreground block mt-0.5">
-                                  Instructor: {c.trainer.name || c.trainer.email}
+                                  Trainer: {c.trainer.name || c.trainer.email}
                                 </span>
                               )}
                             </div>
@@ -1681,7 +1694,7 @@ export default function CourseDetailPage() {
             </div>
             <form onSubmit={handleInviteTrainer} className="p-6 space-y-4">
               <p className="text-xs text-muted-foreground leading-normal">
-                Enter the email address of the trainer you want to invite as a co-instructor for this course. They will receive a notification to join.
+                Enter the email address of the trainer you want to invite as a co-trainer for this course. They will receive a notification to join.
               </p>
               {inviteStatus.message && (
                 <div className={`p-3 rounded-xl text-xs border ${inviteStatus.type === "success"
@@ -1812,7 +1825,7 @@ export default function CourseDetailPage() {
             </div>
             <div className="p-6 space-y-4 text-left">
               <p className="text-xs text-muted-foreground leading-normal">
-                Are you sure you want to un-enroll (drop) from this course? You will lose access to classroom resources, and course instructors will be notified.
+                Are you sure you want to un-enroll (drop) from this course? You will lose access to course resources, and course trainers will be notified.
               </p>
               {unenrollStatus.message && (
                 <div className={`p-3 rounded-xl text-xs border ${unenrollStatus.type === "success"

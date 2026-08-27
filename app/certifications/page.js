@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import { listCourses, getCourse } from "@/features/courses/api/courses.api";
 import { GoogleDriveViewerModal, isGoogleDriveUrl } from "@/components/google-drive-viewer";
 import Link from "next/link";
+import { Award, Building2, Users, Eye, ArrowUpRight, CheckCircle2, ShieldCheck, FileCheck, Send, ExternalLink } from "lucide-react";
 
 // Pre-designed Executive Blank Certificate Templates (HTML5 / Data Backgrounds)
 const PRESET_BACKGROUNDS = [
@@ -115,7 +116,7 @@ const PRESET_BACKGROUNDS = [
 
         <div className="relative z-10 flex justify-between items-end px-12 pb-4 text-indigo-200 text-xs">
           <div className="text-center border-t border-indigo-500/40 pt-1 w-36">
-            <p className="font-bold text-[11px] text-white">Lead Instructor</p>
+            <p className="font-bold text-[11px] text-white">Lead Trainer</p>
           </div>
           <div className="text-center border-t border-indigo-500/40 pt-1 w-36">
             <p className="font-bold text-[11px] text-white">Digital Verification</p>
@@ -402,52 +403,56 @@ export default function CertificationsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-600 via-orange-600 to-indigo-800 text-white p-8 shadow-lg shadow-orange/10">
+      {/* Solid Enterprise Hero Banner */}
+      <div className={`relative overflow-hidden rounded-2xl p-6 sm:p-8 shadow-xl border ${
+        isAdmin
+          ? "bg-slate-900 border-slate-800 text-white"
+          : isTrainerOrAdmin
+          ? "bg-blue-950 border-blue-900 text-white"
+          : "bg-emerald-950 border-emerald-900 text-white"
+      }`}>
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="max-w-2xl">
-            <span className="badge bg-white/20 text-white border-transparent text-xs font-mono uppercase tracking-wider">
+          <div className="space-y-1 max-w-2xl">
+            <span className={`text-[10px] uppercase font-mono px-2.5 py-0.5 rounded-full font-bold tracking-wider inline-block ${
+              isAdmin
+                ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                : isTrainerOrAdmin
+                ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+            }`}>
               {isTrainerOrAdmin ? "Certificate Management & Distribution" : "Academic & Credential Vault"}
             </span>
-            <h1 className="font-display text-display-lg text-white mt-3 leading-tight">
-              {isTrainerOrAdmin ? "Certificate Distribution Window" : "Certifications & Credentials"}
+            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              {isTrainerOrAdmin ? "Certificate Distribution Console" : "Certifications & Credentials"}
             </h1>
-            <p className="text-white/80 text-xs mt-2 leading-relaxed max-w-xl">
-              {isAdmin
-                ? "View all certificates distributed across courses by trainers and inspect batch recipient lists."
-                : isTrainerOrAdmin
-                ? "Upload custom blank certificate templates, position text fields, and issue verified credentials to course trainees."
-                : "View and verify your official course completion certificates and academic credentials."}
-            </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
             {isTrainerOrAdmin && (
-              <div className="bg-white/10 backdrop-blur-md p-1.5 rounded-xl flex items-center gap-1 border border-white/20">
+              <div className="bg-white/10 p-1.5 rounded-xl flex items-center gap-1 border border-white/20">
                 <button
                   onClick={() => setActiveTab("CERTIFICATES")}
-                  className={`text-xs font-bold px-4 py-2 rounded-lg transition-all ${activeTab === "CERTIFICATES" ? "bg-white text-orange-950 shadow-sm" : "text-white hover:bg-white/10"}`}
+                  className={`text-xs font-bold px-4 py-2 rounded-lg transition-all ${activeTab === "CERTIFICATES" ? "bg-white text-slate-950 shadow-xs" : "text-white hover:bg-white/10"}`}
                 >
                   Certificates ({groupedDistributedCertificates.length})
                 </button>
                 {!isAdmin && (
                   <button
                     onClick={() => setActiveTab("SEND_CERTIFICATES")}
-                    className={`text-xs font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${activeTab === "SEND_CERTIFICATES" ? "bg-white text-orange-950 shadow-sm" : "text-white hover:bg-white/10"}`}
+                    className={`text-xs font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${activeTab === "SEND_CERTIFICATES" ? "bg-white text-slate-950 shadow-xs" : "text-white hover:bg-white/10"}`}
                   >
-                    <span>📜</span> Send Certificates
+                    <span>Send Certificates</span>
                   </button>
                 )}
               </div>
             )}
             {!isTrainerOrAdmin && (
-              <Link href="/courses" className="btn-secondary bg-white text-orange-900 font-bold text-xs py-2.5 px-4">
+              <Link href="/courses" className="btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20 font-bold text-xs py-2.5 px-4">
                 Browse Courses
               </Link>
             )}
           </div>
         </div>
-        <div className="absolute right-0 bottom-0 w-72 h-72 bg-white/5 rounded-full blur-3xl -mr-16 -mb-16 pointer-events-none" />
       </div>
 
       {toastMessage && (
@@ -469,10 +474,10 @@ export default function CertificationsPage() {
                   </div>
                   <p className="empty-state-title font-display font-bold text-base text-foreground">No certifications awarded yet</p>
                   <p className="empty-state-desc text-xs text-muted-foreground max-w-sm mx-auto">
-                    Complete enrolled courses or wait for your instructors to issue official course certificates.
+                    Complete enrolled courses or wait for your trainers to issue official course certificates.
                   </p>
                   <Link href="/courses" className="btn-primary inline-flex mt-2">
-                    Explore Active Classrooms
+                    Explore Active Courses
                   </Link>
                 </div>
               ) : (
@@ -482,39 +487,43 @@ export default function CertificationsPage() {
                     return (
                       <div
                         key={cert.id || index}
-                        className="group card-shell flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card hover:shadow-elevated transition-all duration-300"
+                        className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card hover:border-emerald-500/50 hover:shadow-xl transition-all duration-300 min-h-[280px]"
                       >
-                        <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 p-5 text-white relative">
+                        <div className="bg-emerald-950 border-b border-emerald-900 p-5 text-white relative min-h-[105px] flex flex-col justify-between shrink-0">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-2xl">📜</span>
-                            <span className="badge bg-white/20 text-white border-transparent text-[9px] font-mono uppercase tracking-wider">
-                              Verified Certificate
+                            <Award className="w-5 h-5 text-emerald-400" />
+                            <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-md">
+                              Verified Credential
                             </span>
                           </div>
-                          <h3 className="font-display font-bold text-base text-white mt-3 line-clamp-2 leading-snug">
+                          <h3 className="font-display font-bold text-sm text-white mt-3 line-clamp-2 leading-snug">
                             {cert.name}
                           </h3>
                         </div>
 
-                        <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div className="p-5 flex-1 flex flex-col justify-between space-y-4 bg-card text-foreground">
                           <div className="space-y-2">
-                            <p className="text-xs text-muted-foreground font-medium">🏛️ {cert.issuer}</p>
+                            <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+                              <Building2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                              <span className="truncate">{cert.issuer}</span>
+                            </p>
                             <div className="text-[11px] text-muted-foreground space-y-1 border-t border-border/60 pt-2">
                               <div className="flex justify-between">
                                 <span>Issue Date:</span>
-                                <span className="font-mono text-foreground">
+                                <span className="font-mono text-foreground font-semibold">
                                   {cert.issueDate ? new Date(cert.issueDate).toLocaleDateString() : "—"}
                                 </span>
                               </div>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 pt-2 border-t border-border/60">
+                          <div className="flex items-center gap-2 pt-3 border-t border-border/60 mt-auto">
                             <button
                               onClick={() => setDigitalPreviewCert(cert)}
-                              className="btn-primary text-xs py-2 flex-1 text-center font-bold shadow-xs"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-3 rounded-xl flex-1 flex items-center justify-center gap-1.5 shadow-xs transition-colors"
                             >
-                              🎓 View Certificate
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>View Certificate</span>
                             </button>
                             {cert.credentialUrl && (
                               <button
@@ -522,9 +531,10 @@ export default function CertificationsPage() {
                                   setSelectedCert(cert);
                                   setViewerOpen(true);
                                 }}
-                                className="btn-secondary text-xs py-2 px-3 flex items-center gap-1 font-bold"
+                                className="border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 text-xs py-2.5 px-3 rounded-xl font-bold flex items-center gap-1 transition-colors"
                               >
-                                🔗 {hasDriveLink ? "Drive" : "Credential"}
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                <span>{hasDriveLink ? "Drive" : "Credential"}</span>
                               </button>
                             )}
                           </div>
@@ -541,9 +551,9 @@ export default function CertificationsPage() {
           {isTrainerOrAdmin && (
             <div>
               {groupedDistributedCertificates.length === 0 ? (
-                <div className="empty-state bg-card border border-border rounded-2xl p-12 text-center space-y-3">
-                  <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-600 mx-auto flex items-center justify-center text-3xl">
-                    📜
+                <div className="empty-state bg-card border border-border/80 rounded-2xl p-12 text-center space-y-3 shadow-xs">
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
+                    <Award className="w-8 h-8" />
                   </div>
                   <p className="empty-state-title font-display font-bold text-base text-foreground">No distributed certificates yet</p>
                   <p className="empty-state-desc text-xs text-muted-foreground max-w-sm mx-auto">
@@ -552,8 +562,9 @@ export default function CertificationsPage() {
                       : "You have not distributed any certificates to course members yet."}
                   </p>
                   {!isAdmin && (
-                    <button onClick={() => setActiveTab("SEND_CERTIFICATES")} className="btn-primary inline-flex mt-2">
-                      Send Certificate Now
+                    <button onClick={() => setActiveTab("SEND_CERTIFICATES")} className="btn-primary text-xs py-2.5 px-4 font-semibold shadow-xs inline-flex items-center gap-2 mt-2">
+                      <Send className="w-4 h-4" />
+                      <span>Send Certificate Now</span>
                     </button>
                   )}
                 </div>
@@ -561,34 +572,60 @@ export default function CertificationsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {groupedDistributedCertificates.map((batch, index) => {
                     const tmpl = parseTemplateData(batch);
+                    const bannerStyle = isAdmin
+                      ? "bg-slate-900 border-b border-slate-800"
+                      : "bg-blue-950 border-b border-blue-900";
+                    const badgeStyle = isAdmin
+                      ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                      : "bg-blue-500/20 text-blue-300 border-blue-500/30";
+                    const primaryBtnStyle = isAdmin
+                      ? "bg-amber-600 hover:bg-amber-700 text-white"
+                      : "bg-blue-600 hover:bg-blue-700 text-white";
+                    const secondaryBtnStyle = isAdmin
+                      ? "border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                      : "border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10";
+                    const recipientBadgeStyle = isAdmin
+                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                      : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
+
                     return (
                       <div
                         key={batch.id || index}
-                        className="group card-shell flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card hover:shadow-elevated transition-all duration-300"
+                        className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card hover:shadow-xl transition-all duration-300 min-h-[295px]"
                       >
-                        <div className="bg-gradient-to-r from-amber-600 to-orange-700 p-5 text-white relative">
+                        {/* Solid Domain Header Banner */}
+                        <div className={`${bannerStyle} p-5 text-white relative min-h-[110px] flex flex-col justify-between shrink-0`}>
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-2xl">📜</span>
-                            <span className="badge bg-white/20 text-white border-transparent text-[9px] font-mono uppercase tracking-wider">
+                            <Award className={`w-5 h-5 ${isAdmin ? "text-amber-400" : "text-blue-400"}`} />
+                            <span className={`${badgeStyle} border text-[9px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-md`}>
                               Distributed Batch
                             </span>
                           </div>
-                          <h3 className="font-display font-bold text-base text-white mt-3 line-clamp-2 leading-snug">
+                          <h3 className="font-display font-bold text-sm text-white mt-3 line-clamp-2 leading-snug">
                             {batch.name}
                           </h3>
                         </div>
 
-                        <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        {/* Card Body */}
+                        <div className="p-5 flex-1 flex flex-col justify-between space-y-4 bg-card text-foreground">
                           <div className="space-y-2">
                             <p className="text-xs text-muted-foreground font-medium flex items-center justify-between">
-                              <span>🏛️ {batch.issuer}</span>
-                              {tmpl?.courseTitle && <span className="font-mono text-[10px] text-primary truncate max-w-[120px]">{tmpl.courseTitle}</span>}
+                              <span className="flex items-center gap-1.5 truncate">
+                                <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                <span className="truncate">{batch.issuer}</span>
+                              </span>
+                              {tmpl?.courseTitle && (
+                                <span className="font-mono text-[10px] text-primary truncate max-w-[120px]">
+                                  {tmpl.courseTitle}
+                                </span>
+                              )}
                             </p>
                             <div className="text-[11px] text-muted-foreground space-y-1.5 pt-2 border-t border-border/60">
                               <div className="flex justify-between items-center">
                                 <span>Recipients Awarded:</span>
-                                <span className="badge bg-primary/10 text-primary font-bold text-xs font-mono">
-                                  👥 {batch.trainees.length} Trainees
+                                <span className={`${recipientBadgeStyle} border font-bold text-xs font-mono px-2 py-0.5 rounded-md flex items-center gap-1`}>
+                                  <Users className="w-3 h-3" />
+                                  <span>{batch.trainees.length} Trainees</span>
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -600,15 +637,16 @@ export default function CertificationsPage() {
                             </div>
                           </div>
 
-                          <div className="pt-2 border-t border-border/60 flex items-center gap-2">
+                          <div className="pt-3 border-t border-border/60 flex items-center gap-2 mt-auto">
                             <button
                               onClick={() => setInspectRecipientsCert(batch)}
-                              className="btn-primary text-xs py-2 px-3 flex-1 flex items-center justify-center gap-1 font-semibold shadow-xs"
+                              className={`${primaryBtnStyle} text-xs py-2.5 px-3 flex-1 flex items-center justify-center gap-1.5 font-bold rounded-xl shadow-xs transition-colors`}
                             >
-                              <span>👁️</span> View Trainees ({batch.trainees.length})
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>View Trainees ({batch.trainees.length})</span>
                             </button>
 
-                            {tmpl?.customImageBg && (
+                            {!isAdmin && tmpl?.customImageBg && (
                               <button
                                 onClick={() => {
                                   handleSelectSavedTemplate({
@@ -618,10 +656,11 @@ export default function CertificationsPage() {
                                   });
                                   setActiveTab("SEND_CERTIFICATES");
                                 }}
-                                className="btn-secondary text-xs py-2 px-3 flex-1 text-center font-semibold"
+                                className={`${secondaryBtnStyle} text-xs py-2 px-3 flex-1 flex items-center justify-center gap-1 font-bold rounded-xl transition-colors`}
                                 title="Import into Send Certificates editor"
                               >
-                                Reuse Template ↗
+                                <span>Reuse Template</span>
+                                <ArrowUpRight className="w-3.5 h-3.5" />
                               </button>
                             )}
                           </div>
@@ -639,12 +678,12 @@ export default function CertificationsPage() {
       {/* SEND CERTIFICATES STUDIO TAB (Trainers Only) */}
       {activeTab === "SEND_CERTIFICATES" && !isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Classroom & Template Configuration Controls */}
+          {/* Left Column: Course & Template Configuration Controls */}
           <div className="lg:col-span-5 space-y-6">
-            {/* 1. Classroom & Trainees */}
+            {/* 1. Course & Trainees */}
             <div className="card border border-border p-6 bg-card rounded-2xl space-y-5 shadow-sm">
               <div className="border-b border-border pb-3">
-                <h2 className="font-display font-bold text-sm text-foreground">1. Select Classroom & Trainees</h2>
+                <h2 className="font-display font-bold text-sm text-foreground">1. Select Course & Trainees</h2>
                 <p className="text-[11px] text-muted-foreground">Pick trainees to receive custom image certificates</p>
               </div>
 
@@ -694,7 +733,7 @@ export default function CertificationsPage() {
                   </div>
                 ) : enrolledTrainees.length === 0 ? (
                   <p className="text-xs text-muted-foreground italic py-3 text-center border border-dashed border-border rounded-xl">
-                    No active enrolled trainees in this classroom.
+                    No active enrolled trainees in this course.
                   </p>
                 ) : (
                   <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
@@ -932,7 +971,7 @@ export default function CertificationsPage() {
                   </div>
 
                   <div>
-                    <label className="label text-xs font-semibold">Issuing Authority / Instructor</label>
+                    <label className="label text-xs font-semibold">Issuing Authority / Trainer</label>
                     <input
                       type="text"
                       required

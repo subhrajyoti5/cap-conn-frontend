@@ -384,7 +384,7 @@ export function CreateAiAssignmentModal({
           <div>
             <h2 className="font-display text-base font-semibold text-foreground flex items-center gap-2">
               <span>{assignmentType === "DOCUMENT" ? "📄" : "✨"}</span>
-              Create Assignment
+              Create Assessment
             </h2>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               {assignmentType === "DOCUMENT"

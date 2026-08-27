@@ -444,7 +444,7 @@ export function AssignmentStudioModal({
           </button>
           <div>
             <h1 className="font-display font-bold text-base text-foreground flex items-center gap-2">
-              {isDocMode ? "📄 Document Assignment" : "Assignment Editorial Studio"}
+              {isDocMode ? "Document Task" : "Assessment Editorial Studio"}
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-accent/10 text-accent font-semibold">
                 {isEditingPublished
                   ? "Published Edit"
