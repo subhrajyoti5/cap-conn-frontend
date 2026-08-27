@@ -5,12 +5,7 @@ import { useAuth } from "@/features/auth/auth-context";
 import { apiFetch } from "@/lib/api";
 import Link from "next/link";
 
-const CARD_GRADIENTS = [
-  "from-teal-600 to-emerald-700",
-  "from-cyan-600 to-blue-700",
-  "from-violet-600 to-indigo-700",
-  "from-amber-600 to-orange-700",
-];
+
 
 export default function TrainerDashboardPage() {
   const { getToken, user } = useAuth();
@@ -167,110 +162,84 @@ export default function TrainerDashboardPage() {
       label: "My Courses", 
       value: data?.courses || 0, 
       description: "Classrooms you lead or co-teach",
-      accentBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
       active: activeView === "classrooms",
       onClick: () => {
         setActiveView("classrooms");
         document.getElementById("my-classrooms")?.scrollIntoView({ behavior: "smooth" });
       },
-      icon: (
-        <svg className="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-        </svg>
-      )
     },
     { 
       label: "Active Trainees", 
       value: data?.totalTrainees || 0, 
       description: "Enrolled trainees across courses",
-      accentBg: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
       active: activeView === "trainees",
       onClick: () => {
         setActiveView(activeView === "trainees" ? "classrooms" : "trainees");
       },
-      icon: (
-        <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.97 5.97 0 00-.75-2.985m-.939-2.618A5.006 5.006 0 0018 12.5a3.375 3.375 0 00-3.375-3.375H12a3.375 3.375 0 00-3.375 3.375c0 .324.032.64.093.945m8.25.109a6.375 6.375 0 01-12.75 0v-.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766" />
-        </svg>
-      )
     },
     { 
       label: "Pending to Grade", 
       value: data?.pendingToGrade || 0, 
       description: "Submissions awaiting evaluation",
-      accentBg: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
       active: false,
-      icon: (
-        <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-      )
     },
   ];
 
   return (
     <div className="space-y-8 animate-in stagger-1">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-800 text-white p-8 shadow-lg shadow-emerald/10">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="max-w-2xl">
-            <span className="badge bg-white/20 text-white border-transparent text-xs font-mono uppercase tracking-wider">
-              Trainer Portal
-            </span>
-            <h1 className="font-display text-display-lg text-white mt-3 leading-tight">
-              {profile?.fullName || user?.name || "Trainer"}
-            </h1>
-            <p className="text-white/80 text-xs mt-2 leading-relaxed italic max-w-xl">
-              {profile?.bio || "No biography details configured yet. Update your profile info to add a biography."}
-            </p>
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div>
+            <h1 className="page-title">{profile?.fullName || user?.name || "Trainer"}</h1>
+            {profile?.bio && (
+              <p className="page-subtitle italic">{profile.bio}</p>
+            )}
             {profile?.qualifications?.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
+              <div className="flex flex-wrap gap-1.5 mt-3">
                 {profile.qualifications.map((q) => (
-                  <span key={q.id} className="text-[10px] bg-white/10 text-white/95 border border-white/25 px-2.5 py-0.5 rounded-full font-medium">
-                    🎓 {q.degree} ({q.institution} - {q.year})
+                  <span key={q.id} className="badge-neutral">
+                    {q.degree} — {q.institution} {q.year}
                   </span>
                 ))}
               </div>
             )}
           </div>
-          <Link href="/trainer/profile" className="btn-secondary bg-white text-emerald-800 border-transparent hover:bg-white/90 shrink-0 self-start sm:self-center">
+          <Link href="/trainer/profile" className="btn-secondary shrink-0 self-start">
             Edit Profile
           </Link>
         </div>
-        <div className="absolute right-0 bottom-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mb-16" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {stats.map((stat, index) => (
           <div 
             key={stat.label} 
             onClick={stat.onClick}
-            className={`group relative overflow-hidden rounded-2xl bg-card border transition-all duration-300 p-6 flex flex-col justify-between ${
+            className={`group card p-5 flex flex-col justify-between transition-all duration-200 ${
               stat.active 
-                ? "border-primary ring-2 ring-primary/20 shadow-md" 
-                : "border-border hover:border-primary/40 hover:shadow-lg"
+                ? "border-primary ring-1 ring-primary/20" 
+                : "hover:border-primary/30"
             } ${stat.onClick ? "cursor-pointer" : ""}`}
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block">
                   {stat.label}
                 </span>
-                <p className="text-3xl font-extrabold font-display text-foreground tracking-tight">
+                <p className="text-2xl font-bold font-display text-foreground">
                   {stat.value}
                 </p>
               </div>
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-110 ${stat.accentBg}`}>
-                {stat.icon}
-              </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between text-[11px] text-muted-foreground">
+            <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
               <span>{stat.description}</span>
               {stat.onClick && (
-                <span className="text-primary font-semibold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className={`font-medium flex items-center gap-1 transition-opacity ${stat.active ? "text-primary opacity-100" : "opacity-0 group-hover:opacity-100 text-primary"}` }>
                   View
-                  <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </span>
@@ -281,7 +250,7 @@ export default function TrainerDashboardPage() {
       </div>
 
       {actionMessage && (
-        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs p-4 rounded-xl">
+        <div className="bg-success/10 border border-success/20 text-success text-xs p-4 rounded-xl">
           {actionMessage}
         </div>
       )}
@@ -290,11 +259,11 @@ export default function TrainerDashboardPage() {
         <div className="lg:col-span-3 space-y-6">
           {/* Pending Trainee Enrollment Requests Section */}
           {pendingEnrollments.length > 0 && (
-            <div className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-6 space-y-4">
-              <h3 className="font-display font-bold text-xs text-foreground flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
-                ⚡ Pending Trainee Enrollment Requests ({pendingEnrollments.length})
-              </h3>
+            <div className="bg-warning/5 border border-warning/20 rounded-xl p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm text-foreground">Pending Enrollment Requests</h3>
+                <span className="badge-warning">{pendingEnrollments.length}</span>
+              </div>
               <div className="space-y-3">
                 {pendingEnrollments.map((req) => (
                   <div key={req.id} className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -308,14 +277,14 @@ export default function TrainerDashboardPage() {
                       <button
                         onClick={() => handleApproveEnrollment(req.courseId, req.traineeId)}
                         disabled={actionLoadingId !== null}
-                        className="btn-primary bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] py-1 px-3"
+                        className="btn-success btn-sm"
                       >
                         {actionLoadingId === `${req.courseId}-${req.traineeId}` ? "Approving..." : "Approve"}
                       </button>
                       <button
                         onClick={() => handleRejectEnrollment(req.courseId, req.traineeId)}
                         disabled={actionLoadingId !== null}
-                        className="btn-secondary text-red-600 hover:bg-red-50 text-[10px] py-1 px-3 border border-red-200"
+                        className="btn-danger btn-sm"
                       >
                         Reject
                       </button>
@@ -328,10 +297,11 @@ export default function TrainerDashboardPage() {
 
           {/* Pending Co-Trainer Invitations */}
           {invitations.length > 0 && (
-            <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-6 space-y-4">
-              <h3 className="font-display font-bold text-xs text-foreground flex items-center gap-1.5">
-                ✉️ Pending Co-Trainer Invitations
-              </h3>
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm text-foreground">Co-Trainer Invitations</h3>
+                <span className="badge-info">{invitations.length}</span>
+              </div>
               <div className="space-y-3">
                 {invitations.map((invite) => (
                   <div key={invite.id} className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -466,17 +436,16 @@ export default function TrainerDashboardPage() {
                     onClick={() => setActiveView("trainees")}
                     className="btn-secondary btn-sm"
                   >
-                    View Trainees Directory
+                    View Trainees
                   </button>
-                  <Link href="/courses/create" className="btn-primary btn-sm flex items-center gap-1">
-                    <span>➕</span>
+                  <Link href="/courses/create" className="btn-primary btn-sm">
                     Create Course
                   </Link>
                 </div>
               </div>
 
               {courses.length === 0 ? (
-                <div className="empty-state bg-card border border-border rounded-2xl p-10">
+                <div className="empty-state bg-card border border-border rounded-xl p-10">
                   <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                   </svg>
@@ -486,54 +455,46 @@ export default function TrainerDashboardPage() {
                     Create First Course
                   </Link>
                 </div>
+
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {courses.map((course, index) => {
-                    const gradient = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
+                  {courses.map((course) => {
                     return (
                       <Link
                         key={course.id}
                         href={`/courses/${course.id}`}
-                        className="group card-shell flex flex-col justify-between overflow-hidden h-64 hover:shadow-elevated transition-all duration-300"
+                        className="group card card-interactive flex flex-col overflow-hidden"
                       >
-                        <div className="card h-full flex flex-col justify-between border border-border">
-                          {/* Course Card Banner */}
-                          <div className={`bg-gradient-to-br ${gradient} p-4 text-white relative shrink-0`}>
-                            <div className="relative z-10">
-                              <p className="text-[10px] uppercase font-mono tracking-wider opacity-90 truncate">
-                                {course.subject?.name || "LMS Subject"}
-                              </p>
-                              <h3 className="font-display text-base font-bold leading-tight mt-1 line-clamp-2 group-hover:underline">
-                                {course.title}
-                              </h3>
-                              <div className="flex items-center gap-1.5 mt-3">
-                                <span className={`badge text-[9px] uppercase tracking-wider ${course.status === "PUBLISHED" ? "bg-white/20 text-white" : "bg-black/20 text-white"}`}>
-                                  {course.status}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="absolute right-0 top-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8" />
+                          {/* Neutral consistent card header */}
+                          <div className="bg-muted border-b border-border px-4 py-3 shrink-0">
+                            <p className="text-[10px] uppercase font-mono tracking-wider text-muted-foreground truncate">
+                              {course.subject?.name || "LMS Subject"}
+                            </p>
+                            <h3 className="font-semibold text-sm text-foreground leading-tight mt-0.5 line-clamp-2 group-hover:text-primary transition-colors">
+                              {course.title}
+                            </h3>
                           </div>
 
-                          {/* Course Details */}
+                          {/* Card body */}
                           <div className="p-4 flex-1 flex flex-col justify-between">
                             <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                               {course.description}
                             </p>
                             
                             <div className="flex items-center justify-between border-t border-border pt-3 mt-3">
-                              <span className="text-xs font-mono text-muted-foreground">
-                                Enrolled: {course.enrollments?.length || 0}
-                              </span>
-                              <span className="text-xs text-primary font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                                Edit Classwork
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                </svg>
+                              <div className="flex items-center gap-2">
+                                <span className={course.status === "PUBLISHED" ? "badge-success" : "badge-neutral"}>
+                                  {course.status}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {course.enrollments?.length || 0} enrolled
+                                </span>
+                              </div>
+                              <span className="text-xs text-primary font-medium">
+                                Edit
                               </span>
                             </div>
                           </div>
-                        </div>
                       </Link>
                     );
                   })}
@@ -553,7 +514,7 @@ export default function TrainerDashboardPage() {
             
             {data?.pendingToGrade > 0 ? (
               <div className="mt-3 space-y-2">
-                <div className="p-3 bg-amber-500/5 border border-amber-500/10 rounded-lg flex items-center justify-between">
+                <div className="p-3 bg-warning/5 border border-warning/20 rounded-lg flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold text-foreground">Submissions Pending</p>
                     <p className="text-[10px] text-muted-foreground">Requires grading</p>
@@ -622,8 +583,8 @@ export default function TrainerDashboardPage() {
               ) : traineeProfile ? (
                 <div className="space-y-6">
                   {traineeProfile.id === "temp-profile-id" && (
-                    <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs p-3.5 rounded-xl flex items-center gap-2">
-                      <span>⚠️ This trainee has not configured their full profile details yet. Displaying account registration info.</span>
+                    <div className="bg-warning/10 border border-warning/20 text-warning text-xs p-3.5 rounded-xl">
+                      This trainee has not configured their full profile details yet. Displaying account registration info.
                     </div>
                   )}
 
@@ -657,7 +618,7 @@ export default function TrainerDashboardPage() {
                         <ul className="space-y-2 text-xs">
                           {traineeProfile.qualifications.map((q) => (
                             <li key={q.id} className="p-2.5 rounded-lg bg-muted/30 border border-border/40">
-                              <span className="font-semibold block text-foreground">🎓 {q.degree}</span>
+                              <span className="font-semibold block text-foreground">{q.degree}</span>
                               <span className="text-[10px] text-muted-foreground">{q.institution} ({q.year})</span>
                             </li>
                           ))}
@@ -673,7 +634,7 @@ export default function TrainerDashboardPage() {
                         <ul className="space-y-2 text-xs">
                           {traineeProfile.workExperiences.map((w) => (
                             <li key={w.id} className="p-2.5 rounded-lg bg-muted/30 border border-border/40">
-                              <span className="font-semibold block text-foreground">💼 {w.role}</span>
+                              <span className="font-semibold block text-foreground">{w.role}</span>
                               <span className="text-[10px] text-muted-foreground">
                                 {w.organization} ({new Date(w.startDate).toLocaleDateString()} – {w.endDate ? new Date(w.endDate).toLocaleDateString() : "Present"})
                               </span>

@@ -13,6 +13,7 @@ import { GradeSubmissionsModal } from "@/components/grade-submissions-modal";
 import { TakeAssessmentModal } from "@/components/take-assessment-modal";
 import { ViewSubmissionsModal } from "@/components/view-submissions-modal";
 import { apiFetch } from "@/lib/api";
+import { getEmbedUrl, isGoogleDriveUrl } from "@/components/google-drive-viewer";
 import Link from "next/link";
 
 export default function CourseDetailPage() {
@@ -73,7 +74,8 @@ export default function CourseDetailPage() {
   const [unenrolling, setUnenrolling] = useState(false);
   const [unenrollStatus, setUnenrollStatus] = useState({ type: "", message: "" });
 
-  const [activeTab, setActiveTab] = useState("stream");
+  const [activeTab, setActiveTab] = useState("classwork");
+  const [selectedResource, setSelectedResource] = useState(null);
   const [actionMessage, setActionMessage] = useState("");
   const [inviteStatus, setInviteStatus] = useState({ type: "", message: "" });
   const [editStatus, setEditStatus] = useState({ type: "", message: "" });
@@ -295,24 +297,20 @@ export default function CourseDetailPage() {
 
   async function handleOpenResource(resource) {
     if (!resource) return;
-    if (resource.storageKey?.startsWith("http://") || resource.storageKey?.startsWith("https://")) {
-      window.open(resource.storageKey, "_blank", "noopener,noreferrer");
-      return;
-    }
-    if (resource.downloadUrl) {
-      window.open(resource.downloadUrl, "_blank", "noopener,noreferrer");
-      return;
-    }
-    try {
-      const token = await getToken();
-      if (!token) return;
-      const res = await getResource(token, resource.id);
-      const url = res.data?.downloadUrl || res.downloadUrl;
-      if (url) {
-        window.open(url, "_blank", "noopener,noreferrer");
+    setSelectedResource(resource);
+    setActiveTab("classwork");
+    if (!resource.downloadUrl && resource.id && !resource.storageKey?.startsWith("http")) {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const res = await getResource(token, resource.id);
+        const url = res.data?.downloadUrl || res.downloadUrl;
+        if (url) {
+          setSelectedResource((prev) => ({ ...prev, downloadUrl: url }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch download url:", err);
       }
-    } catch (err) {
-      console.error("Failed to fetch download url:", err);
     }
   }
 
@@ -703,273 +701,329 @@ export default function CourseDetailPage() {
 
 
             {activeTab === "classwork" && (
-              <div className="space-y-6">
-
-                <div className="card border border-border p-6 bg-card space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Resource Directory Left Sidebar */}
+                <div className="lg:col-span-4 card border border-border bg-card p-4 space-y-4 rounded-xl sticky top-20">
                   <div className="flex items-center justify-between border-b border-border pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">📁</span>
-                      <h2 className="font-display text-sm font-bold text-foreground">Course Resources</h2>
+                      <span className="icon text-base text-primary" aria-hidden="true">folder</span>
+                      <h2 className="font-display text-xs font-bold uppercase tracking-wider text-foreground">
+                        Resource Directory
+                      </h2>
                     </div>
                     {(isOwner || isAdmin) && (
                       <button
                         onClick={() => setUploadModalOpen(true)}
-                        className="btn-primary btn-sm flex items-center gap-1"
+                        className="btn-secondary btn-sm text-[10px] py-1 px-2 flex items-center gap-1"
+                        title="Upload course resource"
                       >
-                        <span>➕</span>
-                        Upload File
+                        <span className="icon text-xs">add</span>
+                        Add Content
                       </button>
                     )}
                   </div>
 
-                  {course.resources && course.resources.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {course.resources.map((res, index) => (
-                        <div
-                          key={res.id || index}
-                          className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card hover:bg-muted/10 transition-colors gap-3"
+                  <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+                    {/* Course Intro Accordion */}
+                    <div className="border border-border/60 rounded-lg overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-semibold text-foreground cursor-pointer hover:bg-muted/30">
+                        <span>Course Introduction</span>
+                        <span className="text-xs text-muted-foreground">−</span>
+                      </div>
+                      <div className="p-1 space-y-0.5 bg-card">
+                        <button
+                          onClick={() => setSelectedResource(null)}
+                          className={`w-full text-left px-3 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
+                            selectedResource === null
+                              ? "bg-primary/10 text-primary font-semibold"
+                              : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                          }`}
                         >
-                          <div className="min-w-0">
-                            <p className="font-semibold text-xs text-foreground truncate">{res.title}</p>
-                            <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
-                              <span className="uppercase font-bold text-[9px] bg-muted px-1.5 py-0.5 rounded">
-                                {res.type}
-                              </span>
-                              {res.createdAt && (
-                                <span>&bull; {new Date(res.createdAt).toLocaleDateString()}</span>
-                              )}
-                            </div>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="icon text-sm text-primary">article</span>
+                            <span className="truncate">About the Course</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenResource(res)}
-                            className="btn-secondary btn-sm px-3 py-1 text-[10px] shrink-0 cursor-pointer"
-                          >
-                            Open ↗
-                          </button>
+                          <span className="text-[9px] text-muted-foreground">Lesson</span>
+                        </button>
+                        <button
+                          onClick={() => setSelectedResource({ isPolicy: true, title: "Grading Policy" })}
+                          className={`w-full text-left px-3 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
+                            selectedResource?.title === "Grading Policy"
+                              ? "bg-primary/10 text-primary font-semibold"
+                              : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="icon text-sm text-primary">gavel</span>
+                            <span className="truncate">Grading Policy</span>
+                          </div>
+                          <span className="text-[9px] text-muted-foreground">Lesson</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Additional Accordion Categories */}
+                    {["Disciplinary & Non Academic Conduct", "Malpractice Rules", "Live session recordings"].map((title) => (
+                      <div key={title} className="border border-border/60 rounded-lg overflow-hidden">
+                        <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-semibold text-foreground cursor-pointer hover:bg-muted/30">
+                          <span className="truncate">{title}</span>
+                          <span className="text-xs text-muted-foreground">+</span>
                         </div>
-                      ))}
+                      </div>
+                    ))}
+
+                    {/* Course Resources Accordion */}
+                    <div className="border border-border/60 rounded-lg overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-semibold text-foreground cursor-pointer hover:bg-muted/30">
+                        <span>Course Resources</span>
+                        <span className="text-xs text-muted-foreground">−</span>
+                      </div>
+                      <div className="p-1 space-y-0.5 bg-card">
+                        {course.resources && course.resources.length > 0 ? (
+                          course.resources.map((res) => {
+                            const isSelected = selectedResource?.id === res.id;
+                            let iconName = "description";
+                            if (res.type === "LECTURE" || res.type === "VIDEO") iconName = "play_circle";
+                            if (res.type === "PRESENTATION") iconName = "co_present";
+
+                            return (
+                              <button
+                                key={res.id}
+                                onClick={() => handleOpenResource(res)}
+                                className={`w-full text-left px-3 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
+                                  isSelected
+                                    ? "bg-primary/10 text-primary font-semibold"
+                                    : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0 pr-1">
+                                  <span className="icon text-sm shrink-0">{iconName}</span>
+                                  <span className="truncate">{res.title}</span>
+                                </div>
+                                <span className="text-[9px] uppercase font-mono text-muted-foreground shrink-0">
+                                  {res.type}
+                                </span>
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground italic px-3 py-1">No uploaded files yet.</p>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl text-xs">
-                      No learning resources uploaded for this course yet.
+
+                    {/* Navigation Accordion: Assignments & AI Quiz */}
+                    <div className="border border-border/60 rounded-lg overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-semibold text-foreground cursor-pointer hover:bg-muted/30">
+                        <span>Navigation</span>
+                        <span className="text-xs text-muted-foreground">−</span>
+                      </div>
+                      <div className="p-1 space-y-0.5 bg-card">
+                        {course.assessments && course.assessments.length > 0 ? (
+                          course.assessments.map((a) => {
+                            const isDoc = a.type === "DOCUMENT";
+                            const isSelected = selectedResource?.id === `asmt-${a.id}`;
+                            return (
+                              <button
+                                key={a.id}
+                                onClick={() => setSelectedResource({ ...a, isAssessment: true, id: `asmt-${a.id}` })}
+                                className={`w-full text-left px-3 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
+                                  isSelected
+                                    ? "bg-primary/10 text-primary font-semibold"
+                                    : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0 pr-1">
+                                  <span className="icon text-sm shrink-0">
+                                    {isDoc ? "assignment" : "quiz"}
+                                  </span>
+                                  <span className="truncate">{a.title}</span>
+                                </div>
+                                <span className="text-[9px] uppercase font-mono text-muted-foreground shrink-0">
+                                  {isDoc ? "Task" : "Quiz"}
+                                </span>
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground italic px-3 py-1">No assignments posted.</p>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
 
+                {/* Main Workspace Content Area */}
+                <div className="lg:col-span-8 card border border-border bg-card p-6 min-h-[500px] space-y-6 rounded-xl">
+                  {selectedResource === null ? (
+                    // Default Overview View
+                    <div className="space-y-6">
+                      <div className="border-b border-border pb-3 flex items-center gap-2">
+                        <span className="icon text-primary text-xl">menu_book</span>
+                        <div>
+                          <h2 className="font-display text-base font-bold text-foreground">About the Course</h2>
+                          <p className="text-[11px] text-muted-foreground">Course Introduction</p>
+                        </div>
+                      </div>
 
-                <div className="card border border-border p-6 bg-card space-y-4">
-                  <div className="flex items-center justify-between border-b border-border pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">📝</span>
-                      <h2 className="font-display text-sm font-bold text-foreground">Assignments & Quizzes</h2>
+                      <div className="text-center py-4 border-b border-border/40">
+                        <h3 className="font-display text-lg font-bold text-foreground">{course.title}</h3>
+                        <p className="text-xs text-muted-foreground mt-1">Subject: {course.subject?.name || "General"}</p>
+                      </div>
+
+                      <div className="space-y-3 text-xs text-foreground/90 leading-relaxed">
+                        <p><strong>Course ID:</strong> {course.id?.slice(0, 8).toUpperCase()}</p>
+                        <p><strong>Course Status:</strong> {course.status}</p>
+                        <p><strong>Instructor:</strong> {course.trainer?.name || "Unassigned Trainer"}</p>
+                        <p><strong>Instructor Contact:</strong> {course.trainer?.email || "N/A"}</p>
+                        
+                        <div className="pt-3 border-t border-border/40 space-y-2">
+                          <p className="font-semibold text-foreground">Course Overview:</p>
+                          <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
+                            {course.description || "The primary study material for this course is the set of videos, documents, and assignments posted on the course workspace."}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    {(isOwner || isAdmin) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingAssessment(null);
-                          setAiAssignmentOpen(true);
-                        }}
-                        className="btn-primary btn-sm flex items-center gap-1.5 shadow-sm"
-                      >
-                        Create Assignment
-                      </button>
-                    )}
-                  </div>
-
-                  {course.assessments && course.assessments.length > 0 ? (
-                    <div className="space-y-3">
-                      {course.assessments.map((a) => {
-                        const now = new Date();
-                        const startTime = a.startTime ? new Date(a.startTime) : new Date(a.createdAt);
-                        const deadline = a.deadline ? new Date(a.deadline) : null;
-                        const isUpcoming = startTime > now;
-                        const isPastDeadline = deadline && now > deadline;
-
-                        let statusBadgeClass = "badge-neutral";
-                        let statusLabel = a.status?.toLowerCase();
-
-                        if (a.status === "DRAFT") {
-                          statusBadgeClass = "badge-neutral";
-                          statusLabel = "Draft";
-                        } else if (isUpcoming) {
-                          statusBadgeClass = "bg-amber-500/10 text-amber-500 border border-amber-500/20";
-                          statusLabel = "Upcoming";
-                        } else if (isPastDeadline) {
-                          statusBadgeClass = "badge-neutral";
-                          statusLabel = "Closed";
-                        } else {
-                          statusBadgeClass = "badge-success";
-                          statusLabel = "Active";
-                        }
-
-                        const traineeSub = a.submissions?.find(
-                          (s) => s.traineeId === user?.id && s.status === "GRADED"
-                        );
-                        const hasSubmitted = Boolean(traineeSub);
-                        const canSeeResults = a.evaluationMode === "INSTANT" || a.resultsReleased;
-                        const isDoc = a.type === "DOCUMENT";
-                        const isDeadlinePassed = a.deadline && new Date() > new Date(a.deadline);
-                        const mySub =
-                          a.submission ||
-                          a.mySubmission ||
-                          a.submissions?.find((s) => s.traineeId === user?.id) ||
-                          null;
-
-                        return (
-                          <div
-                            key={a.id}
-                            className="p-4 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-muted/10 transition-colors"
-                          >
-                            <div className="space-y-1.5 flex-1 min-w-0 pr-2">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span
-                                  className={`badge text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                                    isDoc
-                                      ? "bg-blue-500/10 text-blue-600 border border-blue-500/20"
-                                      : "bg-purple-500/10 text-purple-600 border border-purple-500/20"
-                                  }`}
-                                >
-                                  {isDoc ? "📄 Document Task" : "✨ MCQ Quiz"}
-                                </span>
-                                <p className="font-bold text-xs text-foreground truncate">{a.title}</p>
-                              </div>
-
-                              {a.description && (
-                                <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
-                                  {a.description}
-                                </p>
-                              )}
-
-                              {isDoc && a.fileName && (
-                                <div className="flex items-center gap-1.5 text-[10px] text-primary/80 font-medium">
-                                  <span>📎 Brief:</span>
-                                  <span className="truncate">{a.fileName}</span>
-                                </div>
-                              )}
-
-                              <div className="flex items-center gap-3.5 mt-1.5 text-[10px] text-muted-foreground flex-wrap">
-                                <span>Max Marks: <strong>{a.totalMarks}</strong></span>
-                                {!isDoc && <span>{a.questions?.length || 0} Questions</span>}
-                                {a.deadline && (
-                                  <span className={`flex items-center gap-1 ${isDeadlinePassed ? "text-destructive font-semibold" : ""}`}>
-                                    <span>{isDeadlinePassed ? "⚠️ Ended:" : "🕒 Due:"}</span>
-                                    <span>{new Date(a.deadline).toLocaleDateString()} {new Date(a.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 self-start sm:self-center shrink-0 flex-wrap">
-                              <span className={`badge text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${statusBadgeClass}`}>
-                                {statusLabel}
-                              </span>
-
-                              {/* TRAINER / ADMIN CONTROLS */}
-                              {(isOwner || isAdmin) && (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (isDoc) {
-                                        setEditAssignmentData(a);
-                                      } else {
-                                        setEditingAssessment(a);
-                                        setAiAssignmentOpen(true);
-                                      }
-                                    }}
-                                    className="btn-secondary btn-sm px-2.5 py-1 text-[10px] flex items-center gap-1"
-                                    title="Edit Assignment Details & Deadline"
-                                  >
-                                    <span>✏️</span> Edit / Deadline
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (isDoc) {
-                                        setGradeAssessmentId(a.id);
-                                      } else {
-                                        setViewSubmissionsAssessment(a);
-                                      }
-                                    }}
-                                    className="btn-primary bg-indigo-600 hover:bg-indigo-700 text-white btn-sm px-3 py-1 text-[10px] flex items-center gap-1 shadow-sm"
-                                  >
-                                    <span>📝</span> Submissions ({a.submissions?.length ?? a._count?.submissions ?? 0})
-                                  </button>
-                                </>
-                              )}
-
-                              {/* TRAINEE CONTROLS */}
-                              {user?.role === "TRAINEE" && isEnrolled && a.status === "PUBLISHED" && (
-                                <>
-                                  {isDoc ? (
-                                    <button
-                                      type="button"
-                                      className={`btn-sm px-3 py-1 text-[10px] font-semibold flex items-center gap-1 ${
-                                        mySub
-                                          ? "btn-secondary border-primary/40 text-primary"
-                                          : "btn-primary shadow-sm"
-                                      }`}
-                                      onClick={() => setSubmitDocAssignmentId(a.id)}
-                                    >
-                                      <span>📄</span>
-                                      {mySub
-                                        ? mySub.status === "GRADED"
-                                          ? `Graded (${mySub.score}/${a.totalMarks})`
-                                          : "View / Update Submission"
-                                        : isDeadlinePassed
-                                        ? "View Assignment"
-                                        : "Submit Answer Doc"}
-                                    </button>
-                                  ) : (
-                                    <>
-                                      {hasSubmitted ? (
-                                        <div className="flex items-center gap-2">
-                                          {canSeeResults ? (
-                                            <>
-                                              <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                                                Score: {traineeSub.score} / {a.totalMarks}
-                                              </span>
-                                              <button
-                                                type="button"
-                                                className="btn-secondary btn-sm px-3 py-1 text-[10px]"
-                                                onClick={() => setTakeAssessment({ id: a.id, mode: "result" })}
-                                              >
-                                                View Result
-                                              </button>
-                                            </>
-                                          ) : (
-                                            <span className="text-[10px] font-semibold text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
-                                              Submitted (Results Pending Release)
-                                            </span>
-                                          )}
-                                        </div>
-                                      ) : isUpcoming ? (
-                                        <span className="text-[10px] text-muted-foreground italic font-medium">
-                                          Locked until start time
-                                        </span>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          className="btn-primary btn-sm px-3 py-1 text-[10px]"
-                                          onClick={() => setTakeAssessment({ id: a.id, mode: "take" })}
-                                        >
-                                          Take Quiz
-                                        </button>
-                                      )}
-                                    </>
-                                  )}
-                                </>
-                              )}
-                            </div>
+                  ) : selectedResource?.isAssessment ? (
+                    // Selected Assessment View
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between border-b border-border pb-4">
+                        <div>
+                          <span className="text-[10px] font-mono uppercase text-primary font-bold">
+                            {selectedResource.type === "DOCUMENT" ? "Assignment Task" : "Quiz Assessment"}
+                          </span>
+                          <h2 className="font-display text-lg font-bold text-foreground">{selectedResource.title}</h2>
+                        </div>
+                        {(isOwner || isAdmin) && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (selectedResource.type === "DOCUMENT") {
+                                  setEditAssignmentData(selectedResource);
+                                } else {
+                                  setEditingAssessment(selectedResource);
+                                  setAiAssignmentOpen(true);
+                                }
+                              }}
+                              className="btn-secondary text-xs py-1.5 px-3"
+                            >
+                              Edit Details
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (selectedResource.type === "DOCUMENT") {
+                                  setGradeAssessmentId(selectedResource.id.replace("asmt-", ""));
+                                } else {
+                                  setViewSubmissionsAssessment(selectedResource);
+                                }
+                              }}
+                              className="btn-primary text-xs py-1.5 px-3"
+                            >
+                              Submissions
+                            </button>
                           </div>
-                        );
-                      })}
+                        )}
+                      </div>
+
+                      {selectedResource.description && (
+                        <p className="text-xs text-muted-foreground leading-relaxed">{selectedResource.description}</p>
+                      )}
+
+                      <div className="p-4 rounded-xl border border-border bg-muted/10 space-y-3">
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Max Score: <strong className="text-foreground">{selectedResource.totalMarks}</strong></span>
+                          {selectedResource.deadline && (
+                            <span>Due: <strong className="text-foreground">{new Date(selectedResource.deadline).toLocaleDateString()}</strong></span>
+                          )}
+                        </div>
+
+                        {user?.role === "TRAINEE" && isEnrolled && selectedResource.status === "PUBLISHED" && (
+                          <div className="pt-2">
+                            {selectedResource.type === "DOCUMENT" ? (
+                              <button
+                                type="button"
+                                onClick={() => setSubmitDocAssignmentId(selectedResource.id.replace("asmt-", ""))}
+                                className="btn-primary w-full text-xs py-2"
+                              >
+                                Submit Assignment Document
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setTakeAssessment({ id: selectedResource.id.replace("asmt-", ""), mode: "take" })}
+                                className="btn-primary w-full text-xs py-2"
+                              >
+                                Start Quiz Assessment
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl text-xs">
-                      No assignments assigned yet.
+                    // Selected Resource View (Video / Document)
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between border-b border-border pb-4">
+                        <div>
+                          <span className="text-[10px] font-mono uppercase text-primary font-bold">
+                            {selectedResource.type} Resource
+                          </span>
+                          <h2 className="font-display text-lg font-bold text-foreground">{selectedResource.title}</h2>
+                        </div>
+                        {selectedResource.downloadUrl && (
+                          <a
+                            href={selectedResource.downloadUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                          >
+                            <span className="icon text-sm">open_in_new</span>
+                            External Link
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Embedded Content Player / Viewer */}
+                      {selectedResource.downloadUrl && isGoogleDriveUrl(selectedResource.downloadUrl) ? (
+                        <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border bg-black">
+                          <iframe
+                            src={getEmbedUrl(selectedResource.downloadUrl)}
+                            className="w-full h-full border-0"
+                            allowFullScreen
+                            title={selectedResource.title}
+                          />
+                        </div>
+                      ) : selectedResource.downloadUrl && (selectedResource.type === "LECTURE" || selectedResource.type === "VIDEO") ? (
+                        <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border bg-black">
+                          <video
+                            src={selectedResource.downloadUrl}
+                            controls
+                            className="w-full h-full"
+                          />
+                        </div>
+                      ) : (
+                        <div className="p-8 border border-dashed border-border rounded-xl text-center space-y-3 bg-muted/10">
+                          <span className="icon text-3xl text-muted-foreground">description</span>
+                          <p className="text-xs text-muted-foreground">
+                            {selectedResource.downloadUrl
+                              ? "Document preview ready. Click below to view or download."
+                              : "Resource link is available."}
+                          </p>
+                          {selectedResource.downloadUrl && (
+                            <a
+                              href={selectedResource.downloadUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5"
+                            >
+                              <span>Open Document</span>
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

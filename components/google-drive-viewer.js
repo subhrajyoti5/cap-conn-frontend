@@ -93,13 +93,9 @@ export function GoogleDriveViewerModal({ isOpen, onClose, url, title = "Document
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-500/20 text-indigo-400 shrink-0">
               {type === "PRESENTATION" ? (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                </svg>
+                <span className="icon text-xl" aria-hidden="true">co_present</span>
               ) : (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                <span className="icon text-xl" aria-hidden="true">description</span>
               )}
             </div>
             <div className="min-w-0">
@@ -120,9 +116,7 @@ export function GoogleDriveViewerModal({ isOpen, onClose, url, title = "Document
               title="Open in Google Drive"
             >
               <span>Open in Drive</span>
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
+              <span className="icon text-sm" aria-hidden="true">open_in_new</span>
             </a>
 
             <button
@@ -132,13 +126,9 @@ export function GoogleDriveViewerModal({ isOpen, onClose, url, title = "Document
               aria-label="Toggle Fullscreen"
             >
               {isFullscreen ? (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 9L4 4m0 0l5 0m-5 0l0 5m11 11l5 5m0 0l-5 0m5 0l0-5M9 15l-5 5m0 0l5 0m-5 0l0-5m11-11l5-5m0 0l-5 0m5 0l0 5" />
-                </svg>
+                <span className="icon text-base" aria-hidden="true">fullscreen_exit</span>
               ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
-                </svg>
+                <span className="icon text-base" aria-hidden="true">fullscreen</span>
               )}
             </button>
 
@@ -148,9 +138,7 @@ export function GoogleDriveViewerModal({ isOpen, onClose, url, title = "Document
               title="Close viewer"
               aria-label="Close"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <span className="icon text-xl" aria-hidden="true">close</span>
             </button>
           </div>
         </div>
