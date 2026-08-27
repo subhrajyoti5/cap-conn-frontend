@@ -24,6 +24,56 @@ export default function CourseDetailPage() {
   const { id } = useParams();
   const { getToken, userId, user } = useAuth();
 
+  function formatResourceUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== "string") return "";
+    if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://") || rawUrl.startsWith("blob:") || rawUrl.startsWith("data:")) {
+      return rawUrl;
+    }
+    if (rawUrl.startsWith("/uploads/") || rawUrl.startsWith("uploads/")) {
+      const apiHost = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+      const cleanHost = apiHost.endsWith("/") ? apiHost.slice(0, -1) : apiHost;
+      const cleanPath = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
+      return `${cleanHost}${cleanPath}`;
+    }
+    // Return empty for raw storage keys so we don't construct invalid URLs
+    return "";
+  }
+
+  async function handleSelectResource(resource) {
+    if (!resource) return;
+
+    let initialUrl = "";
+    if (resource.downloadUrl && resource.downloadUrl !== "#") {
+      initialUrl = formatResourceUrl(resource.downloadUrl);
+    } else if (resource.storageKey?.startsWith("http")) {
+      initialUrl = resource.storageKey;
+    } else if (resource.url?.startsWith("http")) {
+      initialUrl = resource.url;
+    }
+
+    setSelectedResource({
+      ...resource,
+      downloadUrl: initialUrl,
+      url: initialUrl,
+    });
+
+    if (!initialUrl && resource.id) {
+      try {
+        const token = await getToken();
+        if (token) {
+          const res = await getResource(token, resource.id);
+          const rawUrl = res.data?.downloadUrl || res.downloadUrl || res.data?.url || res.url;
+          if (rawUrl && rawUrl !== "#") {
+            const cleanUrl = formatResourceUrl(rawUrl);
+            setSelectedResource((prev) => ({ ...prev, downloadUrl: cleanUrl, url: cleanUrl }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch download url:", err);
+      }
+    }
+  }
+
   function getResourceCategory(res) {
     if (!res) return "other";
     const type = (res.type || "").toUpperCase();
@@ -109,7 +159,7 @@ export default function CourseDetailPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedResource, setSelectedResource] = useState(null);
   const [selectedAssessment, setSelectedAssessment] = useState(null);
-
+  const [lightboxMedia, setLightboxMedia] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [announcementInput, setAnnouncementInput] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
@@ -338,37 +388,65 @@ export default function CourseDetailPage() {
         method: "PATCH",
         body: JSON.stringify({ title: editCourseTitle, description: editCourseDesc }),
       });
-      setEditStatus({ type: "success", message: "Course details updated successfully!" });
+      const newPolicy = {
+        overview: editOverviewInput,
+        gradingPolicy: editGradingInput,
+        disciplinaryConduct: editConductInput,
+        malpracticeRules: editMalpracticeInput,
+      };
+      setCoursePolicyData(newPolicy);
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(`course_policy_${id}`, JSON.stringify(newPolicy));
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      setEditStatus({ type: "success", message: "Course details and policies updated successfully!" });
       setTimeout(() => {
         setShowEditCourseModal(false);
         setEditStatus({ type: "", message: "" });
         load();
-      }, 1500);
+      }, 1200);
     } catch (e) {
       console.error(e);
-      setEditStatus({ type: "error", message: "Failed to update course details." });
+      setEditStatus({ type: "error", message: e.message || "Failed to update course details." });
     } finally {
       setUpdatingCourse(false);
     }
   }
 
-  async function handleOpenResource(resource) {
+  async function handleSelectResource(resource) {
     if (!resource) return;
-    setSelectedResource(resource);
-    setActiveTab("classwork");
+    const formattedUrl = formatResourceUrl(resource.downloadUrl || resource.url || resource.storageKey);
+    const updated = {
+      ...resource,
+      downloadUrl: formattedUrl,
+      url: formattedUrl,
+    };
+    setSelectedResource(updated);
+
     if (!resource.downloadUrl && resource.id && !resource.storageKey?.startsWith("http")) {
       try {
         const token = await getToken();
-        if (!token) return;
-        const res = await getResource(token, resource.id);
-        const url = res.data?.downloadUrl || res.downloadUrl;
-        if (url) {
-          setSelectedResource((prev) => ({ ...prev, downloadUrl: url }));
+        if (token) {
+          const res = await getResource(token, resource.id);
+          const rawUrl = res.data?.downloadUrl || res.downloadUrl || res.data?.url || res.url;
+          if (rawUrl) {
+            const cleanUrl = formatResourceUrl(rawUrl);
+            setSelectedResource((prev) => ({ ...prev, downloadUrl: cleanUrl, url: cleanUrl }));
+          }
         }
       } catch (err) {
         console.error("Failed to fetch download url:", err);
       }
     }
+  }
+
+  async function handleOpenResource(resource) {
+    if (!resource) return;
+    handleSelectResource(resource);
+    setActiveTab("resources");
   }
 
   if (loading) {
@@ -451,35 +529,27 @@ export default function CourseDetailPage() {
   return (
     <div className="space-y-6 max-w-5xl animate-in stagger-1">
 
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-600 to-indigo-800 text-white p-8 shadow-lg relative">
+      <div className="relative overflow-hidden rounded-2xl bg-slate-900 text-white p-6 sm:p-8 shadow-xl border border-slate-800">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`badge ${course.status === "PUBLISHED" ? "bg-white/20 text-white" : "bg-black/20 text-white"} border-transparent uppercase text-[10px]`}>
+            <div className="flex items-center gap-2 mb-2.5">
+              <span className={`badge ${course.status === "PUBLISHED" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-slate-800 text-slate-300 border-slate-700"} text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-md`}>
                 {course.status?.toLowerCase()}
               </span>
               {course.subject && (
-                <span className="badge bg-white/20 text-white border-transparent text-[10px]">{course.subject.name}</span>
+                <span className="badge bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-md">
+                  {course.subject.name}
+                </span>
               )}
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold leading-tight">{course.title}</h1>
-            <p className="text-xs opacity-75 mt-3">Trainer: {course.trainer?.name || "Unassigned"}</p>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white leading-tight">{course.title}</h1>
+            <p className="text-xs text-slate-300 mt-2.5 font-medium flex items-center gap-1.5">
+              <span className="text-slate-400">Trainer:</span>
+              <span className="text-white font-semibold">{course.trainer?.name || "Unassigned"}</span>
+            </p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {(isOwner || isAdmin) && (
-              <button
-                onClick={() => {
-                  setEditCourseTitle(course.title);
-                  setEditCourseDesc(course.description);
-                  setShowEditCourseModal(true);
-                }}
-                className="btn-secondary bg-white/10 hover:bg-white/20 text-white border-white/20 shadow-md text-xs py-1.5 px-3 flex items-center gap-1.5 font-medium"
-              >
-                <Settings className="w-3.5 h-3.5" />
-                <span>Edit Details</span>
-              </button>
-            )}
             {hasAccess && (
               <>
                 <button
@@ -888,7 +958,7 @@ export default function CourseDetailPage() {
                         {course.resources?.filter((r) => getResourceCategory(r) === "lectures").map((res) => (
                           <button
                             key={res.id}
-                            onClick={() => setSelectedResource(res)}
+                            onClick={() => handleSelectResource(res)}
                             className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
                               selectedResource?.id === res.id
                                 ? "bg-primary/10 text-primary font-semibold border border-primary/20"
@@ -919,7 +989,7 @@ export default function CourseDetailPage() {
                         {course.resources?.filter((r) => getResourceCategory(r) === "files").map((res) => (
                           <button
                             key={res.id}
-                            onClick={() => setSelectedResource(res)}
+                            onClick={() => handleSelectResource(res)}
                             className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
                               selectedResource?.id === res.id
                                 ? "bg-primary/10 text-primary font-semibold border border-primary/20"
@@ -950,7 +1020,7 @@ export default function CourseDetailPage() {
                         {course.resources?.filter((r) => getResourceCategory(r) === "images").map((res) => (
                           <button
                             key={res.id}
-                            onClick={() => setSelectedResource(res)}
+                            onClick={() => handleSelectResource(res)}
                             className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
                               selectedResource?.id === res.id
                                 ? "bg-primary/10 text-primary font-semibold border border-primary/20"
@@ -981,7 +1051,7 @@ export default function CourseDetailPage() {
                         {course.resources?.filter((r) => getResourceCategory(r) === "other").map((res) => (
                           <button
                             key={res.id}
-                            onClick={() => setSelectedResource(res)}
+                            onClick={() => handleSelectResource(res)}
                             className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
                               selectedResource?.id === res.id
                                 ? "bg-primary/10 text-primary font-semibold border border-primary/20"
@@ -1024,48 +1094,118 @@ export default function CourseDetailPage() {
                       </div>
 
                       {/* Embedded Preview */}
-                      {selectedResource.downloadUrl && isGoogleDriveUrl(selectedResource.downloadUrl) ? (
-                        <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border bg-black">
-                          <iframe
-                            src={getEmbedUrl(selectedResource.downloadUrl)}
-                            className="w-full h-full border-0"
-                            allowFullScreen
-                            title={selectedResource.title}
-                          />
-                        </div>
-                      ) : selectedResource.downloadUrl && (selectedResource.type === "LECTURE" || selectedResource.type === "VIDEO" || getResourceCategory(selectedResource) === "lectures") ? (
-                        <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border bg-black">
-                          <video src={selectedResource.downloadUrl} controls className="w-full h-full" />
-                        </div>
-                      ) : selectedResource.downloadUrl && (getResourceCategory(selectedResource) === "images" || selectedResource.downloadUrl.match(/\.(png|jpg|jpeg|gif|webp|svg)/i)) ? (
-                        <div className="w-full flex flex-col items-center justify-center p-4 rounded-xl border border-border bg-muted/10">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={selectedResource.downloadUrl}
-                            alt={selectedResource.title}
-                            className="max-h-[500px] w-auto max-w-full object-contain rounded-lg shadow-sm border border-border/50"
-                          />
-                        </div>
-                      ) : (
-                        <div className="p-8 border border-dashed border-border rounded-xl text-center space-y-3 bg-muted/10">
-                          <Folder className="w-8 h-8 mx-auto text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground">
-                            {selectedResource.downloadUrl
-                              ? "Document preview ready. Click below to view or download."
-                              : "Resource link is available."}
-                          </p>
-                          {selectedResource.downloadUrl && (
-                            <a
-                              href={selectedResource.downloadUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5"
-                            >
-                              <span>Open Resource</span>
-                            </a>
-                          )}
-                        </div>
-                      )}
+                      {(() => {
+                        const targetUrl = formatResourceUrl(selectedResource.downloadUrl || selectedResource.url) || (selectedResource.storageKey?.startsWith("http") ? selectedResource.storageKey : "");
+                        if (!targetUrl) {
+                          return (
+                            <div className="p-8 border border-dashed border-border rounded-xl text-center space-y-3 bg-muted/10">
+                              <Folder className="w-8 h-8 mx-auto text-muted-foreground" />
+                              <p className="text-xs text-muted-foreground">
+                                {selectedResource.storageKey ? "Cloudflare R2 storage credentials are required for local file downloads. External links (Drive, YouTube, Web images) preview directly!" : "Resource file link is processing or available on request."}
+                              </p>
+                            </div>
+                          );
+                        }
+
+                        if (isGoogleDriveUrl(targetUrl)) {
+                          return (
+                            <div className="space-y-3">
+                              <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border bg-black shadow-sm">
+                                <iframe
+                                  src={getEmbedUrl(targetUrl)}
+                                  className="w-full h-full border-0"
+                                  allowFullScreen
+                                  title={selectedResource.title}
+                                />
+                              </div>
+                              <div className="flex justify-end">
+                                <button
+                                  onClick={() => setLightboxMedia({ url: targetUrl, title: selectedResource.title, type: "doc" })}
+                                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 font-medium"
+                                >
+                                  <Search className="w-3.5 h-3.5" />
+                                  <span>Expand Fullscreen Viewer</span>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (selectedResource.type === "LECTURE" || selectedResource.type === "VIDEO" || getResourceCategory(selectedResource) === "lectures") {
+                          return (
+                            <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border bg-black shadow-sm flex flex-col">
+                              <video src={targetUrl} controls className="w-full h-full object-contain" />
+                              <div className="p-2.5 bg-card border-t border-border flex justify-between items-center text-xs">
+                                <span className="font-semibold text-foreground">Lecture Video Player</span>
+                                <button
+                                  onClick={() => setLightboxMedia({ url: targetUrl, title: selectedResource.title, type: "video" })}
+                                  className="btn-secondary text-[11px] py-1 px-3 flex items-center gap-1.5 font-medium"
+                                >
+                                  <Search className="w-3 h-3" />
+                                  <span>Expand Fullscreen</span>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (getResourceCategory(selectedResource) === "images" || targetUrl.match(/\.(png|jpg|jpeg|gif|webp|svg)/i)) {
+                          return (
+                            <div className="w-full flex flex-col items-center justify-center p-5 rounded-2xl border border-border bg-muted/10 space-y-4">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={targetUrl}
+                                alt={selectedResource.title}
+                                className="max-h-[480px] w-auto max-w-full object-contain rounded-xl shadow-md border border-border/60"
+                              />
+                              <div className="flex items-center gap-3 pt-2">
+                                <button
+                                  onClick={() => setLightboxMedia({ url: targetUrl, title: selectedResource.title, type: "image" })}
+                                  className="btn-primary text-xs py-2 px-4 shadow-sm flex items-center gap-2 font-semibold"
+                                >
+                                  <Search className="w-3.5 h-3.5" />
+                                  <span>Expand Fullscreen Image</span>
+                                </button>
+                                <a
+                                  href={targetUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  download
+                                  className="btn-secondary text-xs py-2 px-4 flex items-center gap-2 font-semibold"
+                                >
+                                  <Globe className="w-3.5 h-3.5" />
+                                  <span>Open File</span>
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="p-8 border border-dashed border-border rounded-xl text-center space-y-4 bg-muted/10">
+                            <FileText className="w-8 h-8 mx-auto text-primary opacity-80" />
+                            <p className="text-xs text-muted-foreground">Document file ready. Click below to expand preview or open file.</p>
+                            <div className="flex items-center justify-center gap-3">
+                              <button
+                                onClick={() => setLightboxMedia({ url: targetUrl, title: selectedResource.title, type: "doc" })}
+                                className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5 font-semibold"
+                              >
+                                <Search className="w-3.5 h-3.5" />
+                                <span>Expand Fullscreen Preview</span>
+                              </button>
+                              <a
+                                href={targetUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-secondary text-xs py-2 px-4 inline-flex items-center gap-1.5"
+                              >
+                                <Globe className="w-3.5 h-3.5" />
+                                <span>Open File</span>
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       <ResourceComments
                         resourceId={selectedResource.id}
@@ -1314,16 +1454,18 @@ export default function CourseDetailPage() {
                     {(isOwner || isAdmin) && (
                       <button
                         onClick={() => {
+                          setEditCourseTitle(course.title || "");
+                          setEditCourseDesc(course.description || "");
                           setEditOverviewInput(coursePolicyData.overview || course.description || "");
                           setEditGradingInput(coursePolicyData.gradingPolicy || "");
                           setEditConductInput(coursePolicyData.disciplinaryConduct || "");
                           setEditMalpracticeInput(coursePolicyData.malpracticeRules || "");
-                          setShowEditPolicyModal(true);
+                          setShowEditCourseModal(true);
                         }}
                         className="btn-primary text-xs py-2 px-4 font-semibold shadow-sm flex items-center gap-1.5 shrink-0"
                       >
                         <Settings className="w-3.5 h-3.5" />
-                        <span>Edit Policy & Overview</span>
+                        <span>Edit Details</span>
                       </button>
                     )}
                   </div>
@@ -2307,152 +2449,130 @@ export default function CourseDetailPage() {
       )}
 
 
+      {/* Unified Edit Details Modal */}
       {showEditCourseModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-card border border-border w-full max-w-lg rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
-              <h3 className="font-display font-bold text-sm text-foreground">Update Course Details</h3>
+              <div>
+                <h3 className="font-display font-bold text-sm text-foreground">Edit Course Details & Policy Guidelines</h3>
+                <p className="text-[11px] text-muted-foreground">Update course title, description, overview, and academic policies</p>
+              </div>
               <button
-                onClick={() => {
-                  setShowEditCourseModal(false);
-                }}
+                onClick={() => setShowEditCourseModal(false)}
                 className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-bold text-xs"
               >
                 ✕
               </button>
             </div>
-            <form onSubmit={handleUpdateCourse} className="p-6 space-y-4">
+
+            <form onSubmit={handleUpdateCourse} className="p-6 overflow-y-auto space-y-5 flex-1 text-left">
               {editStatus.message && (
-                <div className={`p-3 rounded-xl text-xs border ${editStatus.type === "success"
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                  : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
-                  }`}>
+                <div
+                  className={`p-3 rounded-xl text-xs border ${
+                    editStatus.type === "success"
+                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                      : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
+                  }`}
+                >
                   {editStatus.message}
                 </div>
               )}
-              <div className="flex flex-col gap-1 text-left w-full">
-                <label htmlFor="courseTitle" className="label text-xs font-semibold">Course Title</label>
-                <input
-                  id="courseTitle"
-                  type="text"
-                  required
-                  value={editCourseTitle}
-                  onChange={(e) => setEditCourseTitle(e.target.value)}
-                  className="input text-xs w-full py-2"
-                />
+
+              {/* Section 1: Basic Info */}
+              <div className="space-y-3 border-b border-border pb-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-primary font-mono">1. Basic Information</h4>
+                <div className="flex flex-col gap-1 w-full">
+                  <label htmlFor="courseTitle" className="label text-xs font-semibold">Course Title</label>
+                  <input
+                    id="courseTitle"
+                    type="text"
+                    required
+                    value={editCourseTitle}
+                    onChange={(e) => setEditCourseTitle(e.target.value)}
+                    className="input text-xs w-full py-2"
+                    placeholder="e.g. Advanced Cloud Computing & Architecture"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 w-full">
+                  <label htmlFor="courseDesc" className="label text-xs font-semibold">Short Tagline / Description</label>
+                  <textarea
+                    id="courseDesc"
+                    required
+                    rows={2}
+                    value={editCourseDesc}
+                    onChange={(e) => setEditCourseDesc(e.target.value)}
+                    className="input text-xs w-full py-2 resize-none"
+                    placeholder="Brief description displayed in course catalogs..."
+                  />
+                </div>
               </div>
-              <div className="flex flex-col gap-1 text-left w-full">
-                <label htmlFor="courseDesc" className="label text-xs font-semibold">Description</label>
-                <textarea
-                  id="courseDesc"
-                  required
-                  rows={4}
-                  value={editCourseDesc}
-                  onChange={(e) => setEditCourseDesc(e.target.value)}
-                  className="input text-xs w-full py-2 resize-none"
-                />
+
+              {/* Section 2: Policy & Guidelines */}
+              <div className="space-y-4 pt-1">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-primary font-mono">2. Overview & Academic Policies</h4>
+                <div className="flex flex-col gap-1">
+                  <label className="label text-xs font-semibold">Course Introduction & Overview</label>
+                  <textarea
+                    rows={3}
+                    value={editOverviewInput}
+                    onChange={(e) => setEditOverviewInput(e.target.value)}
+                    className="input text-xs w-full py-2 resize-y font-sans"
+                    placeholder="Detailed introduction and scope of this course..."
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="label text-xs font-semibold">Grading Policy & Evaluation Breakdown</label>
+                  <textarea
+                    rows={3}
+                    value={editGradingInput}
+                    onChange={(e) => setEditGradingInput(e.target.value)}
+                    className="input text-xs w-full py-2 resize-y font-sans"
+                    placeholder="e.g. Quizzes 30%, Assignments 40%, Final Exam 30%..."
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="label text-xs font-semibold">Disciplinary & Non-Academic Conduct Rules</label>
+                  <textarea
+                    rows={3}
+                    value={editConductInput}
+                    onChange={(e) => setEditConductInput(e.target.value)}
+                    className="input text-xs w-full py-2 resize-y font-sans"
+                    placeholder="Code of conduct guidelines, attendance rules..."
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="label text-xs font-semibold">Academic Integrity & Malpractice Rules</label>
+                  <textarea
+                    rows={3}
+                    value={editMalpracticeInput}
+                    onChange={(e) => setEditMalpracticeInput(e.target.value)}
+                    className="input text-xs w-full py-2 resize-y font-sans"
+                    placeholder="Honor code, plagiarism penalties, cheating rules..."
+                  />
+                </div>
               </div>
-              <div className="flex justify-end gap-3 pt-2">
+
+              <div className="pt-3 border-t border-border flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setShowEditCourseModal(false)}
-                  className="btn-secondary text-xs py-1.5 px-4"
+                  className="btn-secondary text-xs py-2 px-4"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={updatingCourse}
-                  className="btn-primary text-xs py-1.5 px-4"
+                  className="btn-primary text-xs py-2 px-4 font-semibold"
                 >
-                  {updatingCourse ? "Saving changes..." : "Save changes"}
+                  {updatingCourse ? "Saving changes..." : "Save Course Details"}
                 </button>
               </div>
             </form>
-              {showEditPolicyModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-card border border-border w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
-              <h3 className="font-display font-bold text-sm text-foreground">Edit Course Policy & Academic Rules</h3>
-              <button
-                onClick={() => setShowEditPolicyModal(false)}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-bold text-xs"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto space-y-4 flex-1">
-              <div className="flex flex-col gap-1 text-left">
-                <label className="label text-xs font-semibold">Course Introduction & Overview</label>
-                <textarea
-                  rows={3}
-                  value={editOverviewInput}
-                  onChange={(e) => setEditOverviewInput(e.target.value)}
-                  className="input text-xs w-full py-2 resize-y font-sans"
-                  placeholder="Overview of the course..."
-                />
-              </div>
-
-              <div className="flex flex-col gap-1 text-left">
-                <label className="label text-xs font-semibold">Grading Policy & Evaluation Criteria</label>
-                <textarea
-                  rows={3}
-                  value={editGradingInput}
-                  onChange={(e) => setEditGradingInput(e.target.value)}
-                  className="input text-xs w-full py-2 resize-y font-sans"
-                  placeholder="Grading percentage breakdown..."
-                />
-              </div>
-
-              <div className="flex flex-col gap-1 text-left">
-                <label className="label text-xs font-semibold">Disciplinary & Non-Academic Conduct Rules</label>
-                <textarea
-                  rows={3}
-                  value={editConductInput}
-                  onChange={(e) => setEditConductInput(e.target.value)}
-                  className="input text-xs w-full py-2 resize-y font-sans"
-                  placeholder="Code of conduct guidelines..."
-                />
-              </div>
-
-              <div className="flex flex-col gap-1 text-left">
-                <label className="label text-xs font-semibold">Academic Integrity & Malpractice Rules</label>
-                <textarea
-                  rows={3}
-                  value={editMalpracticeInput}
-                  onChange={(e) => setEditMalpracticeInput(e.target.value)}
-                  className="input text-xs w-full py-2 resize-y font-sans"
-                  placeholder="Honor code and plagiarism penalties..."
-                />
-              </div>
-            </div>
-            <div className="p-4 border-t border-border flex justify-end gap-3 bg-muted/20">
-              <button
-                type="button"
-                onClick={() => setShowEditPolicyModal(false)}
-                className="btn-secondary text-xs py-2 px-4"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setCoursePolicyData({
-                    overview: editOverviewInput,
-                    gradingPolicy: editGradingInput,
-                    disciplinaryConduct: editConductInput,
-                    malpracticeRules: editMalpracticeInput,
-                  });
-                  setShowEditPolicyModal(false);
-                }}
-                className="btn-primary text-xs py-2 px-4 font-semibold"
-              >
-                Save Policies
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
           </div>
         </div>
       )}
@@ -2467,6 +2587,51 @@ export default function CourseDetailPage() {
           user={user}
           isEnrolled={isEnrolled}
         />
+      )}
+      {/* Fullscreen Lightbox / Media Viewer Modal */}
+      {lightboxMedia && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-2 sm:p-6 bg-black/90 backdrop-blur-md animate-in fade-in-0 duration-200">
+          <div className="relative w-full max-w-6xl max-h-[92vh] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="badge bg-primary/10 text-primary border-primary/20 text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded-full">
+                  Fullscreen Viewer
+                </span>
+                <h3 className="font-display font-bold text-sm text-foreground truncate">{lightboxMedia.title}</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <a
+                  href={lightboxMedia.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 font-semibold"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>Open File</span>
+                </a>
+                <button
+                  onClick={() => setLightboxMedia(null)}
+                  className="w-8 h-8 rounded-full bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors font-bold text-sm"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 p-4 overflow-auto flex items-center justify-center bg-black/40 min-h-[400px]">
+              {lightboxMedia.type === "video" || lightboxMedia.url.match(/\.(mp4|webm|mov|avi|mkv)/i) ? (
+                <video src={lightboxMedia.url} controls autoPlay className="max-h-[80vh] w-auto max-w-full rounded-xl shadow-lg" />
+              ) : lightboxMedia.type === "image" || lightboxMedia.url.match(/\.(png|jpg|jpeg|gif|webp|svg)/i) ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={lightboxMedia.url} alt={lightboxMedia.title} className="max-h-[80vh] w-auto max-w-full object-contain rounded-xl shadow-lg border border-border/40" />
+              ) : isGoogleDriveUrl(lightboxMedia.url) ? (
+                <iframe src={getEmbedUrl(lightboxMedia.url)} className="w-full h-[78vh] border-0 rounded-xl" allowFullScreen title={lightboxMedia.title} />
+              ) : (
+                <iframe src={lightboxMedia.url} className="w-full h-[78vh] border-0 rounded-xl bg-white" title={lightboxMedia.title} />
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
