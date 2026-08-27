@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { updateAssessment, uploadAssessmentFilePipeline } from "@/features/assessments/api/assessments.api";
+import { FileText, Edit3, AlertTriangle, X } from "lucide-react";
 
 export function EditAssignmentModal({
   isOpen,
@@ -107,9 +108,9 @@ export function EditAssignmentModal({
       <div className="w-full max-w-lg rounded-2xl bg-card border border-border shadow-2xl p-6">
         <div className="flex items-center justify-between pb-4 border-b border-border">
           <div>
-            <h2 className="font-display text-base font-semibold text-foreground flex items-center gap-2">
-              <span>✏️</span>
-              Edit Assignment Details & Deadline
+            <h2 className="font-display text-sm font-bold text-foreground flex items-center gap-2">
+              <Edit3 className="w-4 h-4 text-primary" />
+              Edit Assessment Details
             </h2>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               Update submission deadline, instructions, or attached files
@@ -121,13 +122,13 @@ export function EditAssignmentModal({
             disabled={saving}
             className="text-muted-foreground hover:text-foreground text-sm p-1 rounded-lg hover:bg-muted/50 transition-colors"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {error && (
           <div className="mt-3 p-3 rounded-xl bg-destructive/10 text-destructive text-xs border border-destructive/20 flex items-center gap-2">
-            <span>⚠️</span>
+            <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -192,7 +193,7 @@ export function EditAssignmentModal({
               {docFileName ? (
                 <div className="flex items-center justify-between bg-muted/20 p-2.5 rounded-lg border border-border">
                   <span className="truncate text-foreground font-medium flex items-center gap-2">
-                    <span>📄</span>
+                    <FileText className="w-4 h-4 text-primary shrink-0" />
                     {docFileName}
                   </span>
                   <label className="text-[11px] text-primary hover:underline cursor-pointer ml-2 shrink-0">

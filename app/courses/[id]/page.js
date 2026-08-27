@@ -18,11 +18,29 @@ import { AssessmentComments } from "@/components/assessment-comments";
 import { apiFetch } from "@/lib/api";
 import { getEmbedUrl, isGoogleDriveUrl } from "@/components/google-drive-viewer";
 import Link from "next/link";
-import { Star, Settings, Info, Folder, FileText, MessageSquare, Plus, Globe } from "lucide-react";
+import { Star, Settings, Info, Folder, FileText, MessageSquare, Plus, Globe, BookOpen, ShieldAlert, AlertTriangle, Users, CheckCircle2, Video, Image, FileCode, Search, Send, Clock } from "lucide-react";
 
 export default function CourseDetailPage() {
   const { id } = useParams();
   const { getToken, userId, user } = useAuth();
+
+  function getResourceCategory(res) {
+    if (!res) return "other";
+    const type = (res.type || "").toUpperCase();
+    const title = (res.title || "").toLowerCase();
+    const url = (res.downloadUrl || res.url || "").toLowerCase();
+
+    if (type === "LECTURE" || type === "VIDEO" || url.includes("youtube") || url.includes("vimeo") || url.match(/\.(mp4|webm|mov|avi|mkv)$/)) {
+      return "lectures";
+    }
+    if (type === "IMAGE" || title.includes("screenshot") || title.includes("image") || title.includes("diagram") || title.includes("photo") || title.includes("screen shot") || url.match(/\.(png|jpg|jpeg|gif|webp|svg)/)) {
+      return "images";
+    }
+    if (type === "DOCUMENT" || type === "PRESENTATION" || type === "STUDY_MATERIAL" || url.match(/\.(pdf|doc|docx|ppt|pptx|xls|xlsx|txt|csv)/)) {
+      return "files";
+    }
+    return "other";
+  }
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -64,8 +82,18 @@ export default function CourseDetailPage() {
   const [editCourseDesc, setEditCourseDesc] = useState("");
   const [updatingCourse, setUpdatingCourse] = useState(false);
 
-
-  const [showCourseDetailsModal, setShowCourseDetailsModal] = useState(false);
+  const [coursePolicyData, setCoursePolicyData] = useState({
+    overview: "",
+    gradingPolicy: "Evaluation is structured into submitted Assessments (40%), Quizzes & Tests (30%), Class Attendance & Active Participation (15%), and Final Capstone Project (15%).",
+    disciplinaryConduct: "All trainees must maintain professional decorum, respect fellow participants during class discussions, and adhere to institutional communication channels.",
+    malpracticeRules: "Plagiarism, submitting another student's work, or unauthorized code duplication will result in immediate assignment zeroing and academic warning.",
+  });
+  const [showEditPolicyModal, setShowEditPolicyModal] = useState(false);
+  const [editOverviewInput, setEditOverviewInput] = useState("");
+  const [editGradingInput, setEditGradingInput] = useState("");
+  const [editConductInput, setEditConductInput] = useState("");
+  const [editMalpracticeInput, setEditMalpracticeInput] = useState("");
+  const [savingPolicy, setSavingPolicy] = useState(false);
 
 
   const [showRejectRequestModal, setShowRejectRequestModal] = useState(false);
@@ -78,8 +106,29 @@ export default function CourseDetailPage() {
   const [unenrolling, setUnenrolling] = useState(false);
   const [unenrollStatus, setUnenrollStatus] = useState({ type: "", message: "" });
 
-  const [activeTab, setActiveTab] = useState("classwork");
+  const [activeTab, setActiveTab] = useState("all");
   const [selectedResource, setSelectedResource] = useState(null);
+  const [selectedAssessment, setSelectedAssessment] = useState(null);
+
+  const [announcements, setAnnouncements] = useState([]);
+  const [announcementInput, setAnnouncementInput] = useState("");
+  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
+
+  function handlePostAnnouncement() {
+    if (!announcementInput.trim()) return;
+    setPostingAnnouncement(true);
+    const newAnc = {
+      id: `anc-${Date.now()}`,
+      content: announcementInput.trim(),
+      authorName: user?.name || user?.email || "Trainer",
+      authorRole: user?.role || "TRAINER",
+      createdAt: new Date().toISOString(),
+    };
+    setAnnouncements((prev) => [newAnc, ...prev]);
+    setAnnouncementInput("");
+    setPostingAnnouncement(false);
+  }
+
   const [actionMessage, setActionMessage] = useState("");
   const [inviteStatus, setInviteStatus] = useState({ type: "", message: "" });
   const [editStatus, setEditStatus] = useState({ type: "", message: "" });
@@ -440,13 +489,6 @@ export default function CourseDetailPage() {
                   <Star className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
                   <span>Reviews & Ratings</span>
                 </button>
-                <button
-                  onClick={() => setShowCourseDetailsModal(true)}
-                  className="btn-secondary bg-white/10 hover:bg-white/20 text-white border-white/20 shadow-md text-xs py-1.5 px-3 flex items-center gap-1.5 font-medium"
-                >
-                  <Info className="w-3.5 h-3.5" />
-                  <span>View Course Info</span>
-                </button>
               </>
             )}
             {isOwner && course.status === "DRAFT" && (
@@ -611,18 +653,33 @@ export default function CourseDetailPage() {
 
           <div className="border-b border-border flex items-center gap-6">
             <button
-              onClick={() => setActiveTab("stream")}
-              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === "stream" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              onClick={() => setActiveTab("all")}
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === "all" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
             >
-              Stream
+              All
             </button>
             <button
-              onClick={() => setActiveTab("classwork")}
-              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === "classwork" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              onClick={() => setActiveTab("resources")}
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === "resources" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
             >
-              Classwork
+              Resources
+            </button>
+            <button
+              onClick={() => setActiveTab("assessments")}
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === "assessments" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              Assessments
+            </button>
+            <button
+              onClick={() => setActiveTab("overview")}
+              className={`py-3 text-sm font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === "overview" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Overview & Policy</span>
             </button>
             <button
               onClick={() => setActiveTab("people")}
@@ -636,74 +693,150 @@ export default function CourseDetailPage() {
             </button>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6">            {/* 1. ALL TAB (Upcoming Due Sidebar + Announcements & Stream Feed) */}
+            {activeTab === "all" && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-in fade-in duration-200">
+                {/* Left Sidebar: Upcoming Due Box */}
+                <div className="lg:col-span-4 bg-card border border-border p-4 space-y-4 rounded-2xl sticky top-20 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-border pb-3">
+                    <h2 className="font-display text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-amber-500" />
+                      <span>Upcoming Due</span>
+                    </h2>
+                    <span className="text-[10px] font-mono text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-full font-bold">
+                      {course?.assessments?.length || 0} Assessments
+                    </span>
+                  </div>
 
-            {activeTab === "stream" && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-
-                <div className="md:col-span-1 space-y-4">
-                  <div className="card border border-border p-4 bg-card">
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Upcoming Due</h3>
-                    {course.assessments?.filter(a => a.status === "PUBLISHED").length > 0 ? (
-                      <div className="space-y-2">
-                        {course.assessments.filter(a => a.status === "PUBLISHED").slice(0, 2).map(a => (
-                          <p key={a.id} className="text-xs text-foreground leading-normal">
-                            <span className="font-semibold block">{a.title}</span>
-                            <span className="text-[10px] text-muted-foreground">
-                              {a.deadline ? `Due: ${new Date(a.deadline).toLocaleDateString()}` : "No deadline"}
+                  <div className="space-y-2.5 max-h-[70vh] overflow-y-auto pr-1">
+                    {course?.assessments && course.assessments.length > 0 ? (
+                      course.assessments.map((asmt) => (
+                        <div
+                          key={asmt.id}
+                          onClick={() => {
+                            setSelectedAssessment(asmt);
+                            setActiveTab("assessments");
+                          }}
+                          className="p-3 rounded-xl border border-border/70 hover:border-primary/40 bg-muted/10 hover:bg-muted/30 transition-all cursor-pointer group space-y-1.5"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className={`badge ${asmt.type === "DOCUMENT" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" : "bg-blue-500/10 text-blue-600 border-blue-500/20"} text-[8px] font-mono font-bold uppercase px-1.5 py-0.5 rounded`}>
+                              {asmt.type === "DOCUMENT" ? "Written Task" : "MCQ Assessment"}
                             </span>
+                            {asmt.deadline && (
+                              <span className="text-[9px] font-mono text-amber-600 dark:text-amber-400 font-bold">
+                                Due: {new Date(asmt.deadline).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                          <p className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">
+                            {asmt.title}
                           </p>
-                        ))}
-                      </div>
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                            <span>Points: {asmt.totalMarks || 100}</span>
+                            <span className="text-primary font-medium group-hover:underline">View →</span>
+                          </div>
+                        </div>
+                      ))
                     ) : (
-                      <p className="text-xs text-muted-foreground">Woohoo, no work due soon!</p>
+                      <div className="py-8 text-center text-muted-foreground space-y-1">
+                        <CheckCircle2 className="w-6 h-6 mx-auto text-emerald-500 opacity-60" />
+                        <p className="text-xs font-semibold">No pending work due</p>
+                        <p className="text-[10px]">All course assessments are up to date!</p>
+                      </div>
                     )}
                   </div>
                 </div>
 
+                {/* Right Main Column: Post Announcement + Feed */}
+                <div className="lg:col-span-8 space-y-6">
+                  {/* Announcement Posting Card (Trainers & Admins) */}
+                  {(isOwner || isAdmin) && (
+                    <div className="bg-card border border-border p-5 rounded-2xl space-y-3 shadow-xs">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-primary" />
+                        <span>Post Class Announcement</span>
+                      </h3>
+                      <textarea
+                        rows={2}
+                        value={announcementInput}
+                        onChange={(e) => setAnnouncementInput(e.target.value)}
+                        placeholder="Announce updates, deadlines, or general information to trainees..."
+                        className="input text-xs w-full py-2.5 px-3 font-sans resize-y border-border/80 focus:border-primary"
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          onClick={handlePostAnnouncement}
+                          disabled={postingAnnouncement || !announcementInput.trim()}
+                          className="btn-primary text-xs py-1.5 px-4 font-semibold flex items-center gap-1.5 shadow-xs"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>{postingAnnouncement ? "Posting..." : "Post Announcement"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-                <div className="md:col-span-3 space-y-4">
-
-                  <div className="card border border-border p-5 bg-card">
-                    <h3 className="font-semibold text-sm text-foreground mb-1">About this course</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{course.description || "No description provided."}</p>
-                  </div>
-
-
+                  {/* Unified Activity Feed */}
                   <div className="space-y-4">
-                    {streamFeed.length === 0 ? (
-                      <div className="text-center py-10 bg-muted/10 border border-dashed border-border rounded-xl">
-                        <p className="text-xs text-muted-foreground">Nothing has been posted to the stream yet.</p>
+                    {/* Announcement Cards */}
+                    {announcements.map((anc) => (
+                      <div key={anc.id} className="bg-card border border-primary/20 p-5 rounded-2xl flex gap-4 shadow-xs">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                          {anc.authorName ? anc.authorName[0].toUpperCase() : "A"}
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-xs text-foreground">{anc.authorName}</span>
+                            <span className="text-[10px] text-muted-foreground font-mono">{new Date(anc.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <span className="badge bg-primary/10 text-primary border-primary/20 text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-full inline-block mb-1">
+                            Class Announcement
+                          </span>
+                          <p className="text-xs text-foreground leading-relaxed whitespace-pre-line">{anc.content}</p>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Combined Resources & Assessments Stream */}
+                    {streamFeed.length === 0 && announcements.length === 0 ? (
+                      <div className="text-center py-12 bg-muted/10 border border-dashed border-border rounded-2xl">
+                        <p className="text-xs text-muted-foreground">No announcements, resources, or assessments posted yet.</p>
                       </div>
                     ) : (
                       streamFeed.map((post) => (
-                        <div key={post.id} className="card border border-border p-5 bg-card flex gap-4">
-                          <div className="w-10 h-10 rounded-full flex-shrink-0 bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                            {course.trainer?.name ? course.trainer.name[0].toUpperCase() : "I"}
+                        <div key={post.id} className="bg-card border border-border p-5 rounded-2xl flex gap-4 shadow-xs hover:border-border/80 transition-all">
+                          <div className="w-10 h-10 rounded-full bg-muted/30 text-foreground flex items-center justify-center font-bold text-sm shrink-0 border border-border/50">
+                            {course.trainer?.name ? course.trainer.name[0].toUpperCase() : "T"}
                           </div>
-                          <div className="flex-1 space-y-2">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="font-semibold text-foreground">{course.trainer?.name || "Instructor"}</span>
-                              <span className="text-[10px] text-muted-foreground">{post.date.toLocaleDateString()}</span>
+                          <div className="flex-1 space-y-1.5">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-xs text-foreground">{course.trainer?.name || "Trainer"}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">{post.date.toLocaleDateString()}</span>
                             </div>
-                            <p className="text-xs text-foreground leading-relaxed">{post.title}</p>
-
+                            <p className="text-xs font-semibold text-foreground">{post.title}</p>
 
                             {post.type === "resource" && (
                               <button
                                 type="button"
-                                onClick={() => handleOpenResource(post.data)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/80 bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted/50 transition-colors mt-2 cursor-pointer shadow-xs"
+                                onClick={() => {
+                                  setSelectedResource(post.data);
+                                  setActiveTab("resources");
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/20 text-[11px] font-semibold text-primary hover:bg-primary/10 transition-colors mt-1 cursor-pointer"
                               >
                                 <Folder className="w-3.5 h-3.5" />
-                                <span>Open Resource</span>
+                                <span>View Resource</span>
                               </button>
                             )}
 
                             {post.type === "assessment" && (
                               <button
-                                onClick={() => setActiveTab("classwork")}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/80 bg-muted/30 text-[10px] font-semibold text-primary hover:bg-muted/50 transition-colors mt-2 shadow-xs"
+                                onClick={() => {
+                                  setSelectedAssessment(post.data);
+                                  setActiveTab("assessments");
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-muted/20 text-[11px] font-semibold text-primary hover:bg-primary/10 transition-colors mt-1"
                               >
                                 <FileText className="w-3.5 h-3.5" />
                                 <span>View Assessment</span>
@@ -718,310 +851,161 @@ export default function CourseDetailPage() {
               </div>
             )}
 
-
-            {activeTab === "classwork" && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* Resource Directory Left Sidebar */}
-                <div className="lg:col-span-4 card border border-border bg-card p-4 space-y-4 rounded-xl sticky top-20">
+            {/* 2. RESOURCES TAB (Master-Detail Split View) */}
+            {activeTab === "resources" && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-in fade-in duration-200">
+                {/* Left Category Accordion Sidebar */}
+                <div className="lg:col-span-4 bg-card border border-border p-4 space-y-4 rounded-2xl sticky top-20 shadow-xs">
                   <div className="flex items-center justify-between border-b border-border pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="icon text-base text-primary" aria-hidden="true">folder</span>
-                      <h2 className="font-display text-xs font-bold uppercase tracking-wider text-foreground">
-                        Resource Directory
-                      </h2>
-                    </div>
+                    <h2 className="font-display text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                      <Folder className="w-4 h-4 text-primary" />
+                      <span>Course Resources</span>
+                    </h2>
                     {(isOwner || isAdmin) && (
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setUploadModalOpen(true)}
-                          className="btn-secondary btn-sm text-[10px] py-1 px-2 flex items-center gap-1"
-                          title="Upload course resource"
-                        >
-                          <span className="icon text-xs">add</span>
-                          File
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingAssessment(null);
-                            setAiAssignmentOpen(true);
-                          }}
-                          className="btn-primary btn-sm text-[10px] py-1 px-2 flex items-center gap-1 font-semibold"
-                          title="Create Assignment or Quiz"
-                        >
-                          <span className="icon text-xs">add</span>
-                          Assignment
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => setUploadModalOpen(true)}
+                        className="btn-primary text-[10px] py-1 px-2.5 font-semibold flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Add</span>
+                      </button>
                     )}
                   </div>
 
-                  <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-                    {/* Course Intro Accordion */}
-                    <div className="border border-border/60 rounded-lg overflow-hidden">
-                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-semibold text-foreground cursor-pointer hover:bg-muted/30">
-                        <span>Course Introduction</span>
-                        <span className="text-xs text-muted-foreground">−</span>
+                  <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+                    {/* Category: Lectures (Videos) */}
+                    <div className="border border-border/70 rounded-xl overflow-hidden bg-card">
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-bold text-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Video className="w-3.5 h-3.5 text-indigo-500" />
+                          <span>Lectures (Videos)</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {course.resources?.filter((r) => getResourceCategory(r) === "lectures").length || 0}
+                        </span>
                       </div>
-                      <div className="p-1 space-y-0.5 bg-card">
-                        <button
-                          onClick={() => setSelectedResource(null)}
-                          className={`w-full text-left px-3 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
-                            selectedResource === null
-                              ? "bg-primary/10 text-primary font-semibold"
-                              : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="icon text-sm text-primary">article</span>
-                            <span className="truncate">About the Course</span>
-                          </div>
-                          <span className="text-[9px] text-muted-foreground">Lesson</span>
-                        </button>
-                        <button
-                          onClick={() => setSelectedResource({ isPolicy: true, title: "Grading Policy" })}
-                          className={`w-full text-left px-3 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
-                            selectedResource?.title === "Grading Policy"
-                              ? "bg-primary/10 text-primary font-semibold"
-                              : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="icon text-sm text-primary">gavel</span>
-                            <span className="truncate">Grading Policy</span>
-                          </div>
-                          <span className="text-[9px] text-muted-foreground">Lesson</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Additional Accordion Categories */}
-                    {["Disciplinary & Non Academic Conduct", "Malpractice Rules", "Live session recordings"].map((title) => (
-                      <div key={title} className="border border-border/60 rounded-lg overflow-hidden">
-                        <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-semibold text-foreground cursor-pointer hover:bg-muted/30">
-                          <span className="truncate">{title}</span>
-                          <span className="text-xs text-muted-foreground">+</span>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Course Resources Accordion */}
-                    <div className="border border-border/60 rounded-lg overflow-hidden">
-                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-semibold text-foreground cursor-pointer hover:bg-muted/30">
-                        <span>Course Resources</span>
-                        <span className="text-xs text-muted-foreground">−</span>
-                      </div>
-                      <div className="p-1 space-y-0.5 bg-card">
-                        {course.resources && course.resources.length > 0 ? (
-                          course.resources.map((res) => {
-                            const isSelected = selectedResource?.id === res.id;
-                            let iconName = "description";
-                            if (res.type === "LECTURE" || res.type === "VIDEO") iconName = "play_circle";
-                            if (res.type === "PRESENTATION") iconName = "co_present";
-
-                            return (
-                              <button
-                                key={res.id}
-                                onClick={() => handleOpenResource(res)}
-                                className={`w-full text-left px-3 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
-                                  isSelected
-                                    ? "bg-primary/10 text-primary font-semibold"
-                                    : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-                                }`}
-                              >
-                                <div className="flex items-center gap-2 min-w-0 pr-1">
-                                  <span className="icon text-sm shrink-0">{iconName}</span>
-                                  <span className="truncate">{res.title}</span>
-                                </div>
-                                <span className="text-[9px] uppercase font-mono text-muted-foreground shrink-0">
-                                  {res.type}
-                                </span>
-                              </button>
-                            );
-                          })
-                        ) : (
-                          <p className="text-[11px] text-muted-foreground italic px-3 py-1">No uploaded files yet.</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Navigation Accordion: Assignments & AI Quiz */}
-                    <div className="border border-border/60 rounded-lg overflow-hidden">
-                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-semibold text-foreground">
-                        <span>Navigation</span>
-                        {(isOwner || isAdmin) && (
+                      <div className="p-1 space-y-0.5">
+                        {course.resources?.filter((r) => getResourceCategory(r) === "lectures").map((res) => (
                           <button
-                            type="button"
-                            onClick={() => {
-                              setEditingAssessment(null);
-                              setAiAssignmentOpen(true);
-                            }}
-                            className="btn-primary btn-sm text-[10px] py-0.5 px-2 flex items-center gap-1 font-semibold"
+                            key={res.id}
+                            onClick={() => setSelectedResource(res)}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                              selectedResource?.id === res.id
+                                ? "bg-primary/10 text-primary font-semibold border border-primary/20"
+                                : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                            }`}
                           >
-                            <span className="icon text-xs">add</span>
-                            Create Task
+                            <span className="truncate pr-2">{res.title}</span>
+                            <span className="text-[9px] font-mono text-muted-foreground shrink-0">
+                              {new Date(res.createdAt).toLocaleDateString()}
+                            </span>
                           </button>
-                        )}
+                        ))}
                       </div>
-                      <div className="p-1 space-y-0.5 bg-card">
-                        {course.assessments && course.assessments.length > 0 ? (
-                          course.assessments.map((a) => {
-                            const isDoc = a.type === "DOCUMENT";
-                            const isSelected = selectedResource?.id === a.id || selectedResource?.id === `asmt-${a.id}`;
-                            return (
-                              <button
-                                key={a.id}
-                                onClick={() => setSelectedResource({ ...a, isAssessment: true })}
-                                className={`w-full text-left px-3 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
-                                  isSelected
-                                    ? "bg-primary/10 text-primary font-semibold"
-                                    : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-                                }`}
-                              >
-                                <div className="flex items-center gap-2 min-w-0 pr-1">
-                                  <span className="icon text-sm shrink-0">
-                                    {isDoc ? "assignment" : "quiz"}
-                                  </span>
-                                  <span className="truncate">{a.title}</span>
-                                </div>
-                                <span className="text-[9px] uppercase font-mono text-muted-foreground shrink-0">
-                                  {isDoc ? "Task" : "Quiz"}
-                                </span>
-                              </button>
-                            );
-                          })
-                        ) : (
-                          <p className="text-[11px] text-muted-foreground italic px-3 py-1">No assignments posted.</p>
-                        )}
+                    </div>
+
+                    {/* Category: Files (Documents & Slides) */}
+                    <div className="border border-border/70 rounded-xl overflow-hidden bg-card">
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-bold text-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-blue-500" />
+                          <span>Files (Documents)</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {course.resources?.filter((r) => getResourceCategory(r) === "files").length || 0}
+                        </span>
+                      </div>
+                      <div className="p-1 space-y-0.5">
+                        {course.resources?.filter((r) => getResourceCategory(r) === "files").map((res) => (
+                          <button
+                            key={res.id}
+                            onClick={() => setSelectedResource(res)}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                              selectedResource?.id === res.id
+                                ? "bg-primary/10 text-primary font-semibold border border-primary/20"
+                                : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                            }`}
+                          >
+                            <span className="truncate pr-2">{res.title}</span>
+                            <span className="text-[9px] font-mono text-muted-foreground shrink-0">
+                              {new Date(res.createdAt).toLocaleDateString()}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Category: Images */}
+                    <div className="border border-border/70 rounded-xl overflow-hidden bg-card">
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-bold text-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Image className="w-3.5 h-3.5 text-emerald-500" />
+                          <span>Images & Diagrams</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {course.resources?.filter((r) => getResourceCategory(r) === "images").length || 0}
+                        </span>
+                      </div>
+                      <div className="p-1 space-y-0.5">
+                        {course.resources?.filter((r) => getResourceCategory(r) === "images").map((res) => (
+                          <button
+                            key={res.id}
+                            onClick={() => setSelectedResource(res)}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                              selectedResource?.id === res.id
+                                ? "bg-primary/10 text-primary font-semibold border border-primary/20"
+                                : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                            }`}
+                          >
+                            <span className="truncate pr-2">{res.title}</span>
+                            <span className="text-[9px] font-mono text-muted-foreground shrink-0">
+                              {new Date(res.createdAt).toLocaleDateString()}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Category: Other (Notes & Custom Files) */}
+                    <div className="border border-border/70 rounded-xl overflow-hidden bg-card">
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-bold text-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <FileCode className="w-3.5 h-3.5 text-amber-500" />
+                          <span>Other (Notes & Custom)</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {course.resources?.filter((r) => getResourceCategory(r) === "other").length || 0}
+                        </span>
+                      </div>
+                      <div className="p-1 space-y-0.5">
+                        {course.resources?.filter((r) => getResourceCategory(r) === "other").map((res) => (
+                          <button
+                            key={res.id}
+                            onClick={() => setSelectedResource(res)}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                              selectedResource?.id === res.id
+                                ? "bg-primary/10 text-primary font-semibold border border-primary/20"
+                                : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                            }`}
+                          >
+                            <span className="truncate pr-2">{res.title}</span>
+                            <span className="text-[9px] font-mono text-muted-foreground shrink-0">
+                              {new Date(res.createdAt).toLocaleDateString()}
+                            </span>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Main Workspace Content Area */}
-                <div className="lg:col-span-8 card border border-border bg-card p-6 min-h-[500px] space-y-6 rounded-xl">
-                  {selectedResource === null ? (
-                    // Default Overview View
-                    <div className="space-y-6">
-                      <div className="border-b border-border pb-3 flex items-center gap-2">
-                        <span className="icon text-primary text-xl">menu_book</span>
-                        <div>
-                          <h2 className="font-display text-base font-bold text-foreground">About the Course</h2>
-                          <p className="text-[11px] text-muted-foreground">Course Introduction</p>
-                        </div>
-                      </div>
-
-                      <div className="text-center py-4 border-b border-border/40">
-                        <h3 className="font-display text-lg font-bold text-foreground">{course.title}</h3>
-                        <p className="text-xs text-muted-foreground mt-1">Subject: {course.subject?.name || "General"}</p>
-                      </div>
-
-                      <div className="space-y-3 text-xs text-foreground/90 leading-relaxed">
-                        <p><strong>Course ID:</strong> {course.id?.slice(0, 8).toUpperCase()}</p>
-                        <p><strong>Course Status:</strong> {course.status}</p>
-                        <p><strong>Trainer:</strong> {course.trainer?.name || "Unassigned Trainer"}</p>
-                        <p><strong>Trainer Contact:</strong> {course.trainer?.email || "N/A"}</p>
-                        
-                        <div className="pt-3 border-t border-border/40 space-y-2">
-                          <p className="font-semibold text-foreground">Course Overview:</p>
-                          <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
-                            {course.description || "The primary study material for this course is the set of videos, documents, and assignments posted on the course workspace."}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : selectedResource?.isAssessment ? (
-                    // Selected Assessment View
+                {/* Right Content Viewer */}
+                <div className="lg:col-span-8 bg-card border border-border p-6 min-h-[500px] space-y-6 rounded-2xl shadow-xs">
+                  {selectedResource ? (
                     <div className="space-y-6">
                       <div className="flex items-center justify-between border-b border-border pb-4">
                         <div>
-                          <span className="text-[10px] font-mono uppercase text-primary font-bold">
-                            {selectedResource.type === "DOCUMENT" ? "Assignment Task" : "Quiz Assessment"}
-                          </span>
-                          <h2 className="font-display text-lg font-bold text-foreground">{selectedResource.title}</h2>
-                        </div>
-                        {(isOwner || isAdmin) && (
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (selectedResource.type === "DOCUMENT") {
-                                  setEditAssignmentData(selectedResource);
-                                } else {
-                                  setEditingAssessment(selectedResource);
-                                  setAiAssignmentOpen(true);
-                                }
-                              }}
-                              className="btn-secondary text-xs py-1.5 px-3"
-                            >
-                              Edit Details
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const cleanId = String(selectedResource.id).replace("asmt-", "");
-                                if (selectedResource.type === "DOCUMENT") {
-                                  setGradeAssessmentId(cleanId);
-                                } else {
-                                  setViewSubmissionsAssessment({ ...selectedResource, id: cleanId });
-                                }
-                              }}
-                              className="btn-primary text-xs py-1.5 px-3"
-                            >
-                              Submissions
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {selectedResource.description && (
-                        <p className="text-xs text-muted-foreground leading-relaxed">{selectedResource.description}</p>
-                      )}
-
-                      <div className="p-4 rounded-xl border border-border bg-muted/10 space-y-3">
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Max Score: <strong className="text-foreground">{selectedResource.totalMarks}</strong></span>
-                          {selectedResource.deadline && (
-                            <span>Due: <strong className="text-foreground">{new Date(selectedResource.deadline).toLocaleDateString()}</strong></span>
-                          )}
-                        </div>
-
-                        {user?.role === "TRAINEE" && isEnrolled && selectedResource.status === "PUBLISHED" && (
-                          <div className="pt-2">
-                            {selectedResource.type === "DOCUMENT" ? (
-                              <button
-                                type="button"
-                                onClick={() => setSubmitDocAssignmentId(String(selectedResource.id).replace("asmt-", ""))}
-                                className="btn-primary w-full text-xs py-2"
-                              >
-                                Submit Assignment Document
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => setTakeAssessment({ id: String(selectedResource.id).replace("asmt-", ""), mode: "take" })}
-                                className="btn-primary w-full text-xs py-2"
-                              >
-                                Start Quiz Assessment
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      <AssessmentComments
-                        assessmentId={String(selectedResource.id).replace("asmt-", "")}
-                        token={authToken}
-                        user={user}
-                        isEnrolled={isEnrolled}
-                      />
-                    </div>
-                  ) : (
-                    // Selected Resource View (Video / Document)
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between border-b border-border pb-4">
-                        <div>
-                          <span className="text-[10px] font-mono uppercase text-primary font-bold">
+                          <span className="badge bg-primary/10 text-primary border-primary/20 text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full inline-block mb-1">
                             {selectedResource.type} Resource
                           </span>
                           <h2 className="font-display text-lg font-bold text-foreground">{selectedResource.title}</h2>
@@ -1033,13 +1017,13 @@ export default function CourseDetailPage() {
                             rel="noopener noreferrer"
                             className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
                           >
-                            <span className="icon text-sm">open_in_new</span>
-                            External Link
+                            <Globe className="w-3.5 h-3.5" />
+                            <span>External Link</span>
                           </a>
                         )}
                       </div>
 
-                      {/* Embedded Content Player / Viewer */}
+                      {/* Embedded Preview */}
                       {selectedResource.downloadUrl && isGoogleDriveUrl(selectedResource.downloadUrl) ? (
                         <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border bg-black">
                           <iframe
@@ -1049,17 +1033,22 @@ export default function CourseDetailPage() {
                             title={selectedResource.title}
                           />
                         </div>
-                      ) : selectedResource.downloadUrl && (selectedResource.type === "LECTURE" || selectedResource.type === "VIDEO") ? (
+                      ) : selectedResource.downloadUrl && (selectedResource.type === "LECTURE" || selectedResource.type === "VIDEO" || getResourceCategory(selectedResource) === "lectures") ? (
                         <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border bg-black">
-                          <video
+                          <video src={selectedResource.downloadUrl} controls className="w-full h-full" />
+                        </div>
+                      ) : selectedResource.downloadUrl && (getResourceCategory(selectedResource) === "images" || selectedResource.downloadUrl.match(/\.(png|jpg|jpeg|gif|webp|svg)/i)) ? (
+                        <div className="w-full flex flex-col items-center justify-center p-4 rounded-xl border border-border bg-muted/10">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
                             src={selectedResource.downloadUrl}
-                            controls
-                            className="w-full h-full"
+                            alt={selectedResource.title}
+                            className="max-h-[500px] w-auto max-w-full object-contain rounded-lg shadow-sm border border-border/50"
                           />
                         </div>
                       ) : (
                         <div className="p-8 border border-dashed border-border rounded-xl text-center space-y-3 bg-muted/10">
-                          <span className="icon text-3xl text-muted-foreground">description</span>
+                          <Folder className="w-8 h-8 mx-auto text-muted-foreground" />
                           <p className="text-xs text-muted-foreground">
                             {selectedResource.downloadUrl
                               ? "Document preview ready. Click below to view or download."
@@ -1072,7 +1061,7 @@ export default function CourseDetailPage() {
                               rel="noopener noreferrer"
                               className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5"
                             >
-                              <span>Open Document</span>
+                              <span>Open Resource</span>
                             </a>
                           )}
                         </div>
@@ -1085,7 +1074,398 @@ export default function CourseDetailPage() {
                         isEnrolled={isEnrolled}
                       />
                     </div>
+                  ) : (
+                    <div className="py-20 text-center space-y-3 text-muted-foreground">
+                      <Folder className="w-10 h-10 mx-auto opacity-40 text-primary" />
+                      <h3 className="font-display font-bold text-sm text-foreground">Select a Resource</h3>
+                      <p className="text-xs">Choose any lecture video, file document, or note from the left list to view details.</p>
+                    </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* 3. ASSESSMENTS TAB (Master-Detail Split View) */}
+            {activeTab === "assessments" && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-in fade-in duration-200">
+                {/* Left Assessments List Sidebar */}
+                <div className="lg:col-span-4 bg-card border border-border p-4 space-y-4 rounded-2xl sticky top-20 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-border pb-3">
+                    <h2 className="font-display text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      <span>Assessments</span>
+                    </h2>
+                    {(isOwner || isAdmin) && (
+                      <button
+                        onClick={() => {
+                          setEditingAssessment(null);
+                          setAiAssignmentOpen(true);
+                        }}
+                        className="btn-primary text-[10px] py-1 px-2.5 font-semibold flex items-center gap-1"
+                        title="Create Task or Quiz Assessment"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Create</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+                    {/* Document Tasks Category */}
+                    <div className="border border-border/70 rounded-xl overflow-hidden bg-card">
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-bold text-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-amber-500" />
+                          <span>Written Tasks</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {course.assessments?.filter((a) => a.type === "DOCUMENT").length || 0}
+                        </span>
+                      </div>
+                      <div className="p-1 space-y-1">
+                        {course.assessments?.filter((a) => a.type === "DOCUMENT").map((a) => (
+                          <button
+                            key={a.id}
+                            onClick={() => setSelectedAssessment(a)}
+                            className={`w-full text-left p-2.5 rounded-lg text-xs transition-all ${
+                              selectedAssessment?.id === a.id
+                                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-semibold"
+                                : "text-foreground hover:bg-muted/30"
+                            }`}
+                          >
+                            <div className="flex justify-between items-center mb-0.5">
+                              <span className="badge bg-amber-500/10 text-amber-600 border-amber-500/20 text-[8px] uppercase font-mono font-bold px-1.5 py-0.5 rounded">
+                                Task
+                              </span>
+                              {a.deadline && (
+                                <span className="text-[9px] font-mono text-muted-foreground">
+                                  Due: {new Date(a.deadline).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                            <p className="font-bold text-xs truncate">{a.title}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Quizzes & MCQs Category */}
+                    <div className="border border-border/70 rounded-xl overflow-hidden bg-card">
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20 text-xs font-bold text-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+                          <span>Quizzes & MCQs</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {course.assessments?.filter((a) => a.type === "MCQ").length || 0}
+                        </span>
+                      </div>
+                      <div className="p-1 space-y-1">
+                        {course.assessments?.filter((a) => a.type === "MCQ").map((a) => (
+                          <button
+                            key={a.id}
+                            onClick={() => setSelectedAssessment(a)}
+                            className={`w-full text-left p-2.5 rounded-lg text-xs transition-all ${
+                              selectedAssessment?.id === a.id
+                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 font-semibold"
+                                : "text-foreground hover:bg-muted/30"
+                            }`}
+                          >
+                            <div className="flex justify-between items-center mb-0.5">
+                              <span className="badge bg-blue-500/10 text-blue-600 border-blue-500/20 text-[8px] uppercase font-mono font-bold px-1.5 py-0.5 rounded">
+                                Quiz
+                              </span>
+                              {a.deadline && (
+                                <span className="text-[9px] font-mono text-muted-foreground">
+                                  Due: {new Date(a.deadline).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                            <p className="font-bold text-xs truncate">{a.title}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Assessment Workspace Panel */}
+                <div className="lg:col-span-8 bg-card border border-border p-6 min-h-[500px] space-y-6 rounded-2xl shadow-xs">
+                  {selectedAssessment ? (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between border-b border-border pb-4">
+                        <div>
+                          <span className={`badge ${selectedAssessment.type === "DOCUMENT" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" : "bg-blue-500/10 text-blue-600 border-blue-500/20"} text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded-full inline-block mb-1`}>
+                            {selectedAssessment.type === "DOCUMENT" ? "Written Task" : "Quiz MCQ"}
+                          </span>
+                          <h2 className="font-display text-lg font-bold text-foreground">{selectedAssessment.title}</h2>
+                        </div>
+
+                        {(isOwner || isAdmin) && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (selectedAssessment.type === "DOCUMENT") {
+                                  setEditAssignmentData(selectedAssessment);
+                                } else {
+                                  setEditingAssessment(selectedAssessment);
+                                  setAiAssignmentOpen(true);
+                                }
+                              }}
+                              className="btn-secondary text-xs py-1.5 px-3"
+                            >
+                              Edit Details
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const cleanId = String(selectedAssessment.id).replace("asmt-", "");
+                                if (selectedAssessment.type === "DOCUMENT") {
+                                  setGradeAssessmentId(cleanId);
+                                } else {
+                                  setViewSubmissionsAssessment({ ...selectedAssessment, id: cleanId });
+                                }
+                              }}
+                              className="btn-primary text-xs py-1.5 px-3"
+                            >
+                              Submissions
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {selectedAssessment.description && (
+                        <p className="text-xs text-muted-foreground leading-relaxed bg-muted/10 border border-border/40 p-4 rounded-xl">
+                          {selectedAssessment.description}
+                        </p>
+                      )}
+
+                      <div className="p-4 rounded-xl border border-border bg-muted/20 flex items-center justify-between text-xs">
+                        <span>Total Points: <strong className="text-foreground">{selectedAssessment.totalMarks}</strong></span>
+                        {selectedAssessment.deadline && (
+                          <span>Deadline: <strong className="text-foreground">{new Date(selectedAssessment.deadline).toLocaleDateString()}</strong></span>
+                        )}
+                      </div>
+
+                      {user?.role === "TRAINEE" && isEnrolled && selectedAssessment.status === "PUBLISHED" && (
+                        <div className="pt-2">
+                          {selectedAssessment.type === "DOCUMENT" ? (
+                            <button
+                              type="button"
+                              onClick={() => setSubmitDocAssignmentId(String(selectedAssessment.id).replace("asmt-", ""))}
+                              className="btn-primary w-full text-xs py-2.5 font-semibold"
+                            >
+                              Submit Task Document
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setTakeAssessment({ id: String(selectedAssessment.id).replace("asmt-", ""), mode: "take" })}
+                              className="btn-primary w-full text-xs py-2.5 font-semibold"
+                            >
+                              Start Quiz Assessment
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      <AssessmentComments
+                        assessmentId={String(selectedAssessment.id).replace("asmt-", "")}
+                        token={authToken}
+                        user={user}
+                        isEnrolled={isEnrolled}
+                      />
+                    </div>
+                  ) : (
+                    <div className="py-20 text-center space-y-3 text-muted-foreground">
+                      <FileText className="w-10 h-10 mx-auto opacity-40 text-primary" />
+                      <h3 className="font-display font-bold text-sm text-foreground">Select an Assessment</h3>
+                      <p className="text-xs">Choose any task or quiz from the left list to view instructions and submit work.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 4. OVERVIEW & POLICY TAB */}
+            {activeTab === "overview" && (
+              <div className="space-y-6 animate-in fade-in duration-200">
+                {/* Executive Overview Header Card */}
+                <div className="bg-card border border-border p-6 rounded-2xl space-y-4 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="badge bg-primary/10 text-primary border-primary/20 text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full inline-block">
+                          {course.subject?.name || "Subject Domain"}
+                        </span>
+                        <span className="badge bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full inline-block">
+                          {course.status}
+                        </span>
+                      </div>
+                      <h2 className="font-display font-bold text-xl text-foreground">
+                        {course.title}
+                      </h2>
+                      <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+                        Course ID: <strong className="text-foreground">{course.id}</strong>
+                      </p>
+                    </div>
+
+                    {(isOwner || isAdmin) && (
+                      <button
+                        onClick={() => {
+                          setEditOverviewInput(coursePolicyData.overview || course.description || "");
+                          setEditGradingInput(coursePolicyData.gradingPolicy || "");
+                          setEditConductInput(coursePolicyData.disciplinaryConduct || "");
+                          setEditMalpracticeInput(coursePolicyData.malpracticeRules || "");
+                          setShowEditPolicyModal(true);
+                        }}
+                        className="btn-primary text-xs py-2 px-4 font-semibold shadow-sm flex items-center gap-1.5 shrink-0"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                        <span>Edit Policy & Overview</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
+                    <div className="bg-muted/20 p-3 rounded-xl border border-border/60">
+                      <p className="text-[10px] uppercase font-mono text-muted-foreground font-bold">Status</p>
+                      <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{course.status}</p>
+                    </div>
+                    <div className="bg-muted/20 p-3 rounded-xl border border-border/60">
+                      <p className="text-[10px] uppercase font-mono text-muted-foreground font-bold">Enrolled Trainees</p>
+                      <p className="text-xs font-bold text-foreground mt-0.5">
+                        {(course.enrollments?.filter((e) => e.status === "ACTIVE") || []).length} Active
+                      </p>
+                    </div>
+                    <div className="bg-muted/20 p-3 rounded-xl border border-border/60">
+                      <p className="text-[10px] uppercase font-mono text-muted-foreground font-bold">Learning Resources</p>
+                      <p className="text-xs font-bold text-foreground mt-0.5">{course.resources?.length || 0} Materials</p>
+                    </div>
+                    <div className="bg-muted/20 p-3 rounded-xl border border-border/60">
+                      <p className="text-[10px] uppercase font-mono text-muted-foreground font-bold">Assessments</p>
+                      <p className="text-xs font-bold text-foreground mt-0.5">{course.assessments?.length || 0} Tasks & Quizzes</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Assigned Trainers & Contact Info Card */}
+                <div className="bg-card border border-border p-6 rounded-2xl space-y-4 shadow-sm">
+                  <div className="border-b border-border/70 pb-3 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                        <Users className="w-4 h-4 text-primary" />
+                        <span>Assigned Course Trainers</span>
+                      </h3>
+                      <p className="text-xs text-muted-foreground">Instructors assigned to manage and grade this course</p>
+                    </div>
+                    {(isOwner || isAdmin) && (
+                      <button
+                        onClick={() => setShowInviteTrainerModal(true)}
+                        className="btn-secondary text-xs py-1.5 px-3 font-medium flex items-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Invite Co-Trainer</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Primary Lead Trainer */}
+                    <div className="p-4 rounded-xl border border-border bg-muted/10 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-slate-900 text-amber-400 font-bold text-sm flex items-center justify-center shrink-0 border border-slate-700">
+                          {course.trainer?.name ? course.trainer.name[0].toUpperCase() : "T"}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="badge bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[8px] uppercase font-mono font-bold px-1.5 py-0.5 rounded mb-0.5 inline-block">
+                            Lead Trainer
+                          </span>
+                          <p className="font-bold text-xs text-foreground truncate">{course.trainer?.name || "Unassigned Trainer"}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono truncate">{course.trainer?.email}</p>
+                        </div>
+                      </div>
+                      <Link
+                        href={`/messages?userId=${course.trainerId}`}
+                        className="btn-secondary text-[11px] py-1.5 px-2.5 shrink-0 font-medium"
+                      >
+                        Message
+                      </Link>
+                    </div>
+
+                    {/* Secondary Co-Trainers */}
+                    {course.trainers?.map((ct) => {
+                      const t = ct.trainer;
+                      if (!t) return null;
+                      return (
+                        <div key={ct.id} className="p-4 rounded-xl border border-border bg-muted/10 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-full bg-slate-800 text-slate-100 font-bold text-sm flex items-center justify-center shrink-0 border border-slate-700">
+                              {t.name ? t.name[0].toUpperCase() : "T"}
+                            </div>
+                            <div className="min-w-0">
+                              <span className="badge bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-[8px] uppercase font-mono font-bold px-1.5 py-0.5 rounded mb-0.5 inline-block">
+                                Co-Trainer
+                              </span>
+                              <p className="font-bold text-xs text-foreground truncate">{t.name || "Co-Trainer"}</p>
+                              <p className="text-[10px] text-muted-foreground font-mono truncate">{t.email}</p>
+                            </div>
+                          </div>
+                          <Link
+                            href={`/messages?userId=${t.id}`}
+                            className="btn-secondary text-[11px] py-1.5 px-2.5 shrink-0 font-medium"
+                          >
+                            Message
+                          </Link>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Course Introduction & Overview */}
+                <div className="bg-card border border-border p-6 rounded-2xl space-y-3 shadow-sm">
+                  <h3 className="font-display font-bold text-sm text-foreground flex items-center gap-2 border-b border-border/70 pb-2.5">
+                    <BookOpen className="w-4 h-4 text-primary" />
+                    <span>Course Introduction & Overview</span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {coursePolicyData.overview || course.description || "Welcome to the course. Comprehensive training modules, documentation, and assessments are provided for structured skill acquisition."}
+                  </p>
+                </div>
+
+                {/* Grading Policy */}
+                <div className="bg-card border border-border p-6 rounded-2xl space-y-3 shadow-sm">
+                  <h3 className="font-display font-bold text-sm text-foreground flex items-center gap-2 border-b border-border/70 pb-2.5">
+                    <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Grading Policy & Evaluation Criteria</span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {coursePolicyData.gradingPolicy}
+                  </p>
+                </div>
+
+                {/* Disciplinary & Conduct Rules */}
+                <div className="bg-card border border-border p-6 rounded-2xl space-y-3 shadow-sm">
+                  <h3 className="font-display font-bold text-sm text-foreground flex items-center gap-2 border-b border-border/70 pb-2.5">
+                    <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <span>Disciplinary & Non-Academic Conduct Rules</span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {coursePolicyData.disciplinaryConduct}
+                  </p>
+                </div>
+
+                {/* Malpractice & Honor Code */}
+                <div className="bg-card border border-border p-6 rounded-2xl space-y-3 shadow-sm">
+                  <h3 className="font-display font-bold text-sm text-foreground flex items-center gap-2 border-b border-border/70 pb-2.5">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                    <span>Academic Integrity & Malpractice Rules</span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {coursePolicyData.malpracticeRules}
+                  </p>
                 </div>
               </div>
             )}
@@ -1356,7 +1736,8 @@ export default function CourseDetailPage() {
               <div className="space-y-6">
                 {trainerProfile.id === "temp-profile-id" && (
                   <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs p-3.5 rounded-xl flex items-center gap-2">
-                    <span>⚠️ This trainer has not set up their profile yet. Displaying basic registration info.</span>
+                    <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span>This trainer has not set up their profile yet. Displaying basic registration info.</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between border-b border-border pb-4">
@@ -1367,8 +1748,9 @@ export default function CourseDetailPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-lg font-bold font-display text-foreground">{trainerProfile.fullName || "Trainer"}</h3>
-                        <span className="badge bg-amber-500/10 text-amber-600 border-amber-500/20 text-xs font-bold font-mono">
-                          ⭐ {trainerProfile.overallRating || 0} ({trainerProfile.totalReviewsCount || 0} reviews)
+                        <span className="badge bg-amber-500/10 text-amber-600 border-amber-500/20 text-xs font-bold font-mono flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          <span>{trainerProfile.overallRating || 0} ({trainerProfile.totalReviewsCount || 0} reviews)</span>
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground">{trainerProfile.phone || "No phone contact"}</p>
@@ -1380,7 +1762,8 @@ export default function CourseDetailPage() {
                       href={`/messages?userId=${trainerProfile.userId}`}
                       className="btn-primary text-xs py-2 px-4 shadow-sm flex items-center gap-1.5 shrink-0"
                     >
-                      <span>💬 Direct Message</span>
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>Direct Message</span>
                     </Link>
                   )}
                 </div>
@@ -1532,7 +1915,8 @@ export default function CourseDetailPage() {
                 <div className="space-y-6">
                   {traineeProfile.id === "temp-profile-id" && (
                     <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs p-3.5 rounded-xl flex items-center gap-2">
-                      <span>⚠️ This trainee has not set up their profile yet. Displaying basic registration info.</span>
+                      <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                      <span>This trainee has not set up their profile yet. Displaying basic registration info.</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between gap-4 bg-muted/10 p-4 rounded-xl border border-border/50">
@@ -1555,7 +1939,8 @@ export default function CourseDetailPage() {
                         href={`/messages?userId=${traineeProfile.userId}`}
                         className="btn-primary text-xs py-1.5 px-3 shadow-sm flex items-center gap-1 shrink-0"
                       >
-                        <span>💬 Direct Message</span>
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>Direct Message</span>
                       </Link>
                     )}
                   </div>
@@ -1984,112 +2369,94 @@ export default function CourseDetailPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-
-
-      {showCourseDetailsModal && (
+              {showEditPolicyModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-card border border-border w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
-              <h3 className="font-display font-bold text-sm text-foreground">Course Details</h3>
+              <h3 className="font-display font-bold text-sm text-foreground">Edit Course Policy & Academic Rules</h3>
               <button
-                onClick={() => setShowCourseDetailsModal(false)}
+                onClick={() => setShowEditPolicyModal(false)}
                 className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-bold text-xs"
               >
                 ✕
               </button>
             </div>
-            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-left">
-              <div className="space-y-1">
-                <span className="text-[10px] uppercase font-bold text-primary font-mono tracking-wider">
-                  {course.subject?.name || "LMS Classroom"}
-                </span>
-                <h4 className="text-base font-bold text-foreground font-display">{course.title}</h4>
+            <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              <div className="flex flex-col gap-1 text-left">
+                <label className="label text-xs font-semibold">Course Introduction & Overview</label>
+                <textarea
+                  rows={3}
+                  value={editOverviewInput}
+                  onChange={(e) => setEditOverviewInput(e.target.value)}
+                  className="input text-xs w-full py-2 resize-y font-sans"
+                  placeholder="Overview of the course..."
+                />
               </div>
 
-              <div className="space-y-2">
-                <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</h5>
-                <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
-                  {course.description || "No description available."}
-                </p>
+              <div className="flex flex-col gap-1 text-left">
+                <label className="label text-xs font-semibold">Grading Policy & Evaluation Criteria</label>
+                <textarea
+                  rows={3}
+                  value={editGradingInput}
+                  onChange={(e) => setEditGradingInput(e.target.value)}
+                  className="input text-xs w-full py-2 resize-y font-sans"
+                  placeholder="Grading percentage breakdown..."
+                />
               </div>
 
-              <div className="grid grid-cols-3 gap-3 border-t border-b border-border py-4">
-                <div className="text-center">
-                  <span className="block text-lg font-bold text-foreground">
-                    {(course.resources || []).filter((r) => r.type === "LECTURE").length}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Lectures</span>
-                </div>
-                <div className="text-center border-l border-r border-border">
-                  <span className="block text-lg font-bold text-foreground">
-                    {(course.resources || []).filter((r) => ["DOCUMENT", "PRESENTATION", "STUDY_MATERIAL"].includes(r.type)).length}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Documents</span>
-                </div>
-                <div className="text-center">
-                  <span className="block text-lg font-bold text-foreground">
-                    {(course.assessments || []).filter((a) => a.status === "PUBLISHED").length}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Assignments</span>
-                </div>
+              <div className="flex flex-col gap-1 text-left">
+                <label className="label text-xs font-semibold">Disciplinary & Non-Academic Conduct Rules</label>
+                <textarea
+                  rows={3}
+                  value={editConductInput}
+                  onChange={(e) => setEditConductInput(e.target.value)}
+                  className="input text-xs w-full py-2 resize-y font-sans"
+                  placeholder="Code of conduct guidelines..."
+                />
               </div>
 
-              <div className="space-y-2">
-                <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Lead Trainer</h5>
-                <button
-                  onClick={() => {
-                    setShowCourseDetailsModal(false);
-                    handleViewTrainer(course.trainerId);
-                  }}
-                  className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group"
-                >
-                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs group-hover:scale-105 transition-transform shrink-0">
-                    {course.trainer?.name ? course.trainer.name[0].toUpperCase() : "T"}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">{course.trainer?.name || "Unassigned"}</p>
-                    <p className="text-[10px] text-muted-foreground">{course.trainer?.email}</p>
-                  </div>
-                </button>
+              <div className="flex flex-col gap-1 text-left">
+                <label className="label text-xs font-semibold">Academic Integrity & Malpractice Rules</label>
+                <textarea
+                  rows={3}
+                  value={editMalpracticeInput}
+                  onChange={(e) => setEditMalpracticeInput(e.target.value)}
+                  className="input text-xs w-full py-2 resize-y font-sans"
+                  placeholder="Honor code and plagiarism penalties..."
+                />
               </div>
-
-              {course.trainers?.length > 0 && (
-                <div className="space-y-2">
-                  <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Co-Trainers</h5>
-                  <div className="space-y-2">
-                    {course.trainers.map((ct) => {
-                      const t = ct.trainer;
-                      if (!t) return null;
-                      return (
-                        <button
-                          key={ct.id}
-                          onClick={() => {
-                            setShowCourseDetailsModal(false);
-                            handleViewTrainer(t.id);
-                          }}
-                          className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 hover:shadow-sm transition-all group"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition-transform shrink-0">
-                            {t.name ? t.name[0].toUpperCase() : "T"}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors">{t.name || "Co-Trainer"}</p>
-                            <p className="text-[10px] text-muted-foreground">{t.email}</p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+            </div>
+            <div className="p-4 border-t border-border flex justify-end gap-3 bg-muted/20">
+              <button
+                type="button"
+                onClick={() => setShowEditPolicyModal(false)}
+                className="btn-secondary text-xs py-2 px-4"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCoursePolicyData({
+                    overview: editOverviewInput,
+                    gradingPolicy: editGradingInput,
+                    disciplinaryConduct: editConductInput,
+                    malpracticeRules: editMalpracticeInput,
+                  });
+                  setShowEditPolicyModal(false);
+                }}
+                className="btn-primary text-xs py-2 px-4 font-semibold"
+              >
+                Save Policies
+              </button>
             </div>
           </div>
         </div>
       )}
+          </div>
+        </div>
+      )}
+
 
       {showFeedbackModal && (
         <CourseFeedbackModal

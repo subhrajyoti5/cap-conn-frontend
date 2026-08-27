@@ -8,6 +8,7 @@ import {
   publishAssessment,
   uploadAssessmentFilePipeline,
 } from "@/features/assessments/api/assessments.api";
+import { FileText, CheckCircle2, AlertTriangle } from "lucide-react";
 
 const emptyQuestion = (marks = 1, order = 0) => ({
   text: "",
@@ -383,13 +384,17 @@ export function CreateAiAssignmentModal({
         <div className="flex items-center justify-between pb-4 border-b border-border">
           <div>
             <h2 className="font-display text-base font-semibold text-foreground flex items-center gap-2">
-              <span>{assignmentType === "DOCUMENT" ? "📄" : "✨"}</span>
+              {assignmentType === "DOCUMENT" ? (
+                <FileText className="w-5 h-5 text-primary" />
+              ) : (
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+              )}
               Create Assessment
             </h2>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               {assignmentType === "DOCUMENT"
                 ? "Upload task document, set editable deadline & marks"
-                : `AI Quiz Generator · Step ${step} of 3`}
+                : `MCQ Assessment Studio · Step ${step} of 3`}
             </p>
           </div>
           <button
@@ -414,7 +419,6 @@ export function CreateAiAssignmentModal({
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <span>📄</span>
               Document Assignment (Doc / PDF upload)
             </button>
             <button
@@ -426,15 +430,14 @@ export function CreateAiAssignmentModal({
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <span>✨</span>
-              AI Quiz / MCQ Assessment
+              MCQ Assessment
             </button>
           </div>
         )}
 
         {error && (
           <div className="mt-3 p-3 rounded-xl bg-destructive/10 text-destructive text-xs border border-destructive/20 flex items-center gap-2">
-            <span>⚠️</span>
+            <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -504,7 +507,7 @@ export function CreateAiAssignmentModal({
                   {docFileName ? (
                     <div className="flex items-center justify-between bg-card p-3 rounded-lg border border-border">
                       <div className="flex items-center gap-2.5 truncate">
-                        <span className="text-lg">📄</span>
+                        <FileText className="w-4 h-4 text-primary shrink-0" />
                         <div className="text-left truncate">
                           <p className="font-medium text-foreground truncate">{docFileName}</p>
                           <p className="text-[10px] text-muted-foreground">Ready to attach</p>

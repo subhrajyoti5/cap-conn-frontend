@@ -554,7 +554,6 @@ export function AssignmentStudioModal({
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <span>📄</span>
                 Document Assignment (Doc / PDF upload)
               </button>
               <button
@@ -566,8 +565,7 @@ export function AssignmentStudioModal({
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <span>✨</span>
-                AI Quiz / MCQ Assessment
+                MCQ Assessment
               </button>
             </div>
           )}
@@ -673,7 +671,7 @@ export function AssignmentStudioModal({
                     {docFileName ? (
                       <div className="flex items-center justify-between bg-card p-3 rounded-lg border border-border">
                         <div className="flex items-center gap-2.5 truncate">
-                          <span className="text-lg">📄</span>
+                          <FileText className="w-4 h-4 text-primary shrink-0" />
                           <div className="text-left truncate">
                             <p className="font-medium text-foreground truncate text-xs">{docFileName}</p>
                             <p className="text-[10px] text-muted-foreground">Ready to attach</p>
