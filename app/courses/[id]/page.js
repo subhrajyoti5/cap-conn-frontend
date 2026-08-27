@@ -12,6 +12,9 @@ import { SubmitDocumentModal } from "@/components/submit-document-modal";
 import { GradeSubmissionsModal } from "@/components/grade-submissions-modal";
 import { TakeAssessmentModal } from "@/components/take-assessment-modal";
 import { ViewSubmissionsModal } from "@/components/view-submissions-modal";
+import { CourseFeedbackModal } from "@/components/course-feedback-modal";
+import { ResourceComments } from "@/components/resource-comments";
+import { AssessmentComments } from "@/components/assessment-comments";
 import { apiFetch } from "@/lib/api";
 import { getEmbedUrl, isGoogleDriveUrl } from "@/components/google-drive-viewer";
 import Link from "next/link";
@@ -33,11 +36,11 @@ export default function CourseDetailPage() {
   const [takeAssessment, setTakeAssessment] = useState(null);
   const [authToken, setAuthToken] = useState("");
 
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const [showTrainerModal, setShowTrainerModal] = useState(false);
   const [trainerProfile, setTrainerProfile] = useState(null);
   const [loadingTrainer, setLoadingTrainer] = useState(false);
-
 
   const [showTraineeModal, setShowTraineeModal] = useState(false);
   const [traineeProfile, setTraineeProfile] = useState(null);
@@ -423,12 +426,20 @@ export default function CourseDetailPage() {
               </button>
             )}
             {hasAccess && (
-              <button
-                onClick={() => setShowCourseDetailsModal(true)}
-                className="btn-secondary bg-white/10 hover:bg-white/20 text-white border-white/20 shadow-md text-xs py-1.5 px-3"
-              >
-                ℹ View Course Info
-              </button>
+              <>
+                <button
+                  onClick={() => setShowFeedbackModal(true)}
+                  className="btn-secondary bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border-amber-500/30 shadow-md text-xs py-1.5 px-3 flex items-center gap-1 font-semibold"
+                >
+                  <span>⭐ Reviews & Ratings</span>
+                </button>
+                <button
+                  onClick={() => setShowCourseDetailsModal(true)}
+                  className="btn-secondary bg-white/10 hover:bg-white/20 text-white border-white/20 shadow-md text-xs py-1.5 px-3"
+                >
+                  ℹ View Course Info
+                </button>
+              </>
             )}
             {isOwner && course.status === "DRAFT" && (
               <button
@@ -989,6 +1000,13 @@ export default function CourseDetailPage() {
                           </div>
                         )}
                       </div>
+
+                      <AssessmentComments
+                        assessmentId={String(selectedResource.id).replace("asmt-", "")}
+                        token={authToken}
+                        user={user}
+                        isEnrolled={isEnrolled}
+                      />
                     </div>
                   ) : (
                     // Selected Resource View (Video / Document)
@@ -1051,6 +1069,13 @@ export default function CourseDetailPage() {
                           )}
                         </div>
                       )}
+
+                      <ResourceComments
+                        resourceId={selectedResource.id}
+                        token={authToken}
+                        user={user}
+                        isEnrolled={isEnrolled}
+                      />
                     </div>
                   )}
                 </div>
@@ -1321,14 +1346,30 @@ export default function CourseDetailPage() {
                     <span>⚠️ This trainer has not set up their profile yet. Displaying basic registration info.</span>
                   </div>
                 )}
-                <div className="flex items-center gap-4 border-b border-border pb-4">
-                  <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
-                    {trainerProfile.fullName ? trainerProfile.fullName[0].toUpperCase() : "T"}
+                <div className="flex items-center justify-between border-b border-border pb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
+                      {trainerProfile.fullName ? trainerProfile.fullName[0].toUpperCase() : "T"}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold font-display text-foreground">{trainerProfile.fullName || "Trainer"}</h3>
+                        <span className="badge bg-amber-500/10 text-amber-600 border-amber-500/20 text-xs font-bold font-mono">
+                          ⭐ {trainerProfile.overallRating || 0} ({trainerProfile.totalReviewsCount || 0} reviews)
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{trainerProfile.phone || "No phone contact"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold font-display text-foreground">{trainerProfile.fullName || "Trainer"}</h3>
-                    <p className="text-xs text-muted-foreground">{trainerProfile.phone || "No phone contact"}</p>
-                  </div>
+
+                  {trainerProfile.userId && trainerProfile.userId !== userId && (
+                    <Link
+                      href={`/messages?userId=${trainerProfile.userId}`}
+                      className="btn-primary text-xs py-2 px-4 shadow-sm flex items-center gap-1.5 shrink-0"
+                    >
+                      <span>💬 Direct Message</span>
+                    </Link>
+                  )}
                 </div>
 
                 {trainerProfile.bio && (
@@ -1481,18 +1522,29 @@ export default function CourseDetailPage() {
                       <span>⚠️ This trainee has not set up their profile yet. Displaying basic registration info.</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-4 bg-muted/10 p-4 rounded-xl border border-border/50">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
-                      {traineeProfile.fullName ? traineeProfile.fullName[0].toUpperCase() : "T"}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-bold font-display text-foreground truncate">{traineeProfile.fullName || "Trainee"}</h3>
-                        <span className="badge bg-muted text-muted-foreground text-[9px]">Trainee</span>
+                  <div className="flex items-center justify-between gap-4 bg-muted/10 p-4 rounded-xl border border-border/50">
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
+                        {traineeProfile.fullName ? traineeProfile.fullName[0].toUpperCase() : "T"}
                       </div>
-                      <p className="text-xs text-foreground font-medium truncate">{traineeProfile.email || "No email available"}</p>
-                      {traineeProfile.phone && <p className="text-xs text-muted-foreground mt-0.5">{traineeProfile.phone}</p>}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-bold font-display text-foreground truncate">{traineeProfile.fullName || "Trainee"}</h3>
+                          <span className="badge bg-muted text-muted-foreground text-[9px]">Trainee</span>
+                        </div>
+                        <p className="text-xs text-foreground font-medium truncate">{traineeProfile.email || "No email available"}</p>
+                        {traineeProfile.phone && <p className="text-xs text-muted-foreground mt-0.5">{traineeProfile.phone}</p>}
+                      </div>
                     </div>
+
+                    {traineeProfile.userId && traineeProfile.userId !== userId && (
+                      <Link
+                        href={`/messages?userId=${traineeProfile.userId}`}
+                        className="btn-primary text-xs py-1.5 px-3 shadow-sm flex items-center gap-1 shrink-0"
+                      >
+                        <span>💬 Direct Message</span>
+                      </Link>
+                    )}
                   </div>
                   {traineeProfile.bio && (
                     <div className="space-y-2">
@@ -2026,6 +2078,16 @@ export default function CourseDetailPage() {
         </div>
       )}
 
+      {showFeedbackModal && (
+        <CourseFeedbackModal
+          isOpen={showFeedbackModal}
+          onClose={() => setShowFeedbackModal(false)}
+          course={course}
+          token={authToken}
+          user={user}
+          isEnrolled={isEnrolled}
+        />
+      )}
     </div>
   );
 }
