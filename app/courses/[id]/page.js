@@ -822,11 +822,11 @@ export default function CourseDetailPage() {
                         {course.assessments && course.assessments.length > 0 ? (
                           course.assessments.map((a) => {
                             const isDoc = a.type === "DOCUMENT";
-                            const isSelected = selectedResource?.id === `asmt-${a.id}`;
+                            const isSelected = selectedResource?.id === a.id || selectedResource?.id === `asmt-${a.id}`;
                             return (
                               <button
                                 key={a.id}
-                                onClick={() => setSelectedResource({ ...a, isAssessment: true, id: `asmt-${a.id}` })}
+                                onClick={() => setSelectedResource({ ...a, isAssessment: true })}
                                 className={`w-full text-left px-3 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
                                   isSelected
                                     ? "bg-primary/10 text-primary font-semibold"
@@ -914,10 +914,11 @@ export default function CourseDetailPage() {
                             <button
                               type="button"
                               onClick={() => {
+                                const cleanId = String(selectedResource.id).replace("asmt-", "");
                                 if (selectedResource.type === "DOCUMENT") {
-                                  setGradeAssessmentId(selectedResource.id.replace("asmt-", ""));
+                                  setGradeAssessmentId(cleanId);
                                 } else {
-                                  setViewSubmissionsAssessment(selectedResource);
+                                  setViewSubmissionsAssessment({ ...selectedResource, id: cleanId });
                                 }
                               }}
                               className="btn-primary text-xs py-1.5 px-3"
@@ -945,7 +946,7 @@ export default function CourseDetailPage() {
                             {selectedResource.type === "DOCUMENT" ? (
                               <button
                                 type="button"
-                                onClick={() => setSubmitDocAssignmentId(selectedResource.id.replace("asmt-", ""))}
+                                onClick={() => setSubmitDocAssignmentId(String(selectedResource.id).replace("asmt-", ""))}
                                 className="btn-primary w-full text-xs py-2"
                               >
                                 Submit Assignment Document
@@ -953,7 +954,7 @@ export default function CourseDetailPage() {
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => setTakeAssessment({ id: selectedResource.id.replace("asmt-", ""), mode: "take" })}
+                                onClick={() => setTakeAssessment({ id: String(selectedResource.id).replace("asmt-", ""), mode: "take" })}
                                 className="btn-primary w-full text-xs py-2"
                               >
                                 Start Quiz Assessment
