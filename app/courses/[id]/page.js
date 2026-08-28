@@ -497,6 +497,8 @@ export default function CourseDetailPage() {
   const isPending = myEnrollment?.status === "PENDING";
   const isRejected = myEnrollment?.status === "REJECTED";
   const isAdmin = user?.role === "ADMIN";
+  const isSuspended = course.status === "SUSPENDED";
+  const canModifyCourse = (isOwner || isAdmin) && (!isSuspended || isAdmin);
   const hasAccess = isOwner || isEnrolled || isAdmin;
 
 
@@ -528,13 +530,26 @@ export default function CourseDetailPage() {
 
   return (
     <div className="space-y-6 max-w-5xl animate-in stagger-1">
+      {course.status === "SUSPENDED" && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-start gap-3.5 shadow-xs text-amber-800 dark:text-amber-300">
+          <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-1 text-xs">
+            <p className="font-bold text-sm text-amber-900 dark:text-amber-200">
+              Course Suspended by Administrator
+            </p>
+            <p className="leading-relaxed">
+              This course is currently suspended by the platform admin. Trainers and members can view all course materials and member lists, but adding new assessments or materials is locked. Please wait for further actions or communication from the administrator.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="relative overflow-hidden rounded-2xl bg-slate-900 text-white p-6 sm:p-8 shadow-xl border border-slate-800">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2.5">
-              <span className={`badge ${course.status === "PUBLISHED" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-slate-800 text-slate-300 border-slate-700"} text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-md`}>
-                {course.status?.toLowerCase()}
+              <span className={`badge ${course.status === "PUBLISHED" || course.status === "ACTIVE" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : course.status === "SUSPENDED" ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-slate-800 text-slate-300 border-slate-700"} text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-md`}>
+                {course.status === "PUBLISHED" ? "active" : course.status?.toLowerCase()}
               </span>
               {course.subject && (
                 <span className="badge bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-md">
@@ -931,7 +946,7 @@ export default function CourseDetailPage() {
                       <Folder className="w-4 h-4 text-primary" />
                       <span>Course Resources</span>
                     </h2>
-                    {(isOwner || isAdmin) && (
+                    {canModifyCourse && (
                       <button
                         onClick={() => setUploadModalOpen(true)}
                         className="btn-primary text-[10px] py-1 px-2.5 font-semibold flex items-center gap-1"
@@ -1235,7 +1250,7 @@ export default function CourseDetailPage() {
                       <FileText className="w-4 h-4 text-primary" />
                       <span>Assessments</span>
                     </h2>
-                    {(isOwner || isAdmin) && (
+                    {canModifyCourse && (
                       <button
                         onClick={() => {
                           setEditingAssessment(null);
@@ -1341,7 +1356,7 @@ export default function CourseDetailPage() {
                           <h2 className="font-display text-lg font-bold text-foreground">{selectedAssessment.title}</h2>
                         </div>
 
-                        {(isOwner || isAdmin) && (
+                        {canModifyCourse && (
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
@@ -1451,7 +1466,7 @@ export default function CourseDetailPage() {
                       </p>
                     </div>
 
-                    {(isOwner || isAdmin) && (
+                    {canModifyCourse && (
                       <button
                         onClick={() => {
                           setEditCourseTitle(course.title || "");
@@ -1502,7 +1517,7 @@ export default function CourseDetailPage() {
                       </h3>
                       <p className="text-xs text-muted-foreground">Instructors assigned to manage and grade this course</p>
                     </div>
-                    {(isOwner || isAdmin) && (
+                    {canModifyCourse && (
                       <button
                         onClick={() => setShowInviteTrainerModal(true)}
                         className="btn-secondary text-xs py-1.5 px-3 font-medium flex items-center gap-1"

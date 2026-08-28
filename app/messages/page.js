@@ -143,9 +143,22 @@ function MessagesContent() {
   }, [searchParams]);
 
   async function selectPartner(partner) {
+    if (!partner) return;
     setActivePartner(partner);
     setViewMode("CHATS");
     setLoadingThread(true);
+
+    // Ensure partner is present in conversations array so 2-pane view renders immediately
+    setConversations((prev) => {
+      const exists = prev.some((c) => c.partner?.id === partner.id);
+      if (!exists) {
+        return [{ partner, lastMessage: null, unreadCount: 0 }, ...prev];
+      }
+      return prev.map((c) =>
+        c.partner?.id === partner.id ? { ...c, unreadCount: 0 } : c
+      );
+    });
+
     try {
       const token = await getToken();
       const res = await getThread(token, partner.id);
@@ -155,12 +168,6 @@ function MessagesContent() {
           setActivePartner(res.data.partner);
         }
       }
-      // Reset unread count for selected partner
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.partner.id === partner.id ? { ...c, unreadCount: 0 } : c
-        )
-      );
     } catch (e) {
       console.error("Error loading thread:", e);
     } finally {
@@ -454,7 +461,7 @@ function MessagesContent() {
               )}
             </div>
           </div>
-        ) : !hasChats ? (
+        ) : (!hasChats && !activePartner) ? (
           /* ================= MODE: ZERO CONVERSATIONS (SINGLE CENTERED CTA) ================= */
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4 bg-card">
             <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-xs">

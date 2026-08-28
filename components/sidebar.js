@@ -89,6 +89,11 @@ const NAV_ITEMS = [
     href: "/certifications",
     roles: ["ADMIN"],
   },
+  {
+    label: "Messages",
+    href: "/messages",
+    roles: ["ADMIN"],
+  },
 ];
 
 function getIcon(label) {
