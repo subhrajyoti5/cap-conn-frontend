@@ -1004,11 +1004,10 @@ export default function CourseDetailPage() {
                           <button
                             key={res.id}
                             onClick={() => handleSelectResource(res)}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
-                              selectedResource?.id === res.id
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${selectedResource?.id === res.id
                                 ? "bg-primary/10 text-primary font-semibold border border-primary/20"
                                 : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-                            }`}
+                              }`}
                           >
                             <span className="truncate pr-2">{res.title}</span>
                             <span className="text-[9px] font-mono text-muted-foreground shrink-0">
@@ -1035,11 +1034,10 @@ export default function CourseDetailPage() {
                           <button
                             key={res.id}
                             onClick={() => handleSelectResource(res)}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
-                              selectedResource?.id === res.id
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${selectedResource?.id === res.id
                                 ? "bg-primary/10 text-primary font-semibold border border-primary/20"
                                 : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-                            }`}
+                              }`}
                           >
                             <span className="truncate pr-2">{res.title}</span>
                             <span className="text-[9px] font-mono text-muted-foreground shrink-0">
@@ -1066,11 +1064,10 @@ export default function CourseDetailPage() {
                           <button
                             key={res.id}
                             onClick={() => handleSelectResource(res)}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
-                              selectedResource?.id === res.id
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${selectedResource?.id === res.id
                                 ? "bg-primary/10 text-primary font-semibold border border-primary/20"
                                 : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-                            }`}
+                              }`}
                           >
                             <span className="truncate pr-2">{res.title}</span>
                             <span className="text-[9px] font-mono text-muted-foreground shrink-0">
@@ -1097,11 +1094,10 @@ export default function CourseDetailPage() {
                           <button
                             key={res.id}
                             onClick={() => handleSelectResource(res)}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
-                              selectedResource?.id === res.id
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${selectedResource?.id === res.id
                                 ? "bg-primary/10 text-primary font-semibold border border-primary/20"
                                 : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-                            }`}
+                              }`}
                           >
                             <span className="truncate pr-2">{res.title}</span>
                             <span className="text-[9px] font-mono text-muted-foreground shrink-0">
@@ -1293,11 +1289,10 @@ export default function CourseDetailPage() {
                           <button
                             key={a.id}
                             onClick={() => setSelectedAssessment(a)}
-                            className={`w-full text-left p-2.5 rounded-lg text-xs transition-all ${
-                              selectedAssessment?.id === a.id
+                            className={`w-full text-left p-2.5 rounded-lg text-xs transition-all ${selectedAssessment?.id === a.id
                                 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-semibold"
                                 : "text-foreground hover:bg-muted/30"
-                            }`}
+                              }`}
                           >
                             <div className="flex justify-between items-center mb-0.5">
                               <span className="badge bg-amber-500/10 text-amber-600 border-amber-500/20 text-[8px] uppercase font-mono font-bold px-1.5 py-0.5 rounded">
@@ -1331,11 +1326,10 @@ export default function CourseDetailPage() {
                           <button
                             key={a.id}
                             onClick={() => setSelectedAssessment(a)}
-                            className={`w-full text-left p-2.5 rounded-lg text-xs transition-all ${
-                              selectedAssessment?.id === a.id
+                            className={`w-full text-left p-2.5 rounded-lg text-xs transition-all ${selectedAssessment?.id === a.id
                                 ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 font-semibold"
                                 : "text-foreground hover:bg-muted/30"
-                            }`}
+                              }`}
                           >
                             <div className="flex justify-between items-center mb-0.5">
                               <span className="badge bg-blue-500/10 text-blue-600 border-blue-500/20 text-[8px] uppercase font-mono font-bold px-1.5 py-0.5 rounded">
@@ -2495,11 +2489,10 @@ export default function CourseDetailPage() {
             <form onSubmit={handleUpdateCourse} className="p-6 overflow-y-auto space-y-5 flex-1 text-left">
               {editStatus.message && (
                 <div
-                  className={`p-3 rounded-xl text-xs border ${
-                    editStatus.type === "success"
+                  className={`p-3 rounded-xl text-xs border ${editStatus.type === "success"
                       ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
                       : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
-                  }`}
+                    }`}
                 >
                   {editStatus.message}
                 </div>
@@ -2662,3 +2655,4 @@ export default function CourseDetailPage() {
     </div>
   );
 }
+//empty commit for pushing
