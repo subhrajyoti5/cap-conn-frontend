@@ -419,41 +419,22 @@ export default function TrainerDashboardPage() {
                               const student = enrollment.trainee;
                               if (!student) return null;
 
-                              const studentCourses = courses.filter((c) =>
-                                c.enrollments?.some((e) => e.traineeId === (student.id || enrollment.traineeId) && e.status === "ACTIVE")
-                              );
-                              const visibleCourses = studentCourses.slice(0, 2);
-                              const remainingCount = studentCourses.length - visibleCourses.length;
-
                               return (
                                 <div
                                   key={enrollment.id}
                                   onClick={() => handleViewTrainee(student.id || enrollment.traineeId)}
-                                  className="p-3.5 bg-card border border-border/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-primary/40 hover:shadow-xs transition-all cursor-pointer group"
+                                  className="p-3.5 bg-card border border-border/80 rounded-xl flex items-center justify-between gap-3 hover:border-primary/40 hover:shadow-xs transition-all cursor-pointer group"
                                 >
                                   <div className="flex items-center gap-3 min-w-0">
                                     <div className="w-9 h-9 rounded-full bg-slate-800 text-slate-100 flex items-center justify-center font-bold text-xs shrink-0 border border-slate-700">
-                                      {student.name ? student.name[0].toUpperCase() : student.email[0].toUpperCase()}
+                                      {student.name ? student.name[0].toUpperCase() : (student.email ? student.email[0].toUpperCase() : "U")}
                                     </div>
                                     <div className="min-w-0">
                                       <p className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
-                                        {student.name || "No profile name"}
+                                        {student.name || student.email || "Enrolled Trainee"}
                                       </p>
-                                      <p className="text-[10px] font-mono text-muted-foreground truncate">{student.email}</p>
+                                      <p className="text-[10px] font-mono text-muted-foreground truncate">{student.email || "No email available"}</p>
                                     </div>
-                                  </div>
-
-                                  <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0">
-                                    {visibleCourses.map((c) => (
-                                      <span key={c.id} className="badge bg-muted/60 border border-border text-[9px] py-0.5 px-2 font-medium">
-                                        {c.title}
-                                      </span>
-                                    ))}
-                                    {remainingCount > 0 && (
-                                      <span className="badge bg-primary/10 border border-primary/20 text-primary text-[9px] py-0.5 px-2 font-bold">
-                                        +{remainingCount} more
-                                      </span>
-                                    )}
                                   </div>
                                 </div>
                               );
