@@ -296,10 +296,7 @@ export default function AdminCoursesPage() {
               >
                 {/* Solid Domain Header Banner */}
                 <div className={`p-5 ${theme.bg} min-h-[110px] flex flex-col justify-between shrink-0 text-white relative`}>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`text-[10px] uppercase font-mono px-2 py-0.5 rounded-full font-bold border ${theme.badgeBg}`}>
-                      {course.subject?.name || "General Course"}
-                    </span>
+                  <div className="flex items-center justify-end gap-2">
                     <span
                       className={`badge text-[9px] uppercase font-mono px-2 py-0.5 rounded-full font-bold ${
                         course.status === "SUSPENDED"
