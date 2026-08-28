@@ -9,6 +9,23 @@ import {
   sendMessage,
   getDirectory,
 } from "@/features/messages/api/messages.api";
+import {
+  MessageSquare,
+  Plus,
+  Search,
+  ArrowLeft,
+  Send,
+  ShieldAlert,
+  AlertTriangle,
+  CheckCircle2,
+  User,
+  Users,
+  Lock,
+  X,
+  MessageCircle,
+  Inbox,
+  Filter,
+} from "lucide-react";
 
 function MessagesContent() {
   const { getToken, user } = useAuth();
@@ -155,11 +172,12 @@ function MessagesContent() {
     if (e) e.preventDefault();
     if (!messageText.trim() || !activePartner || sending) return;
 
-    // Check if sending to ADMIN and user is non-ADMIN without an OPEN ticket
+    // Check if sending to ADMIN and user is TRAINEE without an OPEN ticket
     const targetIsAdmin = activePartner.role === "ADMIN";
     const senderIsAdmin = user?.role === "ADMIN";
+    const senderIsTrainer = user?.role === "TRAINER";
 
-    if (targetIsAdmin && !senderIsAdmin && !isCurrentTicketOpen) {
+    if (targetIsAdmin && !senderIsAdmin && !senderIsTrainer && !isCurrentTicketOpen) {
       setPendingMessage(messageText.trim());
       setShowTicketModal(true);
       return;
@@ -273,8 +291,8 @@ function MessagesContent() {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse max-w-7xl mx-auto">
-        <div className="h-8 w-48 bg-muted rounded-lg" />
-        <div className="h-[calc(100vh-140px)] min-h-[580px] w-full bg-muted rounded-2xl" />
+        <div className="h-8 w-48 bg-muted/60 rounded-lg" />
+        <div className="h-[calc(100vh-145px)] min-h-[580px] w-full bg-muted/40 rounded-2xl" />
       </div>
     );
   }
@@ -287,55 +305,57 @@ function MessagesContent() {
       {/* Header Banner */}
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
-          <h1 className="font-display text-display-md font-bold text-foreground">
-            Direct Messages Hub
+          <h1 className="font-display text-display-md font-bold text-foreground flex items-center gap-2.5">
+            <MessageSquare className="w-6 h-6 text-primary shrink-0" />
+            <span>Direct Messages Hub</span>
           </h1>
-          <p className="text-xs text-muted-foreground">
-            Private communications with trainees, instructors, and admins.
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Private, encrypted communications with trainees, trainers, and organization admins.
           </p>
         </div>
       </div>
 
       {/* Main Full-Screen Container Card */}
-      <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-elevated flex flex-col h-[calc(100vh-145px)] min-h-[580px] w-full">
+      <div className="border border-border/80 rounded-2xl overflow-hidden bg-card shadow-elevated flex flex-col h-[calc(100vh-145px)] min-h-[580px] w-full">
         {/* Top Control Bar with Search & Conditional Back Action */}
-        <div className="p-3.5 border-b border-border bg-muted/10 flex items-center justify-between gap-3 shrink-0">
+        <div className="p-3.5 border-b border-border/80 bg-muted/20 flex items-center justify-between gap-3 shrink-0">
           <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               placeholder={
                 viewMode === "DIRECTORY"
                   ? "Search available members, emails, or courses..."
-                  : "Search chats, contacts, or message text..."
+                  : "Search conversations, contacts, or messages..."
               }
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field text-xs pl-8 pr-3 py-2 w-full bg-card border-border focus:border-primary shadow-xs"
+              className="input-field text-xs pl-9 pr-3 py-2 w-full bg-card border-border/80 focus:border-primary shadow-xs"
             />
-            <span className="absolute left-2.5 top-2.5 text-xs text-muted-foreground">
-              🔍
-            </span>
           </div>
 
           <div className="flex items-center gap-2">
             {viewMode === "DIRECTORY" && (
               <>
-                <select
-                  value={selectedRoleFilter}
-                  onChange={(e) => setSelectedRoleFilter(e.target.value)}
-                  className="input-field text-xs py-2 px-3 bg-card border-border shrink-0"
-                >
-                  <option value="ALL">All Roles</option>
-                  <option value="TRAINER">Trainers</option>
-                  <option value="TRAINEE">Trainees</option>
-                  <option value="ADMIN">Admins</option>
-                </select>
+                <div className="flex items-center gap-1.5 bg-card border border-border/80 rounded-lg px-2 py-1">
+                  <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                  <select
+                    value={selectedRoleFilter}
+                    onChange={(e) => setSelectedRoleFilter(e.target.value)}
+                    className="text-xs bg-transparent border-none focus:ring-0 text-foreground"
+                  >
+                    <option value="ALL">All Roles</option>
+                    <option value="TRAINER">Trainers</option>
+                    <option value="TRAINEE">Trainees</option>
+                    <option value="ADMIN">Admins</option>
+                  </select>
+                </div>
 
                 <button
                   onClick={() => setViewMode("CHATS")}
-                  className="btn-secondary text-xs py-2 px-4 shadow-sm flex items-center gap-1.5 shrink-0 font-semibold"
+                  className="btn-secondary text-xs py-2 px-3.5 shadow-xs flex items-center gap-1.5 shrink-0 font-medium"
                 >
-                  <span>←</span>
+                  <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Back to Chats ({conversations.length})</span>
                 </button>
               </>
@@ -348,12 +368,13 @@ function MessagesContent() {
           /* ================= MODE: FULL-WIDTH DIRECTORY VIEW ================= */
           <div className="flex-1 overflow-y-auto p-5 min-h-0 bg-card">
             <div className="space-y-4 max-w-5xl mx-auto">
-              <div className="flex justify-between items-center border-b border-border pb-3">
+              <div className="flex justify-between items-center border-b border-border/80 pb-3">
                 <div>
-                  <h3 className="font-display font-bold text-sm text-foreground">
-                    Available Organization Members ({filteredDirectoryContacts.length})
+                  <h3 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                    <Users className="w-4 h-4 text-primary" />
+                    <span>Available Organization Members ({filteredDirectoryContacts.length})</span>
                   </h3>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     Select a member to start a private conversation thread.
                   </p>
                 </div>
@@ -372,10 +393,10 @@ function MessagesContent() {
                   {filteredDirectoryContacts.map((contact) => (
                     <div
                       key={contact.id}
-                      className="p-4 rounded-xl border border-border bg-card hover:bg-muted/20 hover:border-primary/40 transition-all flex flex-col justify-between gap-3 shadow-xs"
+                      className="p-4 rounded-xl border border-border/80 bg-card hover:bg-muted/20 hover:border-primary/40 transition-all flex flex-col justify-between gap-3 shadow-xs"
                     >
                       <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-600 to-indigo-700 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                        <div className="w-10 h-10 rounded-full bg-slate-800 dark:bg-slate-700 text-slate-100 font-bold text-xs flex items-center justify-center shrink-0 shadow-xs border border-slate-700">
                           {contact.name
                             ? contact.name[0].toUpperCase()
                             : contact.email
@@ -389,12 +410,12 @@ function MessagesContent() {
                               {contact.name || contact.email?.split("@")[0] || "User"}
                             </span>
                             <span
-                              className={`badge text-[8px] uppercase font-mono px-1.5 py-0 ${
+                              className={`badge text-[8px] uppercase font-mono px-1.5 py-0.5 rounded-md ${
                                 contact.role === "ADMIN"
-                                  ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
                                   : contact.role === "TRAINER"
-                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                  : "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                  : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
                               }`}
                             >
                               {contact.role}
@@ -422,9 +443,10 @@ function MessagesContent() {
 
                       <button
                         onClick={() => selectPartner(contact)}
-                        className="btn-primary w-full text-xs py-1.5 font-bold shadow-xs flex items-center justify-center gap-1"
+                        className="btn-primary w-full text-xs py-2 font-semibold shadow-xs flex items-center justify-center gap-1.5"
                       >
-                        <span>💬 Start Chat</span>
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>Start Chat</span>
                       </button>
                     </div>
                   ))}
@@ -435,38 +457,39 @@ function MessagesContent() {
         ) : !hasChats ? (
           /* ================= MODE: ZERO CONVERSATIONS (SINGLE CENTERED CTA) ================= */
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4 bg-card">
-            <div className="w-20 h-20 rounded-full bg-primary/10 text-primary flex items-center justify-center text-4xl font-bold shadow-xs animate-in zoom-in-95">
-              💬
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-xs">
+              <Inbox className="w-8 h-8" />
             </div>
             <div className="space-y-1.5 max-w-md">
-              <h3 className="font-bold text-lg text-foreground font-display">
+              <h3 className="font-bold text-base text-foreground font-display">
                 No Conversations Yet
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                You have not initiated any private messages yet. Click below to view instructors, trainees, and organization members available to message!
+                You have not initiated any private messages. Click below to explore available trainers, trainees, and organization members!
               </p>
             </div>
 
             <button
               onClick={handleOpenDirectory}
-              className="btn-primary text-xs py-3 px-6 shadow-md flex items-center gap-2 font-bold text-sm"
+              className="btn-primary text-xs py-2.5 px-5 shadow-sm flex items-center gap-2 font-semibold"
             >
-              <span>💬</span>
+              <Plus className="w-4 h-4" />
               <span>Start New Chat</span>
             </button>
           </div>
         ) : (
           /* ================= MODE: DEFAULT 2-PANE SPLIT VIEW FOR HAS CHATS ================= */
-          <div className="grid grid-cols-1 md:grid-cols-3 divide-x divide-border flex-1 min-h-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-x divide-border/80 flex-1 min-h-0">
             {/* Left Pane: Active Conversations List */}
             <div className="col-span-1 flex flex-col bg-muted/10 h-full min-h-0">
-              <div className="p-3 border-b border-border bg-card/60 flex items-center justify-between text-xs font-semibold text-muted-foreground">
-                <span className="uppercase text-[10px] tracking-wider">Active Conversations ({conversations.length})</span>
+              <div className="p-3 border-b border-border/80 bg-card/60 flex items-center justify-between text-xs font-medium text-muted-foreground">
+                <span className="uppercase text-[10px] tracking-wider font-mono">Conversations ({conversations.length})</span>
                 <button
                   onClick={handleOpenDirectory}
-                  className="btn-primary text-[11px] py-1 px-2.5 font-bold shadow-xs flex items-center gap-1"
+                  className="btn-primary text-[11px] py-1 px-2.5 font-semibold shadow-xs flex items-center gap-1"
                 >
-                  <span>+ New Chat</span>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>New Chat</span>
                 </button>
               </div>
 
@@ -486,10 +509,10 @@ function MessagesContent() {
                       }`}
                     >
                       <div className="relative shrink-0">
-                        <div className={`w-10 h-10 rounded-full font-bold text-xs flex items-center justify-center shadow-xs ${
+                        <div className={`w-10 h-10 rounded-full font-bold text-xs flex items-center justify-center shadow-xs border ${
                           isPartnerAdminInList
-                            ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white ring-2 ring-amber-400/30"
-                            : "bg-gradient-to-br from-teal-600 to-indigo-700 text-white"
+                            ? "bg-slate-900 text-amber-400 border-amber-500/30"
+                            : "bg-slate-800 text-slate-100 border-slate-700"
                         }`}>
                           {c.partner?.name
                             ? c.partner.name[0].toUpperCase()
@@ -498,7 +521,7 @@ function MessagesContent() {
                             : "U"}
                         </div>
                         {c.unreadCount > 0 && (
-                          <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full ring-2 ring-card animate-pulse">
+                          <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full ring-2 ring-card">
                             {c.unreadCount}
                           </span>
                         )}
@@ -521,21 +544,23 @@ function MessagesContent() {
 
                         <div className="flex items-center gap-1 mb-1">
                           <span
-                            className={`badge text-[8px] uppercase font-mono px-1.5 py-0 ${
+                            className={`badge text-[8px] uppercase font-mono px-1.5 py-0 rounded ${
                               isPartnerAdminInList
-                                ? "bg-amber-500/10 text-amber-600 border-amber-500/20 font-bold"
+                                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 font-semibold"
                                 : c.partner?.role === "TRAINER"
-                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                : "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
                             }`}
                           >
-                            {isPartnerAdminInList ? "🛡️ ADMIN SUPPORT" : c.partner?.role || "MEMBER"}
+                            {isPartnerAdminInList ? "ADMIN SUPPORT" : c.partner?.role || "MEMBER"}
                           </span>
                         </div>
 
-                        <p className="text-[11px] text-muted-foreground truncate leading-tight">
-                          {c.lastMessage?.content || "No messages yet"}
-                        </p>
+                        {c.lastMessage?.content && (
+                          <p className="text-[11px] text-muted-foreground truncate leading-tight">
+                            {c.lastMessage.content}
+                          </p>
+                        )}
                       </div>
                     </button>
                   );
@@ -548,12 +573,12 @@ function MessagesContent() {
               {activePartner ? (
                 <>
                   {/* Partner Header with Admin Support Ticket Controls */}
-                  <div className="p-3.5 border-b border-border bg-muted/10 flex items-center justify-between shrink-0 gap-2 flex-wrap">
+                  <div className="p-3.5 border-b border-border/80 bg-muted/20 flex items-center justify-between shrink-0 gap-2 flex-wrap">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-10 h-10 rounded-full font-bold text-xs flex items-center justify-center shrink-0 shadow-xs ${
+                      <div className={`w-10 h-10 rounded-full font-bold text-xs flex items-center justify-center shrink-0 shadow-xs border ${
                         isPartnerAdmin
-                          ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white ring-2 ring-amber-400/30"
-                          : "bg-gradient-to-br from-teal-600 to-indigo-700 text-white"
+                          ? "bg-slate-900 text-amber-400 border-amber-500/30"
+                          : "bg-slate-800 text-slate-100 border-slate-700"
                       }`}>
                         {activePartner.name
                           ? activePartner.name[0].toUpperCase()
@@ -568,43 +593,42 @@ function MessagesContent() {
                             {activePartner.name || activePartner.email || "Chat User"}
                           </h3>
                           <span
-                            className={`badge text-[8px] uppercase font-mono px-1.5 py-0 ${
+                            className={`badge text-[8px] uppercase font-mono px-1.5 py-0.5 rounded ${
                               isPartnerAdmin
-                                ? "bg-amber-500/10 text-amber-600 border-amber-500/20 font-bold"
+                                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 font-semibold"
                                 : activePartner.role === "TRAINER"
-                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                : "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
                             }`}
                           >
-                            {isPartnerAdmin ? "🛡️ ADMIN SUPPORT" : activePartner.role}
+                            {isPartnerAdmin ? "ADMIN SUPPORT" : activePartner.role}
                           </span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground truncate">
+                        <p className="text-[10px] font-mono text-muted-foreground truncate">
                           {activePartner.email}
                         </p>
                       </div>
                     </div>
 
-                    {/* Support Ticket Status Header Controls */}
-                    {isPartnerAdmin && (
+                    {/* Support Ticket Status Header Controls (Trainees Only) */}
+                    {isPartnerAdmin && user?.role === "TRAINEE" && (
                       <div className="flex items-center gap-2 shrink-0">
                         {isCurrentTicketOpen ? (
                           <div className="flex items-center gap-2">
-                            <span className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                            <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                              Support Ticket Active
+                              Ticket Active
                             </span>
                             <button
                               onClick={() => saveTicketState(activePartner.id, false)}
-                              className="text-[10px] btn-secondary py-1 px-2.5 font-bold shadow-xs hover:bg-rose-500/10 hover:text-rose-600 transition-colors"
-                              title="Close active support ticket"
+                              className="text-[10px] btn-secondary py-1 px-2.5 font-medium hover:bg-rose-500/10 hover:text-rose-600 transition-colors"
                             >
                               Close Ticket
                             </button>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <span className="bg-muted text-muted-foreground border border-border text-[10px] font-medium px-2.5 py-1 rounded-full">
+                            <span className="bg-muted/80 text-muted-foreground border border-border/80 text-[10px] font-medium px-2.5 py-1 rounded-full">
                               Ticket Closed
                             </span>
                             <button
@@ -612,9 +636,9 @@ function MessagesContent() {
                                 setPendingMessage("");
                                 setShowTicketModal(true);
                               }}
-                              className="text-[10px] btn-primary py-1 px-3 font-bold shadow-xs bg-amber-600 hover:bg-amber-700 text-white"
+                              className="text-[10px] btn-primary py-1 px-3 font-semibold shadow-xs"
                             >
-                              💬 Request Admin Support
+                              Open Support Ticket
                             </button>
                           </div>
                         )}
@@ -625,35 +649,35 @@ function MessagesContent() {
                   {/* Chat Messages Stream */}
                   <div
                     ref={chatScrollRef}
-                    className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-muted/5 scroll-smooth min-h-0"
+                    className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/5 scroll-smooth min-h-0"
                   >
                     {/* Official System Warning Banner for Admin Support Chats (Role-Specific) */}
                     {isPartnerAdmin && (
-                      <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-foreground space-y-1.5 text-xs shadow-xs mb-3 animate-in fade-in">
-                        <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400 font-display">
-                          <span className="text-base">⚠️</span>
-                          <span>Official Organization Admin Support Notice</span>
+                      <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/5 text-foreground space-y-1.5 text-xs shadow-xs mb-3">
+                        <div className="flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-300 font-display">
+                          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                          <span>Official Admin Support Notice</span>
                         </div>
                         <p className="text-[11px] leading-relaxed text-muted-foreground">
                           Admins handle system-level issues, platform discrepancies, and critical escalations.
                           {user?.role === "TRAINER" ? (
-                            <strong className="text-foreground font-semibold"> Trainers should contact Admins primarily for course administrative approvals, subject domain management, or platform technical support.</strong>
+                            <strong className="text-foreground font-medium"> Trainers should contact Admins primarily for course administrative approvals, subject domain management, or platform technical support.</strong>
                           ) : (
-                            <strong className="text-foreground font-semibold"> Trainees are advised to consult your assigned course trainers or peers for academic assistance before reaching out to Admins.</strong>
+                            <strong className="text-foreground font-medium"> Trainees are advised to consult assigned course trainers or peers for academic assistance before reaching out to Admins.</strong>
                           )}
-                          {" "}Please ensure your request requires administrative intervention.
+                          {" "}Please ensure your issue requires administrative intervention.
                         </p>
                       </div>
                     )}
 
                     {loadingThread ? (
                       <div className="flex items-center justify-center h-full">
-                        <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       </div>
                     ) : threadMessages.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-center space-y-2 text-muted-foreground">
-                        <span className="text-4xl">👋</span>
-                        <p className="text-xs font-semibold text-foreground">
+                        <MessageCircle className="w-8 h-8 opacity-40" />
+                        <p className="text-xs font-medium text-foreground">
                           Start of conversation
                         </p>
                         <p className="text-[11px] max-w-xs">
@@ -671,18 +695,18 @@ function MessagesContent() {
                             }`}
                           >
                             <div
-                              className={`max-w-[78%] rounded-2xl px-4 py-2.5 text-xs shadow-xs leading-relaxed ${
+                              className={`max-w-[78%] rounded-xl px-3.5 py-2 text-xs leading-relaxed ${
                                 isMe
-                                  ? "bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-br-none"
-                                  : "bg-card border border-border text-foreground rounded-bl-none"
+                                  ? "bg-primary text-primary-foreground rounded-br-none shadow-2xs"
+                                  : "bg-card border border-border/80 text-foreground rounded-bl-none shadow-2xs"
                               }`}
                             >
                               <p className="whitespace-pre-wrap break-words">
                                 {msg.content}
                               </p>
                               <div
-                                className={`text-[8px] font-mono text-right mt-1 opacity-80 ${
-                                  isMe ? "text-white/80" : "text-muted-foreground"
+                                className={`text-[9px] font-mono text-right mt-1 opacity-70 ${
+                                  isMe ? "text-primary-foreground" : "text-muted-foreground"
                                 }`}
                               >
                                 {new Date(msg.createdAt).toLocaleTimeString([], {
@@ -700,7 +724,7 @@ function MessagesContent() {
                   {/* Sticky Message Input Footer */}
                   <form
                     onSubmit={handleSend}
-                    className="p-3 border-t border-border bg-card flex items-center gap-2 shrink-0"
+                    className="p-3 border-t border-border/80 bg-card flex items-center gap-2 shrink-0"
                   >
                     <input
                       type="text"
@@ -712,16 +736,12 @@ function MessagesContent() {
                       }
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
-                      className="input-field text-xs py-2.5 px-3 flex-1 bg-muted/20 border-border focus:border-primary"
+                      className="input-field text-xs py-2 px-3 flex-1 bg-muted/20 border-border/80 focus:border-primary"
                     />
                     <button
                       type="submit"
                       disabled={sending || !messageText.trim()}
-                      className={`btn-primary text-xs py-2.5 px-5 shadow-sm font-bold flex items-center gap-1.5 shrink-0 disabled:opacity-50 ${
-                        isPartnerAdmin && !isCurrentTicketOpen && user?.role !== "ADMIN"
-                          ? "bg-amber-600 hover:bg-amber-700 text-white"
-                          : ""
-                      }`}
+                      className="btn-primary text-xs py-2 px-4 shadow-xs font-medium flex items-center gap-1.5 shrink-0 disabled:opacity-50"
                     >
                       <span>
                         {sending
@@ -730,14 +750,14 @@ function MessagesContent() {
                           ? "Open Ticket & Send"
                           : "Send"}
                       </span>
-                      <span>🚀</span>
+                      <Send className="w-3.5 h-3.5" />
                     </button>
                   </form>
                 </>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
-                  <span className="text-4xl">💬</span>
-                  <h3 className="font-bold text-sm text-foreground">
+                  <MessageSquare className="w-10 h-10 text-muted-foreground/40" />
+                  <h3 className="font-semibold text-sm text-foreground">
                     Select a conversation
                   </h3>
                   <p className="text-xs text-muted-foreground">
@@ -752,51 +772,51 @@ function MessagesContent() {
 
       {/* Confirmation Modal for Admin Support Ticket */}
       {showTicketModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-card border border-amber-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-card border border-border/80 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 animate-in zoom-in-95">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0 border border-amber-500/20">
-                🛡️
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-base text-foreground font-display">
+                <h3 className="font-bold text-sm text-foreground font-display">
                   Request Admin Support Ticket?
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[11px] text-muted-foreground">
                   Official Organization Support Desk
                 </p>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-2.5 leading-relaxed">
-              <p className="text-foreground font-medium">
+            <div className="p-3.5 rounded-xl bg-muted/40 border border-border/80 text-xs space-y-2 leading-relaxed">
+              <p className="text-foreground font-medium text-[11px]">
                 Are you sure you want to initiate an official Admin Support ticket?
               </p>
               <p className="text-[11px] text-muted-foreground">
-                <strong className="text-amber-600 dark:text-amber-400">💡 Important Advisory:</strong>{" "}
+                <strong className="text-amber-700 dark:text-amber-300 font-medium">Important Advisory:</strong>{" "}
                 {user?.role === "TRAINER" ? (
                   <span>Trainers should reach out to Admins primarily for course administrative approvals, subject domain management, or platform technical support.</span>
                 ) : (
-                  <span>Trainees should first consult course instructors for learning or course content questions before reaching out to Organization Admins.</span>
+                  <span>Trainees should first consult course trainers for learning or course content questions before reaching out to Organization Admins.</span>
                 )}
               </p>
             </div>
 
-            <div className="flex justify-end gap-2.5 pt-2">
+            <div className="flex justify-end gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => {
                   setShowTicketModal(false);
                   setPendingMessage("");
                 }}
-                className="btn-secondary text-xs py-2 px-4 font-semibold"
+                className="btn-secondary text-xs py-1.5 px-3.5 font-medium"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={confirmAndOpenTicket}
-                className="btn-primary text-xs py-2 px-5 font-bold shadow-md bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white"
+                className="btn-primary text-xs py-1.5 px-4 font-semibold shadow-xs"
               >
                 Confirm & Open Ticket
               </button>

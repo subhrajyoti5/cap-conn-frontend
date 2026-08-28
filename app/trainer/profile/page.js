@@ -4,6 +4,23 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/auth-context";
 import { apiFetch } from "@/lib/api";
 import Link from "next/link";
+import {
+  GraduationCap,
+  Building2,
+  Calendar,
+  Briefcase,
+  Building,
+  CheckCircle2,
+  XCircle,
+  Plus,
+  Trash2,
+  Save,
+  Award,
+  Sparkles,
+  ArrowLeft,
+  User,
+  Target,
+} from "lucide-react";
 
 export default function TrainerProfilePage() {
   const { getToken, user } = useAuth();
@@ -73,10 +90,10 @@ export default function TrainerProfilePage() {
         method: "PUT",
         body: JSON.stringify({ fullName, phone: phone || null, bio: bio || null }),
       });
-      showToast("✅ Basic profile details updated successfully!");
+      showToast("Basic profile details updated successfully!");
     } catch (e) {
       console.error(e);
-      showToast("❌ Failed to update profile details.");
+      showToast("Failed to update profile details.");
     } finally {
       setSavingBase(false);
     }
@@ -96,10 +113,10 @@ export default function TrainerProfilePage() {
       });
       setQualifications([...qualifications, res.data]);
       setNewQual({ degree: "", institution: "", year: "" });
-      showToast("🎓 Qualification added!");
+      showToast("Qualification added successfully!");
     } catch (e) {
       console.error(e);
-      showToast("❌ Failed to add qualification.");
+      showToast("Failed to add qualification.");
     }
   }
 
@@ -131,10 +148,10 @@ export default function TrainerProfilePage() {
       });
       setWorkExperiences([...workExperiences, res.data]);
       setNewExp({ role: "", organization: "", startDate: "", endDate: "" });
-      showToast("💼 Experience added!");
+      showToast("Work experience added!");
     } catch (e) {
       console.error(e);
-      showToast("❌ Failed to add work experience.");
+      showToast("Failed to add work experience.");
     }
   }
 
@@ -161,7 +178,7 @@ export default function TrainerProfilePage() {
       });
       setSkills([...skills, res.data]);
       setNewSkill("");
-      showToast("⚡ Skill added!");
+      showToast("Technical skill added!");
     } catch (e) {
       console.error(e);
     }
@@ -179,105 +196,94 @@ export default function TrainerProfilePage() {
   async function handleAddCompetency(e) {
     e.preventDefault();
     if (!selectedCompetencyId) return;
-
-    if (trainerCompetencies.some(tc => tc.competencyId === selectedCompetencyId)) {
-      showToast("⚠️ Competency already added to profile.");
-      return;
-    }
-
     try {
-      await apiFetch("/profiles/me/competencies", {
+      const res = await apiFetch("/profiles/me/competencies", {
         method: "POST",
         body: JSON.stringify({ competencyId: selectedCompetencyId }),
       });
-
-      const profileRes = await apiFetch("/profiles/me");
-      if (profileRes.data) {
-        setTrainerCompetencies(profileRes.data.trainerCompetencies || []);
-      }
+      setTrainerCompetencies([...trainerCompetencies, res.data]);
       setSelectedCompetencyId("");
-      showToast("⭐ Competency added!");
+      showToast("Domain competency assigned!");
     } catch (e) {
       console.error(e);
-      showToast("❌ Failed to add competency.");
+      showToast("Competency already added or invalid.");
     }
   }
 
   async function handleRemoveCompetency(id) {
-    setActionId(id);
     try {
       await apiFetch(`/profiles/me/competencies/${id}`, { method: "DELETE" });
       setTrainerCompetencies(trainerCompetencies.filter((c) => c.id !== id));
-      showToast("Competency removed.");
     } catch (e) {
       console.error(e);
-    } finally {
-      setActionId(null);
     }
   }
 
   if (loading) {
     return (
-      <div className="space-y-8 max-w-5xl animate-pulse">
-        <div className="h-44 w-full bg-muted rounded-2xl" />
+      <div className="space-y-8 max-w-5xl mx-auto animate-pulse">
+        <div className="h-44 w-full bg-muted/50 rounded-2xl" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="h-80 bg-muted rounded-2xl" />
+          <div className="h-80 bg-muted/40 rounded-2xl" />
           <div className="md:col-span-2 space-y-6">
-            <div className="h-48 bg-muted rounded-2xl" />
-            <div className="h-48 bg-muted rounded-2xl" />
+            <div className="h-48 bg-muted/40 rounded-2xl" />
+            <div className="h-48 bg-muted/40 rounded-2xl" />
           </div>
         </div>
       </div>
     );
   }
 
+  const unassignedCompetencies = allCompetencies.filter(
+    (comp) => !trainerCompetencies.some((tc) => tc.competencyId === comp.id)
+  );
+
   return (
-    <div className="space-y-8 max-w-5xl animate-in stagger-1">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-700 to-indigo-800 text-white p-8 shadow-lg shadow-emerald/10">
+    <div className="space-y-8 max-w-5xl mx-auto animate-in stagger-1">
+      {/* Trainer Solid Blue Theme Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-blue-950 text-white p-6 sm:p-8 shadow-xl border border-blue-900">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 text-white flex items-center justify-center font-bold text-2xl border border-white/20 shadow-inner shrink-0">
+            <div className="w-16 h-16 rounded-2xl bg-blue-900 text-blue-100 flex items-center justify-center font-bold text-2xl border border-blue-800 shrink-0 shadow-inner">
               {fullName ? fullName[0].toUpperCase() : "T"}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="badge bg-white/20 text-white border-transparent text-[10px] font-mono uppercase tracking-wider">
-                  Instructor Profile
-                </span>
-              </div>
-              <h1 className="font-display text-display-md text-white mt-1.5 leading-tight">
+            <div className="space-y-1">
+              <span className="bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] uppercase font-mono px-2.5 py-0.5 rounded-full font-bold tracking-wider inline-block">
+                Trainer Profile
+              </span>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-white">
                 {fullName || "Trainer Profile"}
               </h1>
-              <p className="text-white/80 text-xs mt-1">
-                Manage your credentials, bio, teaching background, and subject competencies.
-              </p>
             </div>
           </div>
 
           <Link
             href="/trainer"
-            className="btn-secondary bg-white text-emerald-800 border-transparent hover:bg-white/90 shrink-0 font-bold text-xs py-2.5 px-4 shadow-sm"
+            className="btn-secondary bg-white/10 text-white hover:bg-white/20 border-white/20 shrink-0 font-semibold text-xs py-2.5 px-4 shadow-xs flex items-center gap-1.5"
           >
-            ← Back to Dashboard
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Console</span>
           </Link>
         </div>
-        <div className="absolute right-0 bottom-0 w-72 h-72 bg-white/5 rounded-full blur-3xl -mr-16 -mb-16 pointer-events-none" />
       </div>
 
       {toastMessage && (
-        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs p-4 rounded-xl font-medium animate-in fade-in">
-          {toastMessage}
+        <div className="bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 text-xs p-3.5 rounded-xl font-medium flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>{toastMessage}</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Personal Information */}
+        {/* Left Column: Basic Details */}
         <div className="space-y-6 lg:col-span-1">
-          <div className="card border border-border p-6 bg-card rounded-2xl space-y-4 shadow-sm">
-            <div className="border-b border-border pb-3">
-              <h2 className="font-display font-bold text-sm text-foreground">Basic Details</h2>
-              <p className="text-[11px] text-muted-foreground">Public profile info visible to students</p>
+          <div className="bg-card border border-border/80 p-6 rounded-2xl space-y-4 shadow-xs">
+            <div className="border-b border-border/70 pb-3">
+              <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span>Trainer Details</span>
+              </h2>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Contact info & professional biography</p>
             </div>
 
             <form onSubmit={handleSaveBase} className="space-y-4">
@@ -289,7 +295,7 @@ export default function TrainerProfilePage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className="input-field text-xs w-full"
-                  placeholder="e.g. Dr. Rajesh Sharma"
+                  placeholder="e.g. Dr. Rajesh Kumar"
                 />
               </div>
 
@@ -311,31 +317,94 @@ export default function TrainerProfilePage() {
                   onChange={(e) => setBio(e.target.value)}
                   rows={4}
                   className="input-field text-xs w-full leading-relaxed"
-                  placeholder="Short description of your teaching experience and research domain..."
+                  placeholder="Describe your research specialization and teaching domain..."
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={savingBase}
-                className="btn-primary text-xs py-2.5 w-full font-bold shadow-sm"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5"
               >
-                {savingBase ? "Saving Details..." : "Save Basic Details"}
+                <Save className="w-3.5 h-3.5" />
+                <span>{savingBase ? "Saving Details..." : "Save Details"}</span>
               </button>
             </form>
           </div>
         </div>
 
-        {/* Right Column: Credentials, Experience, Skills */}
+        {/* Right Column: Qualifications, Experience, Competencies */}
         <div className="space-y-6 lg:col-span-2">
-          {/* Qualifications Section */}
-          <div className="card border border-border p-6 bg-card rounded-2xl space-y-4 shadow-sm">
-            <div className="border-b border-border pb-3 flex items-center justify-between">
+          {/* Domain Competencies Tagging */}
+          <div className="bg-card border border-border/80 p-6 rounded-2xl space-y-4 shadow-xs">
+            <div className="border-b border-border/70 pb-3 flex items-center justify-between">
               <div>
-                <h2 className="font-display font-bold text-sm text-foreground">Qualifications & Degrees</h2>
-                <p className="text-[11px] text-muted-foreground">Academic background and certifications</p>
+                <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                  <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span>Domain Competencies & Expertise</span>
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Verified subject areas for course assignments</p>
               </div>
-              <span className="badge bg-muted text-muted-foreground font-mono text-[10px]">
+              <span className="badge bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-mono text-[10px] font-bold">
+                {trainerCompetencies.length} Assigned
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 min-h-[36px]">
+              {trainerCompetencies.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">No domain competencies assigned yet.</p>
+              ) : (
+                trainerCompetencies.map((tc) => (
+                  <span
+                    key={tc.id}
+                    className="badge bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-[10px] py-1 px-2.5 flex items-center gap-1.5 font-semibold"
+                  >
+                    {tc.competency?.name || "Competency"}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCompetency(tc.id)}
+                      className="text-blue-600 hover:text-rose-600 font-bold text-[10px]"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))
+              )}
+            </div>
+
+            {unassignedCompetencies.length > 0 && (
+              <form onSubmit={handleAddCompetency} className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-border/50">
+                <select
+                  value={selectedCompetencyId}
+                  onChange={(e) => setSelectedCompetencyId(e.target.value)}
+                  className="input-field text-xs min-w-0 flex-1 py-2"
+                >
+                  <option value="">Select a domain competency to add...</option>
+                  {unassignedCompetencies.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2 px-4 rounded-xl shadow-xs transition-colors shrink-0 flex items-center gap-1">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Assign Competency</span>
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Qualifications */}
+          <div className="bg-card border border-border/80 p-6 rounded-2xl space-y-4 shadow-xs">
+            <div className="border-b border-border/70 pb-3 flex items-center justify-between">
+              <div>
+                <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span>Academic Qualifications & Degrees</span>
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Academic degrees and diplomas</p>
+              </div>
+              <span className="badge bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-mono text-[10px] font-bold">
                 {qualifications.length} Added
               </span>
             </div>
@@ -343,10 +412,11 @@ export default function TrainerProfilePage() {
             {qualifications.length > 0 ? (
               <div className="space-y-2.5">
                 {qualifications.map((q) => (
-                  <div key={q.id} className="flex items-center justify-between p-3.5 bg-muted/20 border border-border/60 rounded-xl text-xs hover:border-primary/30 transition-all">
+                  <div key={q.id} className="flex items-center justify-between p-3.5 bg-muted/20 border border-border/60 rounded-xl text-xs hover:border-blue-500/40 transition-all">
                     <div className="space-y-0.5">
                       <p className="font-bold text-foreground flex items-center gap-1.5">
-                        <span>🎓</span> {q.degree}
+                        <GraduationCap className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        <span>{q.degree}</span>
                       </p>
                       <p className="text-[11px] text-muted-foreground">
                         {q.institution} • <span className="font-mono">{q.year}</span>
@@ -356,10 +426,9 @@ export default function TrainerProfilePage() {
                       type="button"
                       onClick={() => handleRemoveQual(q.id)}
                       disabled={actionId === q.id}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors font-bold text-xs shrink-0"
-                      title="Remove qualification"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 transition-colors font-bold text-xs shrink-0"
                     >
-                      {actionId === q.id ? "..." : "✕"}
+                      {actionId === q.id ? "..." : <Trash2 className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 ))}
@@ -370,42 +439,46 @@ export default function TrainerProfilePage() {
 
             <form onSubmit={handleAddQual} className="pt-3 border-t border-border/50 space-y-3">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                <span>➕</span> Add New Qualification
+                <Plus className="w-3.5 h-3.5 text-blue-600" />
+                <span>Add Qualification</span>
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-blue-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>🎓</span> Degree / Qualification
+                    <GraduationCap className="w-3 h-3 text-blue-600" />
+                    <span>Degree</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Ph.D. Climatology"
+                    placeholder="e.g. Ph.D. Oceanography"
                     required
                     value={newQual.degree}
                     onChange={(e) => setNewQual({ ...newQual, degree: e.target.value })}
                     className="w-full text-xs bg-transparent border-none p-0 focus:outline-hidden text-foreground placeholder:text-muted-foreground/60"
                   />
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-blue-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>🏛️</span> Institution / University
+                    <Building2 className="w-3 h-3 text-blue-600" />
+                    <span>Institution</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. IIT Delhi"
+                    placeholder="e.g. IISc Bangalore"
                     required
                     value={newQual.institution}
                     onChange={(e) => setNewQual({ ...newQual, institution: e.target.value })}
                     className="w-full text-xs bg-transparent border-none p-0 focus:outline-hidden text-foreground placeholder:text-muted-foreground/60"
                   />
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-blue-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>📅</span> Passing Year
+                    <Calendar className="w-3 h-3 text-blue-600" />
+                    <span>Year</span>
                   </label>
                   <input
                     type="number"
-                    placeholder="2024"
+                    placeholder="2018"
                     required
                     min="1950"
                     max="2100"
@@ -416,21 +489,25 @@ export default function TrainerProfilePage() {
                 </div>
               </div>
               <div className="flex justify-end">
-                <button type="submit" className="btn-primary text-xs py-2 px-5 font-semibold shadow-xs">
-                  Add Qualification
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2 px-4 rounded-xl shadow-xs transition-colors flex items-center gap-1">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Qualification</span>
                 </button>
               </div>
             </form>
           </div>
 
-          {/* Work Experience Section */}
-          <div className="card border border-border p-6 bg-card rounded-2xl space-y-4 shadow-sm">
-            <div className="border-b border-border pb-3 flex items-center justify-between">
+          {/* Work Experience */}
+          <div className="bg-card border border-border/80 p-6 rounded-2xl space-y-4 shadow-xs">
+            <div className="border-b border-border/70 pb-3 flex items-center justify-between">
               <div>
-                <h2 className="font-display font-bold text-sm text-foreground">Work Experience</h2>
-                <p className="text-[11px] text-muted-foreground">Professional positions and tenure</p>
+                <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span>Professional Work Experience</span>
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Teaching, research, and industry background</p>
               </div>
-              <span className="badge bg-muted text-muted-foreground font-mono text-[10px]">
+              <span className="badge bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-mono text-[10px] font-bold">
                 {workExperiences.length} Added
               </span>
             </div>
@@ -438,10 +515,11 @@ export default function TrainerProfilePage() {
             {workExperiences.length > 0 ? (
               <div className="space-y-2.5">
                 {workExperiences.map((w) => (
-                  <div key={w.id} className="flex items-center justify-between p-3.5 bg-muted/20 border border-border/60 rounded-xl text-xs hover:border-primary/30 transition-all">
+                  <div key={w.id} className="flex items-center justify-between p-3.5 bg-muted/20 border border-border/60 rounded-xl text-xs hover:border-blue-500/40 transition-all">
                     <div className="space-y-0.5">
                       <p className="font-bold text-foreground flex items-center gap-1.5">
-                        <span>💼</span> {w.role}
+                        <Briefcase className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        <span>{w.role}</span>
                       </p>
                       <p className="text-[11px] text-muted-foreground">
                         {w.organization} • ({new Date(w.startDate).toLocaleDateString()} – {w.endDate ? new Date(w.endDate).toLocaleDateString() : "Present"})
@@ -451,10 +529,9 @@ export default function TrainerProfilePage() {
                       type="button"
                       onClick={() => handleRemoveExp(w.id)}
                       disabled={actionId === w.id}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors font-bold text-xs shrink-0"
-                      title="Remove experience"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 transition-colors font-bold text-xs shrink-0"
                     >
-                      {actionId === w.id ? "..." : "✕"}
+                      {actionId === w.id ? "..." : <Trash2 className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 ))}
@@ -465,38 +542,42 @@ export default function TrainerProfilePage() {
 
             <form onSubmit={handleAddExp} className="pt-3 border-t border-border/50 space-y-3">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                <span>➕</span> Add Work Experience
+                <Plus className="w-3.5 h-3.5 text-blue-600" />
+                <span>Add Experience</span>
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-blue-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>💼</span> Role / Job Title
+                    <Briefcase className="w-3 h-3 text-blue-600" />
+                    <span>Role / Designation</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Senior Professor"
+                    placeholder="e.g. Senior Scientist"
                     required
                     value={newExp.role}
                     onChange={(e) => setNewExp({ ...newExp, role: e.target.value })}
                     className="w-full text-xs bg-transparent border-none p-0 focus:outline-hidden text-foreground placeholder:text-muted-foreground/60"
                   />
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-blue-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>🏢</span> Organization / Company
+                    <Building className="w-3 h-3 text-blue-600" />
+                    <span>Organization</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. IMD Pune"
+                    placeholder="e.g. NCMRWF"
                     required
                     value={newExp.organization}
                     onChange={(e) => setNewExp({ ...newExp, organization: e.target.value })}
                     className="w-full text-xs bg-transparent border-none p-0 focus:outline-hidden text-foreground placeholder:text-muted-foreground/60"
                   />
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-blue-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>📅</span> Start Date
+                    <Calendar className="w-3 h-3 text-blue-600" />
+                    <span>Start Date</span>
                   </label>
                   <input
                     type="date"
@@ -506,9 +587,10 @@ export default function TrainerProfilePage() {
                     className="w-full text-xs bg-transparent border-none p-0 focus:outline-hidden text-foreground"
                   />
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-blue-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>🏁</span> End Date (Optional)
+                    <Calendar className="w-3 h-3 text-blue-600" />
+                    <span>End Date (Optional)</span>
                   </label>
                   <input
                     type="date"
@@ -519,112 +601,12 @@ export default function TrainerProfilePage() {
                 </div>
               </div>
               <div className="flex justify-end">
-                <button type="submit" className="btn-primary text-xs py-2 px-5 font-semibold shadow-xs">
-                  Add Experience
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2 px-4 rounded-xl shadow-xs transition-colors flex items-center gap-1">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Experience</span>
                 </button>
               </div>
             </form>
-          </div>
-
-          {/* Skills & Competencies Stack */}
-          <div className="space-y-6">
-            {/* Skills Card */}
-            <div className="card border border-border p-6 bg-card rounded-2xl space-y-4 shadow-sm">
-              <div className="border-b border-border pb-3 flex items-center justify-between">
-                <div>
-                  <h2 className="font-display font-bold text-sm text-foreground">Skills</h2>
-                  <p className="text-[11px] text-muted-foreground">Technical & domain skills</p>
-                </div>
-                <span className="badge bg-muted text-muted-foreground font-mono text-[10px]">
-                  {skills.length} Added
-                </span>
-              </div>
-
-              <div className="flex flex-wrap gap-1.5 min-h-[36px]">
-                {skills.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic">No skills added yet.</p>
-                ) : (
-                  skills.map((s) => (
-                    <span key={s.id} className="badge bg-muted/60 border border-border text-[10px] py-1 px-2.5 flex items-center gap-1.5 font-medium">
-                      {s.name}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSkill(s.id)}
-                        className="text-muted-foreground hover:text-red-600 font-bold text-[10px]"
-                      >
-                        ✕
-                      </button>
-                    </span>
-                  ))
-                )}
-              </div>
-
-              <form onSubmit={handleAddSkill} className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-border/50">
-                <input
-                  type="text"
-                  placeholder="e.g. Python, Weather Forecasting"
-                  required
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  className="input-field text-xs min-w-0 flex-1 py-2"
-                />
-                <button type="submit" className="btn-primary text-xs py-2 px-5 shrink-0 font-semibold">
-                  Add Skill
-                </button>
-              </form>
-            </div>
-
-            {/* Competencies Card */}
-            <div className="card border border-border p-6 bg-card rounded-2xl space-y-4 shadow-sm">
-              <div className="border-b border-border pb-3 flex items-center justify-between">
-                <div>
-                  <h2 className="font-display font-bold text-sm text-foreground">Competencies</h2>
-                  <p className="text-[11px] text-muted-foreground">Verified trainer subject competencies</p>
-                </div>
-                <span className="badge bg-muted text-muted-foreground font-mono text-[10px]">
-                  {trainerCompetencies.length} Added
-                </span>
-              </div>
-
-              <div className="flex flex-wrap gap-1.5 min-h-[36px]">
-                {trainerCompetencies.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic">No competencies added yet.</p>
-                ) : (
-                  trainerCompetencies.map((tc) => (
-                    <span key={tc.id} className="badge bg-primary/10 border border-primary/20 text-primary text-[10px] py-1 px-2.5 flex items-center gap-1.5 font-semibold">
-                      {tc.competency?.name || "Competency"}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCompetency(tc.id)}
-                        disabled={actionId === tc.id}
-                        className="text-primary hover:text-red-600 font-bold text-[10px]"
-                      >
-                        ✕
-                      </button>
-                    </span>
-                  ))
-                )}
-              </div>
-
-              <form onSubmit={handleAddCompetency} className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-border/50">
-                <select
-                  required
-                  value={selectedCompetencyId}
-                  onChange={(e) => setSelectedCompetencyId(e.target.value)}
-                  className="input-field text-xs min-w-0 flex-1 py-2 bg-card"
-                >
-                  <option value="">Select Competency...</option>
-                  {allCompetencies.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                <button type="submit" className="btn-primary text-xs py-2 px-5 shrink-0 font-semibold">
-                  Add Competency
-                </button>
-              </form>
-            </div>
           </div>
         </div>
       </div>

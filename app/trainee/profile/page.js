@@ -4,6 +4,23 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/auth-context";
 import { apiFetch } from "@/lib/api";
 import Link from "next/link";
+import {
+  GraduationCap,
+  Building2,
+  Calendar,
+  Briefcase,
+  Building,
+  CheckCircle2,
+  XCircle,
+  Plus,
+  Trash2,
+  Save,
+  Award,
+  Sparkles,
+  ArrowLeft,
+  User,
+  Lightbulb,
+} from "lucide-react";
 
 export default function TraineeProfilePage() {
   const { getToken, user } = useAuth();
@@ -66,10 +83,10 @@ export default function TraineeProfilePage() {
         method: "PUT",
         body: JSON.stringify({ fullName, phone: phone || null, bio: bio || null }),
       });
-      showToast("✅ Basic profile details updated successfully!");
+      showToast("Basic profile details updated successfully!");
     } catch (e) {
       console.error(e);
-      showToast("❌ Failed to update profile details.");
+      showToast("Failed to update profile details.");
     } finally {
       setSavingBase(false);
     }
@@ -89,10 +106,10 @@ export default function TraineeProfilePage() {
       });
       setQualifications([...qualifications, res.data]);
       setNewQual({ degree: "", institution: "", year: "" });
-      showToast("🎓 Qualification added!");
+      showToast("Qualification added successfully!");
     } catch (e) {
       console.error(e);
-      showToast("❌ Failed to add qualification.");
+      showToast("Failed to add qualification.");
     }
   }
 
@@ -124,10 +141,10 @@ export default function TraineeProfilePage() {
       });
       setWorkExperiences([...workExperiences, res.data]);
       setNewExp({ role: "", organization: "", startDate: "", endDate: "" });
-      showToast("💼 Experience added!");
+      showToast("Work experience added!");
     } catch (e) {
       console.error(e);
-      showToast("❌ Failed to add work experience.");
+      showToast("Failed to add work experience.");
     }
   }
 
@@ -154,7 +171,7 @@ export default function TraineeProfilePage() {
       });
       setSkills([...skills, res.data]);
       setNewSkill("");
-      showToast("⚡ Skill added!");
+      showToast("Skill added!");
     } catch (e) {
       console.error(e);
     }
@@ -179,7 +196,7 @@ export default function TraineeProfilePage() {
       });
       setInterests([...interests, res.data]);
       setNewInterest("");
-      showToast("💡 Interest added!");
+      showToast("Learning interest added!");
     } catch (e) {
       console.error(e);
     }
@@ -196,13 +213,13 @@ export default function TraineeProfilePage() {
 
   if (loading) {
     return (
-      <div className="space-y-8 max-w-5xl animate-pulse">
-        <div className="h-44 w-full bg-muted rounded-2xl" />
+      <div className="space-y-8 max-w-5xl mx-auto animate-pulse">
+        <div className="h-44 w-full bg-muted/50 rounded-2xl" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="h-80 bg-muted rounded-2xl" />
+          <div className="h-80 bg-muted/40 rounded-2xl" />
           <div className="md:col-span-2 space-y-6">
-            <div className="h-48 bg-muted rounded-2xl" />
-            <div className="h-48 bg-muted rounded-2xl" />
+            <div className="h-48 bg-muted/40 rounded-2xl" />
+            <div className="h-48 bg-muted/40 rounded-2xl" />
           </div>
         </div>
       </div>
@@ -210,52 +227,51 @@ export default function TraineeProfilePage() {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl animate-in stagger-1">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-600 via-emerald-700 to-indigo-800 text-white p-8 shadow-lg shadow-emerald/10">
+    <div className="space-y-8 max-w-5xl mx-auto animate-in stagger-1">
+      {/* Trainee Solid Green Theme Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-emerald-950 text-white p-6 sm:p-8 shadow-xl border border-emerald-900">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 text-white flex items-center justify-center font-bold text-2xl border border-white/20 shadow-inner shrink-0">
-              {fullName ? fullName[0].toUpperCase() : "S"}
+            <div className="w-16 h-16 rounded-2xl bg-emerald-900 text-emerald-100 flex items-center justify-center font-bold text-2xl border border-emerald-800 shrink-0 shadow-inner">
+              {fullName ? fullName[0].toUpperCase() : "T"}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="badge bg-white/20 text-white border-transparent text-[10px] font-mono uppercase tracking-wider">
-                  Student Trainee Profile
-                </span>
-              </div>
-              <h1 className="font-display text-display-md text-white mt-1.5 leading-tight">
+            <div className="space-y-1">
+              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] uppercase font-mono px-2.5 py-0.5 rounded-full font-bold tracking-wider inline-block">
+                Trainee Profile
+              </span>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-white">
                 {fullName || "My Trainee Profile"}
               </h1>
-              <p className="text-white/80 text-xs mt-1">
-                Configure your academic degree details, skills, experience, and learning interests.
-              </p>
             </div>
           </div>
 
           <Link
             href="/trainee"
-            className="btn-secondary bg-white text-emerald-800 border-transparent hover:bg-white/90 shrink-0 font-bold text-xs py-2.5 px-4 shadow-sm"
+            className="btn-secondary bg-white/10 text-white hover:bg-white/20 border-white/20 shrink-0 font-semibold text-xs py-2.5 px-4 shadow-xs flex items-center gap-1.5"
           >
-            ← Back to Dashboard
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Dashboard</span>
           </Link>
         </div>
-        <div className="absolute right-0 bottom-0 w-72 h-72 bg-white/5 rounded-full blur-3xl -mr-16 -mb-16 pointer-events-none" />
       </div>
 
       {toastMessage && (
-        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs p-4 rounded-xl font-medium animate-in fade-in">
-          {toastMessage}
+        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs p-3.5 rounded-xl font-medium flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>{toastMessage}</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Basic Details */}
         <div className="space-y-6 lg:col-span-1">
-          <div className="card border border-border p-6 bg-card rounded-2xl space-y-4 shadow-sm">
-            <div className="border-b border-border pb-3">
-              <h2 className="font-display font-bold text-sm text-foreground">Basic Details</h2>
-              <p className="text-[11px] text-muted-foreground">Personal contact and bio summary</p>
+          <div className="bg-card border border-border/80 p-6 rounded-2xl space-y-4 shadow-xs">
+            <div className="border-b border-border/70 pb-3">
+              <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Basic Details</span>
+              </h2>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Personal contact and bio summary</p>
             </div>
 
             <form onSubmit={handleSaveBase} className="space-y-4">
@@ -296,9 +312,10 @@ export default function TraineeProfilePage() {
               <button
                 type="submit"
                 disabled={savingBase}
-                className="btn-primary text-xs py-2.5 w-full font-bold shadow-sm"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5"
               >
-                {savingBase ? "Saving Details..." : "Save Basic Details"}
+                <Save className="w-3.5 h-3.5" />
+                <span>{savingBase ? "Saving Details..." : "Save Basic Details"}</span>
               </button>
             </form>
           </div>
@@ -307,13 +324,16 @@ export default function TraineeProfilePage() {
         {/* Right Column: Qualifications, Experience, Interests */}
         <div className="space-y-6 lg:col-span-2">
           {/* Qualifications */}
-          <div className="card border border-border p-6 bg-card rounded-2xl space-y-4 shadow-sm">
-            <div className="border-b border-border pb-3 flex items-center justify-between">
+          <div className="bg-card border border-border/80 p-6 rounded-2xl space-y-4 shadow-xs">
+            <div className="border-b border-border/70 pb-3 flex items-center justify-between">
               <div>
-                <h2 className="font-display font-bold text-sm text-foreground">Qualifications & Degrees</h2>
-                <p className="text-[11px] text-muted-foreground">Degrees, diplomas, and academic history</p>
+                <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>Qualifications & Degrees</span>
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Degrees, diplomas, and academic history</p>
               </div>
-              <span className="badge bg-muted text-muted-foreground font-mono text-[10px]">
+              <span className="badge bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono text-[10px] font-bold">
                 {qualifications.length} Added
               </span>
             </div>
@@ -321,10 +341,11 @@ export default function TraineeProfilePage() {
             {qualifications.length > 0 ? (
               <div className="space-y-2.5">
                 {qualifications.map((q) => (
-                  <div key={q.id} className="flex items-center justify-between p-3.5 bg-muted/20 border border-border/60 rounded-xl text-xs hover:border-primary/30 transition-all">
+                  <div key={q.id} className="flex items-center justify-between p-3.5 bg-muted/20 border border-border/60 rounded-xl text-xs hover:border-emerald-500/40 transition-all">
                     <div className="space-y-0.5">
                       <p className="font-bold text-foreground flex items-center gap-1.5">
-                        <span>🎓</span> {q.degree}
+                        <GraduationCap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>{q.degree}</span>
                       </p>
                       <p className="text-[11px] text-muted-foreground">
                         {q.institution} • <span className="font-mono">{q.year}</span>
@@ -334,10 +355,10 @@ export default function TraineeProfilePage() {
                       type="button"
                       onClick={() => handleRemoveQual(q.id)}
                       disabled={actionId === q.id}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors font-bold text-xs shrink-0"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 transition-colors font-bold text-xs shrink-0"
                       title="Remove qualification"
                     >
-                      {actionId === q.id ? "..." : "✕"}
+                      {actionId === q.id ? "..." : <Trash2 className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 ))}
@@ -348,12 +369,14 @@ export default function TraineeProfilePage() {
 
             <form onSubmit={handleAddQual} className="pt-3 border-t border-border/50 space-y-3">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                <span>➕</span> Add New Qualification
+                <Plus className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Add New Qualification</span>
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-emerald-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>🎓</span> Degree / Qualification
+                    <GraduationCap className="w-3 h-3 text-emerald-600" />
+                    <span>Degree</span>
                   </label>
                   <input
                     type="text"
@@ -364,9 +387,10 @@ export default function TraineeProfilePage() {
                     className="w-full text-xs bg-transparent border-none p-0 focus:outline-hidden text-foreground placeholder:text-muted-foreground/60"
                   />
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-emerald-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>🏛️</span> Institution / University
+                    <Building2 className="w-3 h-3 text-emerald-600" />
+                    <span>Institution</span>
                   </label>
                   <input
                     type="text"
@@ -377,9 +401,10 @@ export default function TraineeProfilePage() {
                     className="w-full text-xs bg-transparent border-none p-0 focus:outline-hidden text-foreground placeholder:text-muted-foreground/60"
                   />
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-emerald-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>📅</span> Passing Year
+                    <Calendar className="w-3 h-3 text-emerald-600" />
+                    <span>Passing Year</span>
                   </label>
                   <input
                     type="number"
@@ -394,21 +419,25 @@ export default function TraineeProfilePage() {
                 </div>
               </div>
               <div className="flex justify-end">
-                <button type="submit" className="btn-primary text-xs py-2 px-5 font-semibold shadow-xs">
-                  Add Qualification
+                <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs py-2 px-4 rounded-xl shadow-xs transition-colors flex items-center gap-1">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Qualification</span>
                 </button>
               </div>
             </form>
           </div>
 
           {/* Work Experience */}
-          <div className="card border border-border p-6 bg-card rounded-2xl space-y-4 shadow-sm">
-            <div className="border-b border-border pb-3 flex items-center justify-between">
+          <div className="bg-card border border-border/80 p-6 rounded-2xl space-y-4 shadow-xs">
+            <div className="border-b border-border/70 pb-3 flex items-center justify-between">
               <div>
-                <h2 className="font-display font-bold text-sm text-foreground">Work Experience</h2>
-                <p className="text-[11px] text-muted-foreground">Past positions or internships</p>
+                <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>Work Experience</span>
+                </h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Past positions or internships</p>
               </div>
-              <span className="badge bg-muted text-muted-foreground font-mono text-[10px]">
+              <span className="badge bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono text-[10px] font-bold">
                 {workExperiences.length} Added
               </span>
             </div>
@@ -416,10 +445,11 @@ export default function TraineeProfilePage() {
             {workExperiences.length > 0 ? (
               <div className="space-y-2.5">
                 {workExperiences.map((w) => (
-                  <div key={w.id} className="flex items-center justify-between p-3.5 bg-muted/20 border border-border/60 rounded-xl text-xs hover:border-primary/30 transition-all">
+                  <div key={w.id} className="flex items-center justify-between p-3.5 bg-muted/20 border border-border/60 rounded-xl text-xs hover:border-emerald-500/40 transition-all">
                     <div className="space-y-0.5">
                       <p className="font-bold text-foreground flex items-center gap-1.5">
-                        <span>💼</span> {w.role}
+                        <Briefcase className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>{w.role}</span>
                       </p>
                       <p className="text-[11px] text-muted-foreground">
                         {w.organization} • ({new Date(w.startDate).toLocaleDateString()} – {w.endDate ? new Date(w.endDate).toLocaleDateString() : "Present"})
@@ -429,10 +459,10 @@ export default function TraineeProfilePage() {
                       type="button"
                       onClick={() => handleRemoveExp(w.id)}
                       disabled={actionId === w.id}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors font-bold text-xs shrink-0"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 transition-colors font-bold text-xs shrink-0"
                       title="Remove experience"
                     >
-                      {actionId === w.id ? "..." : "✕"}
+                      {actionId === w.id ? "..." : <Trash2 className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 ))}
@@ -443,12 +473,14 @@ export default function TraineeProfilePage() {
 
             <form onSubmit={handleAddExp} className="pt-3 border-t border-border/50 space-y-3">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                <span>➕</span> Add Work Experience
+                <Plus className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Add Work Experience</span>
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-emerald-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>💼</span> Role / Job Title
+                    <Briefcase className="w-3 h-3 text-emerald-600" />
+                    <span>Role / Title</span>
                   </label>
                   <input
                     type="text"
@@ -459,9 +491,10 @@ export default function TraineeProfilePage() {
                     className="w-full text-xs bg-transparent border-none p-0 focus:outline-hidden text-foreground placeholder:text-muted-foreground/60"
                   />
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-emerald-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>🏢</span> Organization / Company
+                    <Building className="w-3 h-3 text-emerald-600" />
+                    <span>Organization</span>
                   </label>
                   <input
                     type="text"
@@ -472,9 +505,10 @@ export default function TraineeProfilePage() {
                     className="w-full text-xs bg-transparent border-none p-0 focus:outline-hidden text-foreground placeholder:text-muted-foreground/60"
                   />
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-emerald-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>📅</span> Start Date
+                    <Calendar className="w-3 h-3 text-emerald-600" />
+                    <span>Start Date</span>
                   </label>
                   <input
                     type="date"
@@ -484,9 +518,10 @@ export default function TraineeProfilePage() {
                     className="w-full text-xs bg-transparent border-none p-0 focus:outline-hidden text-foreground"
                   />
                 </div>
-                <div className="bg-card border border-border rounded-xl p-3 shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="bg-card border border-border/80 rounded-xl p-3 shadow-xs focus-within:border-emerald-500 transition-all">
                   <label className="text-[11px] font-semibold text-foreground flex items-center gap-1 mb-1">
-                    <span>🏁</span> End Date (Optional)
+                    <Calendar className="w-3 h-3 text-emerald-600" />
+                    <span>End Date (Optional)</span>
                   </label>
                   <input
                     type="date"
@@ -497,8 +532,9 @@ export default function TraineeProfilePage() {
                 </div>
               </div>
               <div className="flex justify-end">
-                <button type="submit" className="btn-primary text-xs py-2 px-5 font-semibold shadow-xs">
-                  Add Experience
+                <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs py-2 px-4 rounded-xl shadow-xs transition-colors flex items-center gap-1">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Experience</span>
                 </button>
               </div>
             </form>
@@ -507,13 +543,16 @@ export default function TraineeProfilePage() {
           {/* Skills & Learning Interests Stack */}
           <div className="space-y-6">
             {/* Skills */}
-            <div className="card border border-border p-6 bg-card rounded-2xl space-y-4 shadow-sm">
-              <div className="border-b border-border pb-3 flex items-center justify-between">
+            <div className="bg-card border border-border/80 p-6 rounded-2xl space-y-4 shadow-xs">
+              <div className="border-b border-border/70 pb-3 flex items-center justify-between">
                 <div>
-                  <h2 className="font-display font-bold text-sm text-foreground">Skills</h2>
-                  <p className="text-[11px] text-muted-foreground">Technical capabilities & tools</p>
+                  <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Technical Skills</span>
+                  </h2>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Capabilities & domain tools</p>
                 </div>
-                <span className="badge bg-muted text-muted-foreground font-mono text-[10px]">
+                <span className="badge bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono text-[10px] font-bold">
                   {skills.length} Added
                 </span>
               </div>
@@ -523,12 +562,12 @@ export default function TraineeProfilePage() {
                   <p className="text-xs text-muted-foreground italic">No skills added yet.</p>
                 ) : (
                   skills.map((s) => (
-                    <span key={s.id} className="badge bg-muted/60 border border-border text-[10px] py-1 px-2.5 flex items-center gap-1.5 font-medium">
+                    <span key={s.id} className="badge bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] py-1 px-2.5 flex items-center gap-1.5 font-semibold">
                       {s.name}
                       <button
                         type="button"
                         onClick={() => handleRemoveSkill(s.id)}
-                        className="text-muted-foreground hover:text-red-600 font-bold text-[10px]"
+                        className="text-emerald-600 hover:text-rose-600 font-bold text-[10px]"
                       >
                         ✕
                       </button>
@@ -546,20 +585,24 @@ export default function TraineeProfilePage() {
                   onChange={(e) => setNewSkill(e.target.value)}
                   className="input-field text-xs min-w-0 flex-1 py-2"
                 />
-                <button type="submit" className="btn-primary text-xs py-2 px-5 shrink-0 font-semibold">
-                  Add Skill
+                <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs py-2 px-4 rounded-xl shadow-xs transition-colors shrink-0 flex items-center gap-1">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Skill</span>
                 </button>
               </form>
             </div>
 
             {/* Learning Interests */}
-            <div className="card border border-border p-6 bg-card rounded-2xl space-y-4 shadow-sm">
-              <div className="border-b border-border pb-3 flex items-center justify-between">
+            <div className="bg-card border border-border/80 p-6 rounded-2xl space-y-4 shadow-xs">
+              <div className="border-b border-border/70 pb-3 flex items-center justify-between">
                 <div>
-                  <h2 className="font-display font-bold text-sm text-foreground">Learning Interests</h2>
-                  <p className="text-[11px] text-muted-foreground">Topics & domain fields of interest</p>
+                  <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Learning Interests</span>
+                  </h2>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Topics & research fields</p>
                 </div>
-                <span className="badge bg-muted text-muted-foreground font-mono text-[10px]">
+                <span className="badge bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono text-[10px] font-bold">
                   {interests.length} Added
                 </span>
               </div>
@@ -569,12 +612,12 @@ export default function TraineeProfilePage() {
                   <p className="text-xs text-muted-foreground italic">No interests added yet.</p>
                 ) : (
                   interests.map((i) => (
-                    <span key={i.id} className="badge bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] py-1 px-2.5 flex items-center gap-1.5 font-semibold">
+                    <span key={i.id} className="badge bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] py-1 px-2.5 flex items-center gap-1.5 font-semibold">
                       {i.name}
                       <button
                         type="button"
                         onClick={() => handleRemoveInterest(i.id)}
-                        className="text-emerald-600 dark:text-emerald-400 hover:text-red-600 font-bold text-[10px]"
+                        className="text-emerald-600 hover:text-rose-600 font-bold text-[10px]"
                       >
                         ✕
                       </button>
@@ -592,8 +635,9 @@ export default function TraineeProfilePage() {
                   onChange={(e) => setNewInterest(e.target.value)}
                   className="input-field text-xs min-w-0 flex-1 py-2"
                 />
-                <button type="submit" className="btn-primary text-xs py-2 px-5 shrink-0 font-semibold">
-                  Add Interest
+                <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs py-2 px-4 rounded-xl shadow-xs transition-colors shrink-0 flex items-center gap-1">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Interest</span>
                 </button>
               </form>
             </div>
