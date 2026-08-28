@@ -28,9 +28,25 @@ export async function publishCourse(token, id) {
   });
 }
 
+export async function updateCourseStatus(token, id, status) {
+  return apiFetch(`/courses/${id}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function deleteCourse(token, id) {
+  return apiFetch(`/courses/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 export async function enrollCourse(token, id) {
   return apiFetch(`/courses/${id}/enroll`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
