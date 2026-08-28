@@ -71,6 +71,7 @@ export default function TraineeDashboardPage() {
 
   const activeCount = enrollments.length;
   const pendingAssessmentsCount = dashboardData?.pendingAssessments || 0;
+  const enrolledCourses = enrollments.map((e) => e.course || e).filter(Boolean);
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto animate-in stagger-1">
