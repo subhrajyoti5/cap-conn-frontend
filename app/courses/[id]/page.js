@@ -186,26 +186,42 @@ export default function CourseDetailPage() {
   const [rejectStatus, setRejectStatus] = useState({ type: "", message: "" });
 
   async function handleViewTrainer(trainerId) {
-    const targetId = trainerId || course?.trainerId || course?.trainer?.id;
+    let targetId = trainerId;
+    if (!targetId || typeof targetId !== "string" || targetId === "undefined") {
+      targetId = course?.trainerId || course?.trainer?.id;
+    }
+    if (!targetId || targetId === "undefined") return;
+
     setShowTrainerModal(true);
     setLoadingTrainer(true);
     try {
-      if (targetId) {
-        const res = await apiFetch(`/profiles/trainers/${targetId}`);
-        if (res?.data) {
-          setTrainerProfile(res.data);
-          return;
-        }
-      }
-      if (course?.trainer) {
-        setTrainerProfile({ user: course.trainer, coursesTaught: [] });
-      } else {
-        setTrainerProfile(null);
+      const token = await getToken();
+      const res = await apiFetch(`/profiles/trainers/${targetId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res?.data) {
+        setTrainerProfile(res.data);
+      } else if (course?.trainer) {
+        setTrainerProfile({
+          user: course.trainer,
+          bio: "Assigned course instructor.",
+          courses: [course],
+          workExperiences: [],
+          skills: [],
+          trainerCompetencies: [],
+        });
       }
     } catch (e) {
       console.error("Error loading trainer public profile:", e);
       if (course?.trainer) {
-        setTrainerProfile({ user: course.trainer, coursesTaught: [] });
+        setTrainerProfile({
+          user: course.trainer,
+          bio: "Assigned course instructor.",
+          courses: [course],
+          workExperiences: [],
+          skills: [],
+          trainerCompetencies: [],
+        });
       } else {
         setTrainerProfile(null);
       }
@@ -739,7 +755,7 @@ export default function CourseDetailPage() {
                 </div>
               </div>
               <button
-                onClick={() => handleViewTrainer(course?.trainerId)}
+                onClick={handleViewTrainer}
                 className="btn-secondary w-full text-xs py-2 text-center block font-semibold border-border hover:bg-muted/40"
               >
                 View Instructor Profile

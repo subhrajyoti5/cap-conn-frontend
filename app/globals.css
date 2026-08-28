@@ -153,7 +153,7 @@
   .btn-primary {
     @apply btn px-4 py-2.5 rounded-lg
       bg-accent text-white font-semibold
-      hover:bg-accent-600 active:scale-[0.98]
+      hover:bg-accent-600 hover:text-white active:scale-[0.98]
       shadow-md shadow-accent/25
       text-sm;
   }

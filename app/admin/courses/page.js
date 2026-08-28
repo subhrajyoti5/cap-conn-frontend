@@ -153,10 +153,10 @@ export default function AdminCoursesPage() {
 
           <Link
             href="/courses/create"
-            className="btn-primary text-xs py-2.5 px-4 font-semibold shadow-md shrink-0 flex items-center gap-1.5"
+            className="btn-primary text-xs py-2.5 px-4 font-semibold shadow-md shrink-0 flex items-center gap-1.5 text-white hover:text-white"
           >
-            <Plus className="w-4 h-4" />
-            <span>Create Course</span>
+            <Plus className="w-4 h-4 text-white" />
+            <span className="text-white hover:text-white">Create Course</span>
           </Link>
         </div>
       </div>

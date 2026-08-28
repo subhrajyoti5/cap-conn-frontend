@@ -219,16 +219,16 @@ export default function TrainerDashboardPage() {
           <div className="flex gap-3 shrink-0">
             <Link
               href="/courses/create"
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs py-2.5 px-4 rounded-xl font-semibold shadow-xs flex items-center gap-1.5 transition-colors"
+              className="bg-blue-600 hover:bg-blue-500 text-white hover:text-white text-xs py-2.5 px-4 rounded-xl font-semibold shadow-xs flex items-center gap-1.5 transition-all"
             >
-              <Plus className="w-4 h-4" />
-              <span>Create Course</span>
+              <Plus className="w-4 h-4 text-white" />
+              <span className="text-white hover:text-white">Create Course</span>
             </Link>
             <Link
               href="/trainer/profile"
-              className="btn-secondary text-xs py-2.5 px-4 font-semibold text-white bg-white/10 hover:bg-white/20 border-white/20"
+              className="bg-white/10 hover:bg-white/20 text-white hover:text-white border border-white/20 text-xs py-2.5 px-4 rounded-xl font-semibold transition-all flex items-center justify-center"
             >
-              Edit Profile
+              <span className="text-white hover:text-white">Edit Profile</span>
             </Link>
           </div>
         </div>
