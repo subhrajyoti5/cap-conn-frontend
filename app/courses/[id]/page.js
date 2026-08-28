@@ -186,15 +186,29 @@ export default function CourseDetailPage() {
   const [rejectStatus, setRejectStatus] = useState({ type: "", message: "" });
 
   async function handleViewTrainer(trainerId) {
-    const targetId = trainerId || course?.trainerId;
-    if (!targetId) return;
+    const targetId = trainerId || course?.trainerId || course?.trainer?.id;
     setShowTrainerModal(true);
     setLoadingTrainer(true);
     try {
-      const res = await apiFetch(`/profiles/trainers/${targetId}`);
-      setTrainerProfile(res.data);
+      if (targetId) {
+        const res = await apiFetch(`/profiles/trainers/${targetId}`);
+        if (res?.data) {
+          setTrainerProfile(res.data);
+          return;
+        }
+      }
+      if (course?.trainer) {
+        setTrainerProfile({ user: course.trainer, coursesTaught: [] });
+      } else {
+        setTrainerProfile(null);
+      }
     } catch (e) {
       console.error("Error loading trainer public profile:", e);
+      if (course?.trainer) {
+        setTrainerProfile({ user: course.trainer, coursesTaught: [] });
+      } else {
+        setTrainerProfile(null);
+      }
     } finally {
       setLoadingTrainer(false);
     }
@@ -725,7 +739,7 @@ export default function CourseDetailPage() {
                 </div>
               </div>
               <button
-                onClick={handleViewTrainer}
+                onClick={() => handleViewTrainer(course?.trainerId)}
                 className="btn-secondary w-full text-xs py-2 text-center block font-semibold border-border hover:bg-muted/40"
               >
                 View Instructor Profile

@@ -308,22 +308,22 @@ function MessagesContent() {
   const isPartnerAdmin = activePartner?.role === "ADMIN";
 
   return (
-    <div className="space-y-3 max-w-7xl mx-auto animate-in stagger-1">
+    <div className="h-[calc(100vh-5.5rem)] flex flex-col overflow-hidden max-w-7xl mx-auto animate-in stagger-1">
       {/* Header Banner */}
-      <div className="flex justify-between items-center flex-wrap gap-4">
+      <div className="flex justify-between items-center flex-wrap gap-4 shrink-0 mb-2">
         <div>
-          <h1 className="font-display text-display-md font-bold text-foreground flex items-center gap-2.5">
-            <MessageSquare className="w-6 h-6 text-primary shrink-0" />
+          <h1 className="font-display text-lg font-bold text-foreground flex items-center gap-2.5">
+            <MessageSquare className="w-5 h-5 text-primary shrink-0" />
             <span>Direct Messages Hub</span>
           </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-[11px] text-muted-foreground mt-0.5">
             Private, encrypted communications with trainees, trainers, and organization admins.
           </p>
         </div>
       </div>
 
       {/* Main Full-Screen Container Card */}
-      <div className="border border-border/80 rounded-2xl overflow-hidden bg-card shadow-elevated flex flex-col h-[calc(100vh-145px)] min-h-[580px] w-full">
+      <div className="border border-border/80 rounded-2xl overflow-hidden bg-card shadow-elevated flex flex-col flex-1 min-h-0 w-full">
         {/* Top Control Bar with Search & Conditional Back Action */}
         <div className="p-3.5 border-b border-border/80 bg-muted/20 flex items-center justify-between gap-3 shrink-0">
           <div className="relative flex-1 max-w-md">
@@ -682,8 +682,8 @@ function MessagesContent() {
                         <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       </div>
                     ) : threadMessages.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full text-center space-y-2 text-muted-foreground">
-                        <MessageCircle className="w-8 h-8 opacity-40" />
+                      <div className="flex flex-col items-center justify-center py-10 text-center space-y-2 text-muted-foreground">
+                        <MessageCircle className="w-8 h-8 opacity-40 text-primary" />
                         <p className="text-xs font-medium text-foreground">
                           Start of conversation
                         </p>
