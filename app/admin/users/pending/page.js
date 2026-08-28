@@ -116,17 +116,17 @@ export default function PendingUsersPage() {
                 setLoading(true);
                 load();
               }}
-              className="btn-secondary bg-white/10 text-white hover:bg-white/20 border-white/20 text-xs py-2 px-3.5 flex items-center gap-1.5 font-medium shadow-xs"
+              className="bg-white/10 hover:bg-white/20 text-white hover:text-white border border-white/20 text-xs py-2 px-3.5 rounded-xl flex items-center gap-1.5 font-medium transition-all shadow-xs"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Refresh Queue</span>
+              <RefreshCw className="w-3.5 h-3.5 text-white" />
+              <span className="text-white hover:text-white">Refresh Queue</span>
             </button>
             <Link
               href="/admin"
-              className="btn-secondary bg-white/10 text-white hover:bg-white/20 border-white/20 text-xs py-2 px-3.5 flex items-center gap-1.5 font-medium shadow-xs"
+              className="bg-white/10 hover:bg-white/20 text-white hover:text-white border border-white/20 text-xs py-2 px-3.5 rounded-xl flex items-center gap-1.5 font-medium transition-all shadow-xs"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Admin Console</span>
+              <ArrowLeft className="w-3.5 h-3.5 text-white" />
+              <span className="text-white hover:text-white">Admin Console</span>
             </Link>
           </div>
         </div>

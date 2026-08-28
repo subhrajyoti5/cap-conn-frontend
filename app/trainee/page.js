@@ -21,6 +21,7 @@ export default function TraineeDashboardPage() {
   const { getToken, user } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [enrollments, setEnrollments] = useState([]);
+  const [newlyAddedCourses, setNewlyAddedCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   async function load() {
@@ -28,15 +29,17 @@ export default function TraineeDashboardPage() {
       const token = await getToken();
       if (!token) return;
 
-      const [dashRes, enrollmentsRes] = await Promise.all([
+      const [dashRes, enrollmentsRes, newlyAddedRes] = await Promise.all([
         apiFetch("/dashboard/trainee"),
         apiFetch("/me/enrollments?status=ACTIVE"),
+        apiFetch("/courses?status=PUBLISHED&isFeatured=true&sort=featured"),
       ]);
 
       setDashboardData(dashRes.data || dashRes);
       setEnrollments(enrollmentsRes.data || enrollmentsRes || []);
+      setNewlyAddedCourses(newlyAddedRes.data || newlyAddedRes || []);
     } catch (e) {
-      console.error("Error loading trainee dashboard:", e);
+      console.error("Error loading trainee homepage:", e);
     } finally {
       setLoading(false);
     }
@@ -52,6 +55,12 @@ export default function TraineeDashboardPage() {
         <div className="h-44 w-full bg-muted/50 rounded-2xl" />
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-6">
+            <div className="h-6 w-44 bg-muted/60 rounded-lg" />
+            <div className="flex gap-4 overflow-hidden">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-44 w-72 bg-muted/40 rounded-2xl shrink-0" />
+              ))}
+            </div>
             <div className="h-6 w-44 bg-muted/60 rounded-lg" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {[1, 2].map((i) => (
@@ -107,25 +116,92 @@ export default function TraineeDashboardPage() {
             </div>
           </div>
         </div>
-
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Enrolled Courses Main Grid */}
-        <div className="lg:col-span-3 space-y-5">
-          <div className="flex items-center justify-between border-b border-border/80 pb-3">
-            <h2 className="font-display text-base font-bold text-foreground flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-primary" />
-              <span>My Active Classes</span>
-            </h2>
-            <Link
-              href="/courses"
-              className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-            >
-              <span>Explore All Catalog</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
+        {/* Main Content Area */}
+        <div className="lg:col-span-3 space-y-7">
+          {/* Newly Added Horizontal Scrolling Showcase */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-border/80 pb-2.5">
+              <h2 className="font-display text-base font-bold text-foreground flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>Newly Added</span>
+              </h2>
+              <Link
+                href="/courses"
+                className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 shrink-0"
+              >
+                <span>Explore All Catalog</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {newlyAddedCourses.length === 0 ? (
+              <div className="p-5 rounded-2xl bg-card border border-border/80 text-xs text-muted-foreground text-center">
+                No newly added courses available at the moment.
+              </div>
+            ) : (
+              <div className="flex overflow-x-auto gap-4 pb-3 pt-1 scrollbar-thin scrollbar-thumb-muted snap-x">
+                {newlyAddedCourses.map((c) => {
+                  const isEnrolled = enrolledCourses.some((ec) => ec.id === c.id);
+
+                  return (
+                    <Link
+                      key={c.id}
+                      href={`/courses/${c.id}`}
+                      className="shrink-0 w-72 sm:w-80 bg-card border border-border/80 rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all flex flex-col justify-between p-4 snap-start group"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="bg-primary/10 text-primary border border-primary/20 text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-md truncate max-w-[70%]">
+                            {c.subject?.name || "Specialized Domain"}
+                          </span>
+                          {isEnrolled ? (
+                            <span className="text-[9px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-bold uppercase px-2 py-0.5 rounded-md border border-emerald-500/20">
+                              Enrolled
+                            </span>
+                          ) : (
+                            <span className="text-[9px] bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono font-bold uppercase px-2 py-0.5 rounded-md border border-amber-500/20">
+                              New
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-display font-bold text-sm text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                          {c.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                          {c.description || "Interactive training program."}
+                        </p>
+                      </div>
+
+                      <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs mt-3">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="w-5 h-5 rounded-full bg-slate-800 text-slate-100 flex items-center justify-center font-bold text-[10px] shrink-0 border border-slate-700">
+                            {c.trainer?.name ? c.trainer.name[0].toUpperCase() : "T"}
+                          </div>
+                          <span className="truncate text-[11px] font-medium text-muted-foreground">{c.trainer?.name || "Trainer"}</span>
+                        </div>
+                        <span className="text-[11px] font-semibold text-primary flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                          <span>View Course</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
+
+          {/* Enrolled Courses Main Grid */}
+          <div className="space-y-5">
+            <div className="flex items-center justify-between border-b border-border/80 pb-2.5">
+              <h2 className="font-display text-base font-bold text-foreground flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-primary" />
+                <span>My Active Classes</span>
+              </h2>
+            </div>
 
           {enrolledCourses.length === 0 ? (
             <div className="bg-card border border-border/80 rounded-2xl p-10 text-center space-y-4 shadow-xs">
@@ -201,6 +277,7 @@ export default function TraineeDashboardPage() {
               })}
             </div>
           )}
+          </div>
         </div>
 
         {/* Sidebar Info Section */}

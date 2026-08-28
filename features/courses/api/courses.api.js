@@ -50,3 +50,19 @@ export async function enrollCourse(token, id) {
   });
 }
 
+export async function updateCourseFeatured(token, id, isFeatured, featuredOrder) {
+  return apiFetch(`/courses/${id}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ isFeatured, featuredOrder }),
+  });
+}
+
+export async function reorderFeaturedCoursesApi(token, courseOrders) {
+  return apiFetch(`/courses/reorder-featured`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ courseOrders }),
+  });
+}
+

@@ -186,15 +186,45 @@ export default function CourseDetailPage() {
   const [rejectStatus, setRejectStatus] = useState({ type: "", message: "" });
 
   async function handleViewTrainer(trainerId) {
-    const targetId = trainerId || course?.trainerId;
-    if (!targetId) return;
+    let targetId = trainerId;
+    if (!targetId || typeof targetId !== "string" || targetId === "undefined") {
+      targetId = course?.trainerId || course?.trainer?.id;
+    }
+    if (!targetId || targetId === "undefined") return;
+
     setShowTrainerModal(true);
     setLoadingTrainer(true);
     try {
-      const res = await apiFetch(`/profiles/trainers/${targetId}`);
-      setTrainerProfile(res.data);
+      const token = await getToken();
+      const res = await apiFetch(`/profiles/trainers/${targetId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res?.data) {
+        setTrainerProfile(res.data);
+      } else if (course?.trainer) {
+        setTrainerProfile({
+          user: course.trainer,
+          bio: "Assigned course instructor.",
+          courses: [course],
+          workExperiences: [],
+          skills: [],
+          trainerCompetencies: [],
+        });
+      }
     } catch (e) {
       console.error("Error loading trainer public profile:", e);
+      if (course?.trainer) {
+        setTrainerProfile({
+          user: course.trainer,
+          bio: "Assigned course instructor.",
+          courses: [course],
+          workExperiences: [],
+          skills: [],
+          trainerCompetencies: [],
+        });
+      } else {
+        setTrainerProfile(null);
+      }
     } finally {
       setLoadingTrainer(false);
     }

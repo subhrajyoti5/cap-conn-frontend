@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
   // Trainee items
   {
-    label: "Dashboard",
+    label: "Home",
     href: "/trainee",
     roles: ["TRAINEE"],
   },
@@ -98,6 +98,7 @@ const NAV_ITEMS = [
 
 function getIcon(label) {
   const names = {
+    "Home":           "home",
     "Dashboard":      "dashboard",
     "Courses":        "menu_book",
     "Certifications": "workspace_premium",
