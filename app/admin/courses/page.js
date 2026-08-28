@@ -108,11 +108,22 @@ export default function AdminCoursesPage() {
     const token = await getToken();
     if (!token) return;
     setActionLoading(true);
+
+    if (!targetStatus) {
+      setCuratedList((prev) => prev.filter((c) => c.id !== courseId));
+    } else {
+      const targetCourse = courses.find((c) => c.id === courseId);
+      if (targetCourse && !curatedList.some((c) => c.id === courseId)) {
+        setCuratedList((prev) => [...prev, targetCourse]);
+      }
+    }
+
     try {
       await updateCourseFeatured(token, courseId, targetStatus, 0);
       await loadCourses();
     } catch (e) {
       console.error("Error toggling course featured status:", e);
+      alert(e.message || "Failed to update featured status");
     } finally {
       setActionLoading(false);
     }
@@ -133,15 +144,28 @@ export default function AdminCoursesPage() {
     if (!token) return;
     setSavingCuration(true);
     try {
-      const courseOrders = curatedList.map((c, idx) => ({
+      const featuredIds = new Set(curatedList.map((c) => c.id));
+      const featuredOrders = curatedList.map((c, idx) => ({
         id: c.id,
         featuredOrder: idx + 1,
         isFeatured: true,
       }));
-      await reorderFeaturedCoursesApi(token, courseOrders);
+
+      const removedOrders = courses
+        .filter((c) => (c.status === "PUBLISHED" || c.status === "ACTIVE") && !featuredIds.has(c.id))
+        .map((c) => ({
+          id: c.id,
+          featuredOrder: 0,
+          isFeatured: false,
+        }));
+
+      const allOrders = [...featuredOrders, ...removedOrders];
+      await reorderFeaturedCoursesApi(token, allOrders);
       await loadCourses();
+      alert("Featured courses sequence saved successfully!");
     } catch (e) {
       console.error("Error saving featured sequence:", e);
+      alert(e.message || "Failed to save sequence. Please verify server DB is in sync.");
     } finally {
       setSavingCuration(false);
     }
