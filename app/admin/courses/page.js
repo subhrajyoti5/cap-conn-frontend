@@ -3,7 +3,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/features/auth/auth-context";
 import Link from "next/link";
-import { listCourses, updateCourseStatus, deleteCourse } from "@/features/courses/api/courses.api";
+import {
+  listCourses,
+  updateCourseStatus,
+  deleteCourse,
+  updateCourseFeatured,
+  reorderFeaturedCoursesApi,
+} from "@/features/courses/api/courses.api";
 import {
   BookOpen,
   Search,
@@ -19,6 +25,9 @@ import {
   X,
   AlertCircle,
   CheckCircle2,
+  Sparkles,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 export default function AdminCoursesPage() {
@@ -74,6 +83,69 @@ export default function AdminCoursesPage() {
   const suspendedVaultCourses = useMemo(() => {
     return courses.filter((c) => ["SUSPENDED", "ARCHIVED"].includes(c.status));
   }, [courses]);
+
+  // Featured / Newly Added Curation list
+  const featuredCoursesList = useMemo(() => {
+    return courses
+      .filter((c) => (c.status === "PUBLISHED" || c.status === "ACTIVE") && c.isFeatured !== false)
+      .sort((a, b) => (a.featuredOrder ?? 0) - (b.featuredOrder ?? 0));
+  }, [courses]);
+
+  const nonFeaturedCoursesList = useMemo(() => {
+    return courses.filter(
+      (c) => (c.status === "PUBLISHED" || c.status === "ACTIVE") && c.isFeatured === false
+    );
+  }, [courses]);
+
+  const [curatedList, setCuratedList] = useState([]);
+  const [savingCuration, setSavingCuration] = useState(false);
+
+  useEffect(() => {
+    setCuratedList(featuredCoursesList);
+  }, [featuredCoursesList]);
+
+  async function handleToggleFeatured(courseId, targetStatus) {
+    const token = await getToken();
+    if (!token) return;
+    setActionLoading(true);
+    try {
+      await updateCourseFeatured(token, courseId, targetStatus, 0);
+      await loadCourses();
+    } catch (e) {
+      console.error("Error toggling course featured status:", e);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  function handleMoveCourse(index, direction) {
+    const updated = [...curatedList];
+    const targetIdx = direction === "UP" ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= updated.length) return;
+    const temp = updated[index];
+    updated[index] = updated[targetIdx];
+    updated[targetIdx] = temp;
+    setCuratedList(updated);
+  }
+
+  async function handleSaveFeaturedSequence() {
+    const token = await getToken();
+    if (!token) return;
+    setSavingCuration(true);
+    try {
+      const courseOrders = curatedList.map((c, idx) => ({
+        id: c.id,
+        featuredOrder: idx + 1,
+        isFeatured: true,
+      }));
+      await reorderFeaturedCoursesApi(token, courseOrders);
+      await loadCourses();
+    } catch (e) {
+      console.error("Error saving featured sequence:", e);
+    } finally {
+      setSavingCuration(false);
+    }
+  }
 
   const currentTabCourses = activeTab === "ACTIVE_CATALOG" ? activeCatalogCourses : suspendedVaultCourses;
 
@@ -161,8 +233,8 @@ export default function AdminCoursesPage() {
         </div>
       </div>
 
-      {/* Main Navigation Tabs (Active Catalog vs Suspended) */}
-      <div className="flex items-center gap-3 border-b border-border/80 pb-2">
+      {/* Main Navigation Tabs (Active Catalog vs Suspended vs Curation) */}
+      <div className="flex items-center gap-3 border-b border-border/80 pb-2 flex-wrap">
         <button
           onClick={() => {
             setActiveTab("ACTIVE_CATALOG");
@@ -178,6 +250,24 @@ export default function AdminCoursesPage() {
           <span>Active Courses</span>
           <span className="ml-1.5 bg-black/20 text-white px-2 py-0.5 rounded-full text-[10px] font-mono">
             {activeCatalogCourses.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("NEWLY_ADDED_CURATION");
+            setSelectedStatus("ALL");
+          }}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all ${
+            activeTab === "NEWLY_ADDED_CURATION"
+              ? "bg-amber-500 text-slate-950 shadow-sm font-bold"
+              : "bg-card text-muted-foreground border border-border/80 hover:bg-muted/20"
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>Newly Added Curation</span>
+          <span className="ml-1.5 bg-black/20 text-current px-2 py-0.5 rounded-full text-[10px] font-mono font-bold">
+            {courses.filter((c) => (c.status === "PUBLISHED" || c.status === "ACTIVE") && c.isFeatured !== false).length}
           </span>
         </button>
 
@@ -254,24 +344,159 @@ export default function AdminCoursesPage() {
         </div>
       </div>
 
-      {/* Courses Grid */}
-      {filteredCourses.length === 0 ? (
-        <div className="bg-card border border-border/80 rounded-2xl p-12 text-center space-y-3 shadow-xs">
-          <div className="w-14 h-14 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto">
-            {activeTab === "SUSPENDED_VAULT" ? <Archive className="w-7 h-7" /> : <BookOpen className="w-7 h-7" />}
+      {/* Curation Panel when activeTab === "NEWLY_ADDED_CURATION" */}
+      {activeTab === "NEWLY_ADDED_CURATION" ? (
+        <div className="space-y-6">
+          {/* Curation Header Banner */}
+          <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                <h2 className="font-display font-bold text-base text-foreground">
+                  Trainee Homepage "Newly Added" Showcase Curation
+                </h2>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
+                Add or remove courses from the Featured / Newly Added horizontal scroll showcase, and use the controls below to manually adjust their display sequence. Position #1 will appear leftmost for trainees.
+              </p>
+            </div>
+            <button
+              onClick={handleSaveFeaturedSequence}
+              disabled={savingCuration || curatedList.length === 0}
+              className="btn-primary text-xs py-2.5 px-5 font-bold shadow-md shrink-0 flex items-center gap-2 text-white hover:text-white"
+            >
+              <CheckCircle2 className="w-4 h-4 text-white" />
+              <span>{savingCuration ? "Saving Sequence..." : "Save Sequence Order"}</span>
+            </button>
           </div>
-          <p className="font-display font-bold text-sm text-foreground">
-            {activeTab === "SUSPENDED_VAULT"
-              ? "No suspended or archived courses"
-              : "No matching courses found in active catalog"}
-          </p>
-          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            {activeTab === "SUSPENDED_VAULT"
-              ? "Any course you suspend from the active catalog will safely appear here under Suspended for restoration or permanent deletion."
-              : "Try resetting your search query or filters to supervise platform courses."}
-          </p>
+
+          {/* Curated Featured Sequence */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+              <h3 className="font-display text-sm font-bold text-foreground flex items-center justify-between">
+                <span>Featured Sequence ({curatedList.length} Courses)</span>
+                <span className="text-[11px] font-mono text-muted-foreground font-normal">Leftmost → Rightmost</span>
+              </h3>
+
+              {curatedList.length === 0 ? (
+                <div className="bg-card border border-border/80 rounded-2xl p-8 text-center text-xs text-muted-foreground">
+                  No courses are currently featured in the Newly Added showcase. Add courses from the right panel.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {curatedList.map((course, idx) => (
+                    <div
+                      key={course.id}
+                      className="bg-card border border-border/80 rounded-2xl p-4 flex items-center justify-between gap-4 hover:border-amber-500/40 transition-all shadow-xs"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <span className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                          #{idx + 1}
+                        </span>
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="bg-primary/10 text-primary border border-primary/20 text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-md truncate">
+                              {course.subject?.name || "General"}
+                            </span>
+                            <span className="text-[9px] font-mono text-muted-foreground">
+                              Trainer: {course.trainer?.name || "N/A"}
+                            </span>
+                          </div>
+                          <h4 className="font-display font-bold text-sm text-foreground truncate">
+                            {course.title}
+                          </h4>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1 bg-muted/40 border border-border/60 rounded-xl p-1">
+                          <button
+                            onClick={() => handleMoveCourse(idx, "UP")}
+                            disabled={idx === 0}
+                            title="Move Left / Higher Priority"
+                            className="p-1 rounded-lg hover:bg-card text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleMoveCourse(idx, "DOWN")}
+                            disabled={idx === curatedList.length - 1}
+                            title="Move Right / Lower Priority"
+                            className="p-1 rounded-lg hover:bg-card text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => handleToggleFeatured(course.id, false)}
+                          disabled={actionLoading}
+                          className="px-2.5 py-1.5 rounded-xl border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 text-xs font-semibold transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Non-featured Available Catalog */}
+            <div className="space-y-4">
+              <h3 className="font-display text-sm font-bold text-foreground">
+                Available Courses ({nonFeaturedCoursesList.length})
+              </h3>
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                {nonFeaturedCoursesList.length === 0 ? (
+                  <div className="bg-card border border-border/80 rounded-2xl p-6 text-center text-xs text-muted-foreground">
+                    All published courses are currently included in the Newly Added showcase.
+                  </div>
+                ) : (
+                  nonFeaturedCoursesList.map((course) => (
+                    <div
+                      key={course.id}
+                      className="bg-card border border-border/80 rounded-xl p-3.5 flex items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="min-w-0 space-y-0.5">
+                        <span className="text-[9px] font-mono text-primary uppercase block">
+                          {course.subject?.name || "General"}
+                        </span>
+                        <h4 className="font-bold text-foreground truncate">{course.title}</h4>
+                      </div>
+                      <button
+                        onClick={() => handleToggleFeatured(course.id, true)}
+                        disabled={actionLoading}
+                        className="px-2.5 py-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 font-bold shrink-0 transition-colors"
+                      >
+                        + Add
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
+        <>
+          {/* Courses Grid */}
+          {filteredCourses.length === 0 ? (
+            <div className="bg-card border border-border/80 rounded-2xl p-12 text-center space-y-3 shadow-xs">
+              <div className="w-14 h-14 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto">
+                {activeTab === "SUSPENDED_VAULT" ? <Archive className="w-7 h-7" /> : <BookOpen className="w-7 h-7" />}
+              </div>
+              <p className="font-display font-bold text-sm text-foreground">
+                {activeTab === "SUSPENDED_VAULT"
+                  ? "No suspended or archived courses"
+                  : "No matching courses found in active catalog"}
+              </p>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                {activeTab === "SUSPENDED_VAULT"
+                  ? "Any course you suspend from the active catalog will safely appear here under Suspended for restoration or permanent deletion."
+                  : "Try resetting your search query or filters to supervise platform courses."}
+              </p>
+            </div>
+          ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCourses.map((course, idx) => {
             const activeEnrollmentsCount = course.enrollments?.filter(e => e.status === "ACTIVE")?.length || course.enrollments?.length || 0;
@@ -386,6 +611,8 @@ export default function AdminCoursesPage() {
             );
           })}
         </div>
+      )}
+      </>
       )}
 
       {/* WARNING CONFIRMATION MODAL */}
