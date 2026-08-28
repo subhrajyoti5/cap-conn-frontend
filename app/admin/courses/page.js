@@ -257,11 +257,10 @@ export default function AdminCoursesPage() {
             setActiveTab("NEWLY_ADDED_CURATION");
             setSelectedStatus("ALL");
           }}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all ${
-            activeTab === "NEWLY_ADDED_CURATION"
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all ${activeTab === "NEWLY_ADDED_CURATION"
               ? "bg-amber-500 text-slate-950 shadow-sm font-bold"
               : "bg-card text-muted-foreground border border-border/80 hover:bg-muted/20"
-          }`}
+            }`}
         >
           <Sparkles className="w-4 h-4" />
           <span>Newly Added Curation</span>
@@ -495,121 +494,121 @@ export default function AdminCoursesPage() {
               </p>
             </div>
           ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course, idx) => {
-            const activeEnrollmentsCount = course.enrollments?.filter(e => e.status === "ACTIVE")?.length || course.enrollments?.length || 0;
-            const isSuspended = course.status === "SUSPENDED" || course.status === "ARCHIVED";
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCourses.map((course, idx) => {
+                const activeEnrollmentsCount = course.enrollments?.filter(e => e.status === "ACTIVE")?.length || course.enrollments?.length || 0;
+                const isSuspended = course.status === "SUSPENDED" || course.status === "ARCHIVED";
 
-            const DOMAIN_COLOR_THEMES = [
-              { bg: "bg-emerald-950 border-b border-emerald-900", badgeBg: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
-              { bg: "bg-blue-950 border-b border-blue-900", badgeBg: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
-              { bg: "bg-indigo-950 border-b border-indigo-900", badgeBg: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30" },
-              { bg: "bg-amber-950 border-b border-amber-900", badgeBg: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
-              { bg: "bg-rose-950 border-b border-rose-900", badgeBg: "bg-rose-500/20 text-rose-300 border-rose-500/30" },
-              { bg: "bg-slate-900 border-b border-slate-800", badgeBg: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
-            ];
-            const theme = isSuspended
-              ? { bg: "bg-slate-950 border-b border-slate-900", badgeBg: "bg-amber-500/20 text-amber-400 border-amber-500/30" }
-              : DOMAIN_COLOR_THEMES[idx % DOMAIN_COLOR_THEMES.length];
+                const DOMAIN_COLOR_THEMES = [
+                  { bg: "bg-emerald-950 border-b border-emerald-900", badgeBg: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+                  { bg: "bg-blue-950 border-b border-blue-900", badgeBg: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
+                  { bg: "bg-indigo-950 border-b border-indigo-900", badgeBg: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30" },
+                  { bg: "bg-amber-950 border-b border-amber-900", badgeBg: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+                  { bg: "bg-rose-950 border-b border-rose-900", badgeBg: "bg-rose-500/20 text-rose-300 border-rose-500/30" },
+                  { bg: "bg-slate-900 border-b border-slate-800", badgeBg: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
+                ];
+                const theme = isSuspended
+                  ? { bg: "bg-slate-950 border-b border-slate-900", badgeBg: "bg-amber-500/20 text-amber-400 border-amber-500/30" }
+                  : DOMAIN_COLOR_THEMES[idx % DOMAIN_COLOR_THEMES.length];
 
-            return (
-              <div
-                key={course.id}
-                className="group bg-card border border-border/80 rounded-2xl overflow-hidden hover:border-amber-500/50 hover:shadow-xl transition-all flex flex-col justify-between h-[310px]"
-              >
-                {/* Solid Domain Header Banner */}
-                <div className={`p-5 ${theme.bg} min-h-[110px] flex flex-col justify-between shrink-0 text-white relative`}>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`text-[10px] uppercase font-mono px-2 py-0.5 rounded-full font-bold border ${theme.badgeBg}`}>
-                      {course.subject?.name || "General Course"}
-                    </span>
-                    <span
-                      className={`badge text-[9px] uppercase font-mono px-2 py-0.5 rounded-full font-bold ${course.status === "SUSPENDED"
-                          ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                          : course.status === "PUBLISHED"
-                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                            : "bg-slate-500/20 text-slate-300 border-slate-500/30"
-                        }`}
-                    >
-                      {course.status}
-                    </span>
-                  </div>
-
-                  <h3 className="font-display text-base font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-1 mt-2">
-                    {course.title}
-                  </h3>
-                </div>
-
-                {/* Card Body */}
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {course.description || "No overview description added for this course."}
-                  </p>
-
-                  <div className="flex items-center justify-between text-xs pt-2 border-t border-border/60">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <span className="font-medium text-foreground">{course.trainer?.name || "Unassigned"}</span>
-                    </div>
-
-                    <span className="text-[11px] font-mono text-muted-foreground font-semibold">
-                      {activeEnrollmentsCount} Enrolled
-                    </span>
-                  </div>
-                </div>
-
-                {/* Card Footer Actions */}
-                <div className="px-5 py-3 bg-muted/20 border-t border-border/80 flex items-center justify-between gap-2">
-                  <Link
-                    href={`/courses/${course.id}`}
-                    className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                return (
+                  <div
+                    key={course.id}
+                    className="group bg-card border border-border/80 rounded-2xl overflow-hidden hover:border-amber-500/50 hover:shadow-xl transition-all flex flex-col justify-between h-[310px]"
                   >
-                    <span>View Course</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                    {/* Solid Domain Header Banner */}
+                    <div className={`p-5 ${theme.bg} min-h-[110px] flex flex-col justify-between shrink-0 text-white relative`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`text-[10px] uppercase font-mono px-2 py-0.5 rounded-full font-bold border ${theme.badgeBg}`}>
+                          {course.subject?.name || "General Course"}
+                        </span>
+                        <span
+                          className={`badge text-[9px] uppercase font-mono px-2 py-0.5 rounded-full font-bold ${course.status === "SUSPENDED"
+                              ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                              : course.status === "PUBLISHED"
+                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                                : "bg-slate-500/20 text-slate-300 border-slate-500/30"
+                            }`}
+                        >
+                          {course.status}
+                        </span>
+                      </div>
 
-                  {isSuspended ? (
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => {
-                          setSelectedCourse(course);
-                          setModalType("RESTORE");
-                        }}
-                        className="btn-secondary text-[11px] py-1.5 px-2.5 font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 flex items-center gap-1"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>Restore</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setSelectedCourse(course);
-                          setModalType("DELETE_PERMANENT");
-                        }}
-                        className="btn-secondary text-[11px] py-1.5 px-2.5 font-semibold text-rose-600 dark:text-rose-400 border-rose-500/30 hover:bg-rose-500/10 flex items-center gap-1"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete</span>
-                      </button>
+                      <h3 className="font-display text-base font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-1 mt-2">
+                        {course.title}
+                      </h3>
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setSelectedCourse(course);
-                        setModalType("SUSPEND");
-                      }}
-                      className="btn-secondary text-[11px] py-1.5 px-2.5 font-semibold text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/10 flex items-center gap-1"
-                    >
-                      <ShieldAlert className="w-3.5 h-3.5" />
-                      <span>Suspend</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-      </>
+
+                    {/* Card Body */}
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {course.description || "No overview description added for this course."}
+                      </p>
+
+                      <div className="flex items-center justify-between text-xs pt-2 border-t border-border/60">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <span className="font-medium text-foreground">{course.trainer?.name || "Unassigned"}</span>
+                        </div>
+
+                        <span className="text-[11px] font-mono text-muted-foreground font-semibold">
+                          {activeEnrollmentsCount} Enrolled
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Card Footer Actions */}
+                    <div className="px-5 py-3 bg-muted/20 border-t border-border/80 flex items-center justify-between gap-2">
+                      <Link
+                        href={`/courses/${course.id}`}
+                        className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                      >
+                        <span>View Course</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+
+                      {isSuspended ? (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedCourse(course);
+                              setModalType("RESTORE");
+                            }}
+                            className="btn-secondary text-[11px] py-1.5 px-2.5 font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 flex items-center gap-1"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Restore</span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setSelectedCourse(course);
+                              setModalType("DELETE_PERMANENT");
+                            }}
+                            className="btn-secondary text-[11px] py-1.5 px-2.5 font-semibold text-rose-600 dark:text-rose-400 border-rose-500/30 hover:bg-rose-500/10 flex items-center gap-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setSelectedCourse(course);
+                            setModalType("SUSPEND");
+                          }}
+                          className="btn-secondary text-[11px] py-1.5 px-2.5 font-semibold text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/10 flex items-center gap-1"
+                        >
+                          <ShieldAlert className="w-3.5 h-3.5" />
+                          <span>Suspend</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
       {/* WARNING CONFIRMATION MODAL */}

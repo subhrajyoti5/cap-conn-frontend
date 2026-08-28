@@ -1211,16 +1211,6 @@ export default function CourseDetailPage() {
                                   <Search className="w-3.5 h-3.5" />
                                   <span>Expand Fullscreen Image</span>
                                 </button>
-                                <a
-                                  href={targetUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  download
-                                  className="btn-secondary text-xs py-2 px-4 flex items-center gap-2 font-semibold"
-                                >
-                                  <Globe className="w-3.5 h-3.5" />
-                                  <span>Open File</span>
-                                </a>
                               </div>
                             </div>
                           );
@@ -1229,7 +1219,7 @@ export default function CourseDetailPage() {
                         return (
                           <div className="p-8 border border-dashed border-border rounded-xl text-center space-y-4 bg-muted/10">
                             <FileText className="w-8 h-8 mx-auto text-primary opacity-80" />
-                            <p className="text-xs text-muted-foreground">Document file ready. Click below to expand preview or open file.</p>
+                            <p className="text-xs text-muted-foreground">Document file ready. Click below to expand preview.</p>
                             <div className="flex items-center justify-center gap-3">
                               <button
                                 onClick={() => setLightboxMedia({ url: targetUrl, title: selectedResource.title, type: "doc" })}
@@ -1238,15 +1228,6 @@ export default function CourseDetailPage() {
                                 <Search className="w-3.5 h-3.5" />
                                 <span>Expand Fullscreen Preview</span>
                               </button>
-                              <a
-                                href={targetUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn-secondary text-xs py-2 px-4 inline-flex items-center gap-1.5"
-                              >
-                                <Globe className="w-3.5 h-3.5" />
-                                <span>Open File</span>
-                              </a>
                             </div>
                           </div>
                         );

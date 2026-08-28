@@ -346,19 +346,24 @@ export default function TraineeDashboardPage() {
                 <span>Recent Scorecard</span>
               </h3>
               <div className="space-y-2.5 divide-y divide-border/50">
-                {dashboardData.recentResults.map((sub) => (
-                  <div key={sub.id} className="pt-2 first:pt-0 flex justify-between items-center text-xs">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-foreground truncate">{sub.assessment?.title}</p>
-                      <p className="text-[10px] font-mono text-muted-foreground">
-                        {new Date(sub.submittedAt).toLocaleDateString()}
-                      </p>
+                {dashboardData.recentResults.map((sub) => {
+                  const total = sub.assessment?.totalMarks || 0;
+                  const percentage = total > 0 ? Math.round((sub.score / total) * 100) : sub.score;
+
+                  return (
+                    <div key={sub.id} className="pt-2.5 first:pt-0 flex justify-between items-center text-xs">
+                      <div className="min-w-0 pr-2">
+                        <p className="font-semibold text-foreground truncate">{sub.assessment?.title}</p>
+                        <p className="text-[10px] font-mono text-muted-foreground">
+                          {new Date(sub.submittedAt).toLocaleDateString()} • {sub.score}/{total || "—"} Marks
+                        </p>
+                      </div>
+                      <span className="badge bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono font-bold text-xs px-2 py-0.5 shrink-0">
+                        {percentage}%
+                      </span>
                     </div>
-                    <span className="badge bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono font-bold text-xs px-2 py-0.5">
-                      {sub.score}%
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
