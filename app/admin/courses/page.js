@@ -168,11 +168,10 @@ export default function AdminCoursesPage() {
             setActiveTab("ACTIVE_CATALOG");
             setSelectedStatus("ALL");
           }}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all ${
-            activeTab === "ACTIVE_CATALOG"
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all ${activeTab === "ACTIVE_CATALOG"
               ? "bg-primary text-primary-foreground shadow-sm"
               : "bg-card text-muted-foreground border border-border/80 hover:bg-muted/20"
-          }`}
+            }`}
         >
           <BookOpen className="w-4 h-4" />
           <span>Active Courses</span>
@@ -186,11 +185,10 @@ export default function AdminCoursesPage() {
             setActiveTab("SUSPENDED_VAULT");
             setSelectedStatus("ALL");
           }}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all ${
-            activeTab === "SUSPENDED_VAULT"
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all ${activeTab === "SUSPENDED_VAULT"
               ? "bg-amber-600 text-white shadow-sm"
               : "bg-card text-muted-foreground border border-border/80 hover:bg-muted/20"
-          }`}
+            }`}
         >
           <Archive className="w-4 h-4" />
           <span>Suspended</span>
@@ -296,15 +294,17 @@ export default function AdminCoursesPage() {
               >
                 {/* Solid Domain Header Banner */}
                 <div className={`p-5 ${theme.bg} min-h-[110px] flex flex-col justify-between shrink-0 text-white relative`}>
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`text-[10px] uppercase font-mono px-2 py-0.5 rounded-full font-bold border ${theme.badgeBg}`}>
+                      {course.subject?.name || "General Course"}
+                    </span>
                     <span
-                      className={`badge text-[9px] uppercase font-mono px-2 py-0.5 rounded-full font-bold ${
-                        course.status === "SUSPENDED"
+                      className={`badge text-[9px] uppercase font-mono px-2 py-0.5 rounded-full font-bold ${course.status === "SUSPENDED"
                           ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
                           : course.status === "PUBLISHED"
-                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                          : "bg-slate-500/20 text-slate-300 border-slate-500/30"
-                      }`}
+                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                            : "bg-slate-500/20 text-slate-300 border-slate-500/30"
+                        }`}
                     >
                       {course.status}
                     </span>

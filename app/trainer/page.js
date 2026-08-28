@@ -242,11 +242,10 @@ export default function TrainerDashboardPage() {
             <div
               key={stat.label}
               onClick={stat.onClick}
-              className={`bg-card border p-5 rounded-2xl flex flex-col justify-between transition-all shadow-xs ${
-                stat.active
+              className={`bg-card border p-5 rounded-2xl flex flex-col justify-between transition-all shadow-xs ${stat.active
                   ? "border-primary ring-2 ring-primary/20"
                   : "border-border/80 hover:border-primary/40"
-              } ${stat.onClick ? "cursor-pointer" : ""}`}
+                } ${stat.onClick ? "cursor-pointer" : ""}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
@@ -509,12 +508,14 @@ export default function TrainerDashboardPage() {
                       >
                         {/* Solid Domain Header Banner */}
                         <div className={`p-5 ${theme.bg} min-h-[105px] flex flex-col justify-between shrink-0 text-white`}>
-                          <div className="flex items-center justify-end gap-2">
-                            <span className={`text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-md border ${
-                              course.status === "PUBLISHED"
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`${theme.badgeBg} border text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-md truncate max-w-[65%]`}>
+                              {course.subject?.name || "Specialized Domain"}
+                            </span>
+                            <span className={`text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-md border ${course.status === "PUBLISHED"
                                 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                                 : "bg-white/10 text-white/80 border-white/20"
-                            }`}>
+                              }`}>
                               {course.status}
                             </span>
                           </div>

@@ -150,8 +150,8 @@ export default function CoursesPage() {
             {searchQuery || selectedSubject !== "ALL" || selectedStatus !== "ALL"
               ? "Try resetting your search query or filters to discover available courses."
               : canCreate
-              ? "Create your first course to begin publishing learning materials."
-              : "No published courses are currently available."}
+                ? "Create your first course to begin publishing learning materials."
+                : "No published courses are currently available."}
           </p>
           {canCreate && (
             <Link href="/courses/create" className="btn-primary text-xs py-2 px-4 shadow-xs inline-flex items-center gap-1.5 mt-2 font-semibold">
@@ -174,12 +174,14 @@ export default function CoursesPage() {
               >
                 {/* Solid Rich Domain Header Banner */}
                 <div className={`p-5 ${theme.bg} min-h-[110px] flex flex-col justify-between shrink-0 text-white`}>
-                  <div className="flex items-center justify-end gap-2">
-                    <span className={`text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-md border ${
-                      course.status === "PUBLISHED"
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`${theme.badgeBg} border text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-md truncate max-w-[65%]`}>
+                      {course.subject?.name || "Specialized Domain"}
+                    </span>
+                    <span className={`text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-md border ${course.status === "PUBLISHED"
                         ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                         : "bg-white/10 text-white/80 border-white/20"
-                    }`}>
+                      }`}>
                       {course.status}
                     </span>
                   </div>
