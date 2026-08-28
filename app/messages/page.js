@@ -206,7 +206,6 @@ function MessagesContent() {
   }
 
   async function executeSendMessage(content) {
-    setMessageText("");
     setSending(true);
 
     try {
@@ -217,12 +216,13 @@ function MessagesContent() {
       });
 
       if (res.data) {
+        setMessageText("");
         const newMsg = res.data;
         setThreadMessages((prev) => [...prev, newMsg]);
 
         // Update conversation list
         setConversations((prev) => {
-          const idx = prev.findIndex((c) => c.partner.id === activePartner.id);
+          const idx = prev.findIndex((c) => c.partner?.id === activePartner.id);
           if (idx !== -1) {
             const updated = [...prev];
             updated[idx] = {
@@ -245,7 +245,7 @@ function MessagesContent() {
       }
     } catch (e) {
       console.error("Failed to send message:", e);
-      alert("Failed to send message. Please try again.");
+      alert(e.message || "Failed to send message. Please try again.");
     } finally {
       setSending(false);
     }
