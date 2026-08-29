@@ -56,6 +56,12 @@ export function MarketingNavbar() {
 
         <nav className="flex items-center gap-1 sm:gap-2" aria-label="Main navigation">
           <Link
+            href="/#solutions"
+            className="btn-tertiary text-sm hidden sm:inline-flex !text-slate-800 hover:!text-slate-950 hover:!bg-white/50"
+          >
+            Solutions
+          </Link>
+          <Link
             href="/#features"
             className="btn-tertiary text-sm hidden sm:inline-flex !text-slate-800 hover:!text-slate-950 hover:!bg-white/50"
           >

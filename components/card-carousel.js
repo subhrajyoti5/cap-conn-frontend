@@ -6,33 +6,57 @@ import { motion } from "framer-motion";
 const DEFAULT_CAROUSEL_ITEMS = [
   {
     step: "01",
-    tag: "Courses",
-    title: "Modular Learning Paths",
-    desc: "Build structured courses with rich media, cloud resources, and self-paced progress tracking.",
+    tag: "Learning Paths",
+    title: "Structured Learning Paths",
+    desc: "Design organization-wide training programs with modular resources and clear progression from new joiner to role-ready employee.",
   },
   {
     step: "02",
-    tag: "Competencies",
+    tag: "Trainers",
     title: "Verified Trainer Matching",
-    desc: "Algorithmically match cohorts with verified domain experts based on mapped skill taxonomies.",
+    desc: "Match training cohorts with verified instructors based on domain expertise and competency requirements.",
   },
   {
     step: "03",
-    tag: "Assessments",
-    title: "Instant MCQ Auto-Grading",
-    desc: "Server-validated anti-cheat assessments with instant scoring, analytics, and performance reports.",
+    tag: "Onboarding",
+    title: "Employee Onboarding",
+    desc: "Onboard new joiners with structured curricula, assigned training, and measurable readiness checkpoints.",
   },
   {
     step: "04",
-    tag: "Certificates",
-    title: "Verifiable Digital Credentials",
-    desc: "Issue tamper-proof course completion certificates with trackable digital verification.",
+    tag: "Competencies",
+    title: "Competency Mapping",
+    desc: "Map required skills to roles and programs so organizations can track workforce capability with clarity.",
   },
   {
     step: "05",
-    tag: "Governance",
-    title: "Audit Logs & Approvals",
-    desc: "Role-based access control, one-click profile approvals, and comprehensive audit trails.",
+    tag: "Assessments",
+    title: "Assessments & Evaluation",
+    desc: "Evaluate employee understanding with structured assessments and transparent scoring for trainers and admins.",
+  },
+  {
+    step: "06",
+    tag: "Progress",
+    title: "Training Progress",
+    desc: "Monitor completion across teams, programs, and individuals so leaders know where capability is building.",
+  },
+  {
+    step: "07",
+    tag: "Certificates",
+    title: "Certifications",
+    desc: "Issue completion credentials that confirm employees have finished required training and competency tracks.",
+  },
+  {
+    step: "08",
+    tag: "Verification",
+    title: "Skill Verification",
+    desc: "Verify that training and skill requirements are complete before employees advance or take on new responsibilities.",
+  },
+  {
+    step: "09",
+    tag: "Analytics",
+    title: "Organization-wide Training Analytics",
+    desc: "See program participation, assessment outcomes, and competency coverage across your organization in one place.",
   },
 ];
 
@@ -43,6 +67,8 @@ export function CardCarousel({
 }) {
   const [activeIndex, setActiveIndex] = useState(2);
   const [isHovered, setIsHovered] = useState(false);
+  const [slideWidth, setSlideWidth] = useState(280);
+  const [isCompact, setIsCompact] = useState(false);
 
   const toPrev = (e) => {
     e?.stopPropagation?.();
@@ -60,6 +86,18 @@ export function CardCarousel({
   };
 
   useEffect(() => {
+    const syncViewport = () => {
+      const compact = window.innerWidth < 640;
+      setIsCompact(compact);
+      setSlideWidth(compact ? Math.min(260, Math.max(220, window.innerWidth - 48)) : 280);
+    };
+
+    syncViewport();
+    window.addEventListener("resize", syncViewport);
+    return () => window.removeEventListener("resize", syncViewport);
+  }, []);
+
+  useEffect(() => {
     if (isHovered || items.length <= 1 || autoplayMs <= 0) return undefined;
 
     const id = window.setInterval(() => {
@@ -68,8 +106,6 @@ export function CardCarousel({
 
     return () => window.clearInterval(id);
   }, [isHovered, items.length, autoplayMs]);
-
-  const slideWidth = 280;
 
   return (
     <div
@@ -101,9 +137,10 @@ export function CardCarousel({
               const isActive = activeIndex === i;
               const diff = i - activeIndex;
 
-              const targetRotate = isHovered ? diff * 12 : diff * 4;
-              const targetScale = isActive ? 1.05 : isHovered ? 0.88 : 0.92;
-              const targetY = isHovered ? Math.abs(diff) * 12 : 0;
+              const rotateFactor = isCompact ? 2 : isHovered ? 12 : 4;
+              const targetRotate = (isCompact ? diff * rotateFactor : isHovered ? diff * 12 : diff * 4);
+              const targetScale = isActive ? (isCompact ? 1.02 : 1.05) : isHovered && !isCompact ? 0.88 : 0.92;
+              const targetY = isHovered && !isCompact ? Math.abs(diff) * 12 : 0;
 
               return (
                 <motion.div
@@ -120,34 +157,51 @@ export function CardCarousel({
                   <div
                     onClick={(e) => toSlide(e, i)}
                     className={`w-full h-[260px] sm:h-[280px] rounded-2xl p-6 text-left flex flex-col justify-between cursor-pointer transition-all duration-300 border ${isActive
-                        ? "bg-gradient-to-b from-card to-card/90 text-foreground border-accent/40 shadow-2xl shadow-accent/10 ring-1 ring-accent/20"
-                        : "bg-card/60 backdrop-blur-md text-foreground/70 border-border/70 hover:border-border hover:text-foreground shadow-lg"
+                        ? "bg-card text-foreground border-accent/50 shadow-xl shadow-accent/10 ring-1 ring-accent/25"
+                        : "bg-card text-foreground border-border shadow-md hover:border-accent/25 hover:shadow-lg"
                       }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-mono font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
+                      <span
+                        className={`text-[11px] font-mono font-bold tracking-wider px-2.5 py-0.5 rounded-full border ${isActive
+                            ? "bg-accent/15 text-accent border-accent/30"
+                            : "bg-accent/10 text-accent/90 border-accent/20"
+                          }`}
+                      >
                         {item.tag}
                       </span>
-                      <span className="text-xs font-mono font-bold text-muted-foreground/60">
+                      <span
+                        className={`text-xs font-mono font-bold ${isActive ? "text-muted-foreground" : "text-muted-foreground/80"
+                          }`}
+                      >
                         {item.step}
                       </span>
                     </div>
 
                     <div className="space-y-2 my-auto">
-                      <h3 className="font-display text-base font-bold text-foreground leading-snug">
+                      <h3
+                        className={`font-display text-base font-bold leading-snug ${isActive ? "text-foreground" : "text-foreground/90"
+                          }`}
+                      >
                         {item.title}
                       </h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                      <p
+                        className={`text-xs leading-relaxed line-clamp-3 ${isActive ? "text-foreground/75" : "text-muted-foreground"
+                          }`}
+                      >
                         {item.desc}
                       </p>
                     </div>
 
-                    <div className="pt-2 flex items-center justify-between border-t border-border/40">
-                      <span className="text-[10px] font-mono text-muted-foreground">
+                    <div className="pt-2 flex items-center justify-between border-t border-border">
+                      <span
+                        className={`text-[10px] font-mono ${isActive ? "text-accent font-semibold" : "text-muted-foreground"
+                          }`}
+                      >
                         {isActive ? "● Active Feature" : "Click to view"}
                       </span>
                       <div
-                        className={`w-2 h-2 rounded-full ${isActive ? "bg-accent" : "bg-muted-foreground/30"
+                        className={`w-2 h-2 rounded-full ${isActive ? "bg-accent" : "bg-muted-foreground/40"
                           }`}
                       />
                     </div>

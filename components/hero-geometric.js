@@ -251,12 +251,12 @@ export default function HeroGeometric({
             </div>
 
             {description && (
-              <div className="max-w-[480px] text-center mb-8">
+              <div className="max-w-[640px] text-center mb-8">
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-                  className="text-lg md:text-[1.35rem] leading-relaxed text-neutral-600 font-normal"
+                  className="text-base md:text-lg lg:text-[1.2rem] leading-relaxed text-neutral-700 font-normal"
                 >
                   {description}
                 </motion.p>
